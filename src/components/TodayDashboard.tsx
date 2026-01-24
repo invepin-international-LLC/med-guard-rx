@@ -5,13 +5,14 @@ import { TimeOfDayHeader } from '@/components/TimeOfDayHeader';
 import { ElderMedicationCard } from '@/components/ElderMedicationCard';
 import { AdherenceWidget } from '@/components/AdherenceWidget';
 import { EmergencyCardElder } from '@/components/EmergencyCardElder';
+import { EmergencyContactsManager } from '@/components/EmergencyContactsManager';
 import { QuickActionsElder } from '@/components/QuickActionsElder';
 import { InteractiveDoseClock } from '@/components/InteractiveDoseClock';
 import { PrescriptionScanner } from '@/components/PrescriptionScanner';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Heart, Info, AlertTriangle, Phone, PlayCircle, BookOpen, Clock, RefreshCw } from 'lucide-react';
+import { Heart, Info, AlertTriangle, Phone, PlayCircle, BookOpen, Clock, RefreshCw, Settings, ChevronRight, User, Shield } from 'lucide-react';
 
 type NavItem = 'today' | 'medications' | 'scan' | 'stats' | 'profile';
 type TimeOfDay = 'morning' | 'afternoon' | 'evening' | 'bedtime';
@@ -136,12 +137,50 @@ const mockUserProfile = {
 
 const timeOrder: TimeOfDay[] = ['morning', 'afternoon', 'evening', 'bedtime'];
 
+// Profile Menu Item Component
+function ProfileMenuItem({ 
+  icon: Icon, 
+  label, 
+  description, 
+  onClick, 
+  highlight = false 
+}: { 
+  icon: typeof Phone; 
+  label: string; 
+  description: string; 
+  onClick: () => void;
+  highlight?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center gap-4 p-5 rounded-2xl border-2 transition-all haptic-tap text-left ${
+        highlight 
+          ? 'bg-accent/10 border-accent/30 hover:bg-accent/20' 
+          : 'bg-card border-border hover:bg-secondary'
+      }`}
+    >
+      <div className={`w-14 h-14 rounded-full flex items-center justify-center ${
+        highlight ? 'bg-accent/20' : 'bg-secondary'
+      }`}>
+        <Icon className={`w-7 h-7 ${highlight ? 'text-accent' : 'text-muted-foreground'}`} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-elder-lg text-foreground">{label}</p>
+        <p className="text-muted-foreground truncate">{description}</p>
+      </div>
+      <ChevronRight className="w-6 h-6 text-muted-foreground flex-shrink-0" />
+    </button>
+  );
+}
+
 export function TodayDashboard() {
   const [activeNav, setActiveNav] = useState<NavItem>('today');
   const [doses, setDoses] = useState<MedicationDose[]>(initialDoses);
   const [selectedMedication, setSelectedMedication] = useState<Medication | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
+  const [showContactsManager, setShowContactsManager] = useState(false);
 
   // Group doses by time of day
   const groupedDoses = useMemo(() => {
@@ -306,6 +345,86 @@ export function TodayDashboard() {
         onMedicationScanned={handleMedicationScanned}
         onClose={handleCloseScanner}
       />
+    );
+  }
+
+  // Show profile page
+  if (activeNav === 'profile') {
+    return (
+      <div className="min-h-screen bg-background pb-32">
+        <ElderHeader 
+          userName={mockUserProfile.name}
+          notificationCount={0}
+        />
+        
+        <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+          {/* Profile Header */}
+          <div className="bg-card rounded-3xl p-6 shadow-elder-lg border-2 border-border">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+                <User className="w-10 h-10 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-elder-2xl text-foreground">{mockUserProfile.name}</h1>
+                <p className="text-muted-foreground">
+                  {new Date(mockUserProfile.dateOfBirth).toLocaleDateString('en-US', { 
+                    month: 'long', 
+                    day: 'numeric', 
+                    year: 'numeric' 
+                  })}
+                </p>
+              </div>
+            </div>
+
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-success/10 rounded-xl p-4 text-center">
+                <p className="text-3xl font-bold text-success">{stats.currentStreak}</p>
+                <p className="text-muted-foreground">Day Streak</p>
+              </div>
+              <div className="bg-primary/10 rounded-xl p-4 text-center">
+                <p className="text-3xl font-bold text-primary">{stats.weeklyAdherence}%</p>
+                <p className="text-muted-foreground">Weekly</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Profile Menu Items */}
+          <div className="space-y-3">
+            <ProfileMenuItem 
+              icon={Phone}
+              label="Emergency Contacts"
+              description="Manage caregivers & alerts"
+              onClick={() => setShowContactsManager(true)}
+              highlight
+            />
+            <ProfileMenuItem 
+              icon={Shield}
+              label="Medical Info"
+              description="Allergies, conditions, insurance"
+              onClick={() => toast.info('Medical info coming soon!')}
+            />
+            <ProfileMenuItem 
+              icon={Settings}
+              label="App Settings"
+              description="Notifications, display, voice"
+              onClick={() => toast.info('Settings coming soon!')}
+            />
+          </div>
+
+          {/* Emergency Card */}
+          <EmergencyCardElder info={mockUserProfile} />
+        </main>
+
+        <ElderBottomNav activeItem={activeNav} onNavigate={setActiveNav} />
+
+        {/* Emergency Contacts Manager Sheet */}
+        <Sheet open={showContactsManager} onOpenChange={setShowContactsManager}>
+          <SheetContent side="bottom" className="h-[90vh] overflow-y-auto rounded-t-3xl">
+            <EmergencyContactsManager onClose={() => setShowContactsManager(false)} />
+          </SheetContent>
+        </Sheet>
+      </div>
     );
   }
 
