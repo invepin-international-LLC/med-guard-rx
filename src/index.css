@@ -2,87 +2,106 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Warm, calming healthcare palette */
+    --background: 40 33% 98%;
+    --foreground: 220 30% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 220 30% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 220 30% 15%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Calming teal - trustworthy, healthcare */
+    --primary: 173 58% 39%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Soft sage for secondary elements */
+    --secondary: 160 20% 94%;
+    --secondary-foreground: 173 58% 30%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Muted backgrounds */
+    --muted: 40 20% 95%;
+    --muted-foreground: 220 15% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Warm coral for action buttons - high visibility */
+    --accent: 16 85% 60%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Success green for "taken" */
+    --success: 152 60% 42%;
+    --success-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* Warning amber for alerts */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
 
-    --radius: 0.5rem;
+    /* Destructive for critical alerts */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
 
+    --border: 220 15% 90%;
+    --input: 220 15% 90%;
+    --ring: 173 58% 39%;
+
+    --radius: 1rem;
+
+    /* Time-of-day colors */
+    --morning: 43 96% 56%;
+    --afternoon: 199 89% 48%;
+    --evening: 262 52% 47%;
+    --bedtime: 240 50% 25%;
+
+    /* Sidebar */
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 220 25% 10%;
+    --foreground: 40 20% 95%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 220 25% 14%;
+    --card-foreground: 40 20% 95%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 220 25% 14%;
+    --popover-foreground: 40 20% 95%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 173 58% 45%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 220 20% 20%;
+    --secondary-foreground: 173 50% 70%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 220 20% 18%;
+    --muted-foreground: 220 15% 60%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 16 85% 55%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --success: 152 55% 45%;
+    --success-foreground: 0 0% 100%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --warning: 38 90% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --destructive: 0 70% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 20% 22%;
+    --input: 220 20% 22%;
+    --ring: 173 58% 45%;
+
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -100,6 +119,91 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'DM Sans', 'Inter', sans-serif;
+  }
+
+  /* Elder-friendly: larger base text */
+  html {
+    font-size: 18px;
+  }
+
+  /* High contrast focus states */
+  *:focus-visible {
+    @apply outline-none ring-4 ring-primary ring-offset-2 ring-offset-background;
+  }
+}
+
+@layer utilities {
+  /* Elder-friendly large text */
+  .text-elder {
+    @apply text-xl leading-relaxed;
+  }
+
+  .text-elder-lg {
+    @apply text-2xl leading-relaxed font-medium;
+  }
+
+  .text-elder-xl {
+    @apply text-3xl leading-snug font-semibold;
+  }
+
+  /* Time of day gradients */
+  .bg-morning-gradient {
+    background: linear-gradient(135deg, hsl(43 96% 56% / 0.15), hsl(40 90% 70% / 0.1));
+  }
+
+  .bg-afternoon-gradient {
+    background: linear-gradient(135deg, hsl(199 89% 48% / 0.15), hsl(190 80% 60% / 0.1));
+  }
+
+  .bg-evening-gradient {
+    background: linear-gradient(135deg, hsl(262 52% 47% / 0.15), hsl(270 45% 60% / 0.1));
+  }
+
+  .bg-bedtime-gradient {
+    background: linear-gradient(135deg, hsl(240 50% 25% / 0.2), hsl(230 40% 35% / 0.15));
+  }
+
+  /* Soft shadow for cards */
+  .shadow-soft {
+    box-shadow: 0 4px 20px -4px hsl(220 30% 15% / 0.08), 
+                0 2px 8px -2px hsl(220 30% 15% / 0.04);
+  }
+
+  .shadow-soft-lg {
+    box-shadow: 0 8px 30px -6px hsl(220 30% 15% / 0.12), 
+                0 4px 12px -4px hsl(220 30% 15% / 0.06);
+  }
+
+  /* Pulse animation for reminders */
+  @keyframes gentle-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.02); opacity: 0.9; }
+  }
+
+  .animate-gentle-pulse {
+    animation: gentle-pulse 2s ease-in-out infinite;
+  }
+
+  /* Success checkmark animation */
+  @keyframes check-pop {
+    0% { transform: scale(0); opacity: 0; }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .animate-check-pop {
+    animation: check-pop 0.4s ease-out forwards;
+  }
+
+  /* Slide up for modals */
+  @keyframes slide-up {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.3s ease-out forwards;
   }
 }
