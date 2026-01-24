@@ -107,9 +107,9 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
       {/* Logo */}
       <div className="text-center mb-10">
         <div className="w-24 h-24 bg-accent rounded-full flex items-center justify-center mx-auto mb-6 shadow-accent">
-          <span className="text-5xl">💊</span>
+          <img src="/favicon.png" alt="Med Guard Rx" className="w-16 h-16" />
         </div>
-        <h1 className="text-elder-2xl text-foreground mb-2">MedRemind</h1>
+        <h1 className="text-elder-2xl text-foreground mb-2">Med Guard Rx</h1>
         <p className="text-elder text-muted-foreground">
           {isLogin ? 'Sign in to continue' : 'Create your account'}
         </p>
