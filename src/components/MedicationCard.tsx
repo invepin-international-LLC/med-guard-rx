@@ -1,6 +1,7 @@
 import { Medication, Dose, DoseStatus } from '@/types/medication';
 import { Button } from '@/components/ui/button';
-import { Check, Clock, X, ChevronRight, Pill } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Check, Clock, X, ChevronRight, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface MedicationCardProps {
@@ -40,6 +41,7 @@ export function MedicationCard({
   const isPending = dose.status === 'pending' || dose.status === 'snoozed';
   const isTaken = dose.status === 'taken';
   const isSkipped = dose.status === 'skipped';
+  const isLowStock = medication.quantityRemaining !== undefined && medication.quantityRemaining <= 7;
 
   return (
     <div 
@@ -55,7 +57,15 @@ export function MedicationCard({
         <div className="flex items-center gap-3">
           <div className="text-3xl">{formIcons[medication.form] || '💊'}</div>
           <div>
-            <h3 className="text-elder-lg text-foreground">{medication.name}</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-elder-lg text-foreground">{medication.name}</h3>
+              {isLowStock && (
+                <Badge variant="destructive" className="flex items-center gap-1 text-xs">
+                  <AlertTriangle className="w-3 h-3" />
+                  Low Stock
+                </Badge>
+              )}
+            </div>
             <p className="text-muted-foreground">{medication.strength}</p>
           </div>
         </div>
