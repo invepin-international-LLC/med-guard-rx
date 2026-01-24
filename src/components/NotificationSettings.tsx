@@ -77,7 +77,7 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
           <div className="flex-1">
             <h3 className="text-elder-lg text-foreground">Push Notifications</h3>
             <p className="text-muted-foreground mt-1">
-              Install the MedRemind app on your iPhone or Android to receive medication reminders even when you're not using the app.
+              Install the Med Guard Rx app on your iPhone or Android to receive medication reminders even when you're not using the app.
             </p>
           </div>
         </div>
@@ -139,7 +139,7 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
               To receive medication reminders, please enable notifications in your device settings.
             </p>
             <p className="text-sm text-muted-foreground mt-2">
-              Go to Settings → MedRemind → Notifications → Allow Notifications
+              Go to Settings → Med Guard Rx → Notifications → Allow Notifications
             </p>
           </div>
         </div>

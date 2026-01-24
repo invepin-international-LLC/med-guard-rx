@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'app.lovable.45501de00fa248198669d3873eb1bd90',
-  appName: 'MedRemind',
+  appName: 'Med Guard Rx',
   webDir: 'dist',
   server: {
     url: 'https://45501de0-0fa2-4819-8669-d3873eb1bd90.lovableproject.com?forceHideBadge=true',
