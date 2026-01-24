@@ -1,4 +1,4 @@
-import { Bell, Menu, User, Settings } from 'lucide-react';
+import { Bell, Menu, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ElderHeaderProps {
@@ -31,9 +31,16 @@ export function ElderHeader({
           >
             <Menu className="w-8 h-8" />
           </Button>
-          <div>
-            <p className="text-muted-foreground text-lg">{greeting}</p>
-            <h1 className="text-elder-xl text-foreground">{firstName} 👋</h1>
+          <div className="flex items-center gap-4">
+            <img 
+              src="/favicon.png" 
+              alt="Med Guard Rx" 
+              className="w-14 h-14 rounded-xl shadow-md"
+            />
+            <div>
+              <p className="text-muted-foreground text-lg">{greeting}, {firstName} 👋</p>
+              <h1 className="text-elder-lg font-bold text-primary">Med Guard Rx</h1>
+            </div>
           </div>
         </div>
 
