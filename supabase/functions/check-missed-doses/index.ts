@@ -51,7 +51,7 @@ serve(async (req: Request) => {
     if (!missedDoses || missedDoses.length === 0) {
       console.log('No missed doses found');
       return new Response(
-        JSON.stringify({ success: true, message: 'No missed doses', alertsSent: 0 }),
+        JSON.stringify({ success: true, message: 'No missed doses', alertsSent: 0, pushNotificationsSent: 0 }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -71,6 +71,7 @@ serve(async (req: Request) => {
     console.log(`${dosesToAlert.length} doses need alerts (${alertedDoseIds.size} already alerted)`);
 
     let alertsSent = 0;
+    let pushNotificationsSent = 0;
 
     for (const dose of dosesToAlert) {
       // Get medication name
@@ -85,37 +86,82 @@ serve(async (req: Request) => {
         continue;
       }
 
-      // Call the send-caregiver-alert function
-      const alertResponse = await fetch(`${supabaseUrl}/functions/v1/send-caregiver-alert`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabaseServiceKey}`,
-        },
-        body: JSON.stringify({
-          userId: dose.user_id,
-          medicationName: medication.name,
-          scheduledTime: dose.scheduled_for,
-          doseLogId: dose.id,
-        }),
+      // Format scheduled time for display
+      const scheduledDate = new Date(dose.scheduled_for);
+      const timeString = scheduledDate.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
       });
 
-      const alertResult = await alertResponse.json();
-      
-      if (alertResult.success && alertResult.notificationsSent > 0) {
-        alertsSent += alertResult.notificationsSent;
-        console.log(`Sent ${alertResult.notificationsSent} alerts for dose ${dose.id}`);
+      // Send push notification to the user
+      try {
+        const pushResponse = await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseServiceKey}`,
+          },
+          body: JSON.stringify({
+            userId: dose.user_id,
+            title: `⚠️ Missed Dose: ${medication.name}`,
+            body: `You missed your ${timeString} dose. Tap to take it now or skip.`,
+            data: { 
+              type: 'missed_dose',
+              doseLogId: dose.id,
+              medicationId: dose.medication_id,
+              medicationName: medication.name
+            }
+          }),
+        });
+
+        const pushResult = await pushResponse.json();
+        
+        if (pushResult.results && pushResult.results.length > 0) {
+          const successCount = pushResult.results.filter((r: { success: boolean }) => r.success).length;
+          pushNotificationsSent += successCount;
+          console.log(`Sent ${successCount} push notification(s) for missed dose ${dose.id}`);
+        }
+      } catch (pushError) {
+        console.error(`Error sending push notification for dose ${dose.id}:`, pushError);
+      }
+
+      // Call the send-caregiver-alert function for SMS to caregivers
+      try {
+        const alertResponse = await fetch(`${supabaseUrl}/functions/v1/send-caregiver-alert`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseServiceKey}`,
+          },
+          body: JSON.stringify({
+            userId: dose.user_id,
+            medicationName: medication.name,
+            scheduledTime: dose.scheduled_for,
+            doseLogId: dose.id,
+          }),
+        });
+
+        const alertResult = await alertResponse.json();
+        
+        if (alertResult.success && alertResult.notificationsSent > 0) {
+          alertsSent += alertResult.notificationsSent;
+          console.log(`Sent ${alertResult.notificationsSent} caregiver alerts for dose ${dose.id}`);
+        }
+      } catch (alertError) {
+        console.error(`Error sending caregiver alert for dose ${dose.id}:`, alertError);
       }
     }
 
-    console.log(`Total alerts sent: ${alertsSent}`);
+    console.log(`Total caregiver alerts sent: ${alertsSent}, push notifications sent: ${pushNotificationsSent}`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         missedDosesFound: missedDoses.length,
         dosesNeedingAlerts: dosesToAlert.length,
-        alertsSent 
+        alertsSent,
+        pushNotificationsSent
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
