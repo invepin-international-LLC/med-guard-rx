@@ -11,6 +11,7 @@ import { QuickActionsElder } from '@/components/QuickActionsElder';
 import { InteractiveDoseClock } from '@/components/InteractiveDoseClock';
 import { PrescriptionScanner } from '@/components/PrescriptionScanner';
 import { MedicationsList } from '@/components/MedicationsList';
+import { RefillAlertsWidget } from '@/components/RefillAlertsWidget';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -325,7 +326,29 @@ export function TodayDashboard() {
         {/* Today's Progress - Compact */}
         <AdherenceWidget stats={stats} size="compact" />
 
-        {/* Empty State */}
+        {/* Refill Alerts */}
+        <RefillAlertsWidget 
+          medications={medications.map(med => {
+            const daysUntilRefill = med.refillDate 
+              ? Math.ceil((new Date(med.refillDate).getTime() - Date.now()) / (24 * 60 * 60 * 1000))
+              : undefined;
+            return {
+              id: med.id,
+              name: med.name,
+              strength: med.strength,
+              refillDate: med.refillDate,
+              quantityRemaining: med.quantityRemaining,
+              daysUntilRefill: daysUntilRefill !== undefined && daysUntilRefill >= 0 ? daysUntilRefill : undefined,
+            };
+          })}
+          onViewMedication={(id) => {
+            const med = medications.find(m => m.id === id);
+            if (med) handleViewDetails(med);
+          }}
+          onCallPharmacy={() => {
+            window.location.href = 'tel:+15551234567';
+          }}
+        />
         {!hasMedications && (
           <div className="bg-card rounded-3xl p-8 shadow-elder-lg border-2 border-border text-center">
             <div className="w-24 h-24 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-6">

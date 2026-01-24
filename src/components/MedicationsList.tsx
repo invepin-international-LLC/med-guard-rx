@@ -25,6 +25,7 @@ interface MedicationData {
   importantWarnings?: string[];
   prescriber?: string;
   refillDate?: string;
+  quantityRemaining?: number;
   imageUrl?: string;
 }
 
@@ -143,6 +144,7 @@ export function MedicationsList({ onNavigate, onScan, userName }: MedicationsLis
         instructions: data.instructions || null,
         prescriber: data.prescriber || null,
         refill_date: data.refillDate || null,
+        quantity_remaining: data.quantityRemaining ?? null,
       })
       .eq('id', data.id)
       .eq('user_id', userId);

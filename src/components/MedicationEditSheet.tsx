@@ -18,6 +18,7 @@ interface MedicationData {
   instructions?: string;
   prescriber?: string;
   refillDate?: string;
+  quantityRemaining?: number;
 }
 
 interface MedicationEditSheetProps {
@@ -60,6 +61,7 @@ export function MedicationEditSheet({ medication, open, onClose, onSave }: Medic
         instructions: medication.instructions || '',
         prescriber: medication.prescriber || '',
         refillDate: medication.refillDate || '',
+        quantityRemaining: medication.quantityRemaining,
       });
     }
   }, [medication]);
@@ -220,6 +222,28 @@ export function MedicationEditSheet({ medication, open, onClose, onSave }: Medic
               onChange={(e) => setFormData({ ...formData, refillDate: e.target.value })}
               className="h-14 text-lg rounded-xl"
             />
+          </div>
+
+          {/* Quantity Remaining */}
+          <div className="space-y-2">
+            <Label htmlFor="quantityRemaining" className="text-lg font-semibold">
+              Doses Remaining
+            </Label>
+            <Input
+              id="quantityRemaining"
+              type="number"
+              min="0"
+              value={formData.quantityRemaining ?? ''}
+              onChange={(e) => setFormData({ 
+                ...formData, 
+                quantityRemaining: e.target.value ? parseInt(e.target.value, 10) : undefined 
+              })}
+              placeholder="e.g., 30"
+              className="h-14 text-lg rounded-xl"
+            />
+            <p className="text-sm text-muted-foreground">
+              We'll remind you when running low (7 or fewer remaining)
+            </p>
           </div>
 
           {/* Save Button */}

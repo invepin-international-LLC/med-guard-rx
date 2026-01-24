@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.schedule-dose-reminders]
 verify_jwt = false
+
+[functions.check-refill-reminders]
+verify_jwt = false
