@@ -277,6 +277,27 @@ export function useMedications() {
 
       if (error) throw error;
 
+      // Decrement quantity_remaining for the medication
+      const medication = medications.find(m => m.id === dose.medicationId);
+      if (medication?.quantityRemaining !== undefined && medication.quantityRemaining > 0) {
+        const { error: updateError } = await supabase
+          .from('medications')
+          .update({ quantity_remaining: medication.quantityRemaining - 1 })
+          .eq('id', dose.medicationId)
+          .eq('user_id', userId);
+
+        if (updateError) {
+          console.error('Error updating quantity:', updateError);
+        } else {
+          // Update local medications state
+          setMedications(prev => prev.map(m =>
+            m.id === dose.medicationId
+              ? { ...m, quantityRemaining: (m.quantityRemaining ?? 1) - 1 }
+              : m
+          ));
+        }
+      }
+
       // Update local state
       setDoses(prev => prev.map(d => 
         d.scheduledDoseId === dose.scheduledDoseId 
@@ -302,7 +323,7 @@ export function useMedications() {
       console.error('Error taking dose:', error);
       toast.error('Failed to record dose');
     }
-  }, [userId]);
+  }, [userId, medications]);
 
   // Skip a dose
   const skipDose = useCallback(async (dose: MedicationDose) => {
