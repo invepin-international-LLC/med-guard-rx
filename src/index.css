@@ -272,6 +272,40 @@
     animation: number-pop 0.15s ease-out;
   }
 
+  /* Slot machine animations */
+  @keyframes reel-spin {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-100%); }
+  }
+
+  @keyframes jackpot-glow {
+    0%, 100% { 
+      box-shadow: 0 0 20px hsl(38 92% 50% / 0.5), 0 0 40px hsl(38 92% 50% / 0.3);
+    }
+    50% { 
+      box-shadow: 0 0 40px hsl(38 92% 50% / 0.8), 0 0 80px hsl(38 92% 50% / 0.5);
+    }
+  }
+
+  @keyframes coin-shower {
+    0% { transform: translateY(-100%) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+
+  @keyframes scale-in {
+    0% { transform: scale(0); opacity: 0; }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.4s ease-out forwards;
+  }
+
+  .animate-jackpot-glow {
+    animation: jackpot-glow 0.5s ease-in-out infinite;
+  }
+
   /* Safe area padding for mobile */
   .pb-safe {
     padding-bottom: max(1rem, env(safe-area-inset-bottom));

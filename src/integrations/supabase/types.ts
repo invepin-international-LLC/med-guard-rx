@@ -486,6 +486,102 @@ export type Database = {
           },
         ]
       }
+      spin_history: {
+        Row: {
+          created_at: string
+          id: string
+          prize_type: string
+          prize_value: number
+          spin_result: string[]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          prize_type: string
+          prize_value?: number
+          spin_result: string[]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          prize_type?: string
+          prize_value?: number
+          spin_result?: string[]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_badges: {
+        Row: {
+          badge_description: string | null
+          badge_name: string
+          badge_type: string
+          earned_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          badge_description?: string | null
+          badge_name: string
+          badge_type: string
+          earned_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          badge_description?: string | null
+          badge_name?: string
+          badge_type?: string
+          earned_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_rewards: {
+        Row: {
+          available_spins: number
+          coins: number
+          created_at: string
+          id: string
+          last_spin_date: string | null
+          streak_multiplier: number
+          streak_shield_active: boolean
+          streak_shield_expires_at: string | null
+          total_spins_used: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          available_spins?: number
+          coins?: number
+          created_at?: string
+          id?: string
+          last_spin_date?: string | null
+          streak_multiplier?: number
+          streak_shield_active?: boolean
+          streak_shield_expires_at?: string | null
+          total_spins_used?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          available_spins?: number
+          coins?: number
+          created_at?: string
+          id?: string
+          last_spin_date?: string | null
+          streak_multiplier?: number
+          streak_shield_active?: boolean
+          streak_shield_expires_at?: string | null
+          total_spins_used?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
