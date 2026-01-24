@@ -17,6 +17,7 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ScannedMedication {
   ndcCode: string;
@@ -25,6 +26,8 @@ interface ScannedMedication {
   strength: string;
   form: string;
   manufacturer?: string;
+  route?: string;
+  productType?: string;
 }
 
 interface PrescriptionScannerProps {
@@ -32,41 +35,12 @@ interface PrescriptionScannerProps {
   onClose: () => void;
 }
 
-// Mock NDC database - in production this would be an API call
-const mockNdcDatabase: Record<string, ScannedMedication> = {
-  '00006-0749-31': {
-    ndcCode: '00006-0749-31',
-    name: 'Metformin HCl',
-    genericName: 'Metformin Hydrochloride',
-    strength: '500mg',
-    form: 'Tablet',
-    manufacturer: 'Merck',
-  },
-  '00071-0155-23': {
-    ndcCode: '00071-0155-23',
-    name: 'Lisinopril',
-    genericName: 'Lisinopril',
-    strength: '10mg',
-    form: 'Tablet',
-    manufacturer: 'Pfizer',
-  },
-  '00071-0157-23': {
-    ndcCode: '00071-0157-23',
-    name: 'Atorvastatin',
-    genericName: 'Atorvastatin Calcium',
-    strength: '20mg',
-    form: 'Tablet',
-    manufacturer: 'Pfizer',
-  },
-  '50580-0506-30': {
-    ndcCode: '50580-0506-30',
-    name: 'Omeprazole',
-    genericName: 'Omeprazole',
-    strength: '20mg',
-    form: 'Capsule',
-    manufacturer: 'Dr. Reddy\'s',
-  },
-};
+// Demo NDC codes for testing (verified working with OpenFDA)
+const demoNdcCodes = [
+  '0777-3105-02', // Prozac 20mg
+  '16714-613-01', // Sertraline 100mg
+  '59762-3304-1', // Nitroglycerin 0.4mg
+];
 
 type ScannerMode = 'camera' | 'manual';
 
@@ -84,31 +58,30 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   const scannerContainerId = 'ndc-scanner';
 
   const lookupNdc = useCallback(async (ndcCode: string): Promise<ScannedMedication | null> => {
-    // Simulate API lookup delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // Clean up NDC code (remove dashes for lookup)
-    const cleanNdc = ndcCode.replace(/-/g, '');
-    
-    // Check mock database
-    for (const [key, value] of Object.entries(mockNdcDatabase)) {
-      if (key.replace(/-/g, '') === cleanNdc || key === ndcCode) {
-        return value;
+    try {
+      console.log(`Looking up NDC: ${ndcCode}`);
+      
+      const { data, error } = await supabase.functions.invoke('ndc-lookup', {
+        body: { ndc: ndcCode }
+      });
+      
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Failed to lookup medication');
       }
+      
+      if (data?.success && data?.medication) {
+        console.log('Found medication:', data.medication);
+        return data.medication as ScannedMedication;
+      }
+      
+      // Not found in FDA database
+      console.log('Medication not found in FDA database');
+      return null;
+    } catch (err) {
+      console.error('NDC lookup error:', err);
+      throw err;
     }
-    
-    // If not found in mock, create a generic entry (in production, would return null or use real API)
-    if (ndcCode.length >= 10) {
-      return {
-        ndcCode,
-        name: 'Unknown Medication',
-        strength: 'Unknown',
-        form: 'Unknown',
-        manufacturer: 'Unknown',
-      };
-    }
-    
-    return null;
   }, []);
 
   const handleScanSuccess = useCallback(async (decodedText: string) => {
@@ -129,23 +102,20 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       navigator.vibrate([100, 50, 100]);
     }
     
-    toast.info('Barcode detected! Looking up medication...');
+    toast.info('Barcode detected! Looking up medication in FDA database...');
     
     try {
       const medication = await lookupNdc(decodedText);
       
       if (medication) {
         setScannedResult(medication);
-        if (medication.name !== 'Unknown Medication') {
-          toast.success(`Found: ${medication.name} ${medication.strength}`);
-        } else {
-          toast.warning('Medication not found in database');
-        }
+        toast.success(`Found: ${medication.name} ${medication.strength}`);
       } else {
-        setError('Could not identify medication from barcode');
+        setError('Medication not found in FDA database. Try entering the NDC manually.');
       }
     } catch (err) {
-      setError('Error looking up medication');
+      console.error('Scan lookup error:', err);
+      setError('Error looking up medication. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -289,16 +259,13 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       
       if (medication) {
         setScannedResult(medication);
-        if (medication.name !== 'Unknown Medication') {
-          toast.success(`Found: ${medication.name} ${medication.strength}`);
-        } else {
-          toast.warning('Medication not found in database');
-        }
+        toast.success(`Found: ${medication.name} ${medication.strength}`);
       } else {
-        setError('Invalid NDC code. Please check and try again.');
+        setError('Medication not found in FDA database. Please verify the NDC code.');
       }
     } catch (err) {
-      setError('Error looking up medication');
+      console.error('Manual lookup error:', err);
+      setError('Error looking up medication. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -461,10 +428,10 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
             {/* Example NDC codes for demo */}
             <div className="pt-4 border-t border-border">
               <p className="text-sm text-muted-foreground text-center mb-3">
-                Try these demo codes:
+                Try these demo codes (real FDA data):
               </p>
               <div className="flex flex-wrap gap-2 justify-center">
-                {Object.keys(mockNdcDatabase).slice(0, 3).map((ndc) => (
+                {demoNdcCodes.map((ndc) => (
                   <Button
                     key={ndc}
                     variant="outline"
@@ -539,11 +506,10 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
               </div>
             )}
 
-            {scannedResult.name === 'Unknown Medication' && (
-              <div className="bg-warning/20 rounded-xl p-4 border-2 border-warning/40">
-                <p className="text-warning text-elder">
-                  ⚠️ Medication not found in database. You can still add it manually.
-                </p>
+            {scannedResult.route && (
+              <div className="bg-muted rounded-xl p-4">
+                <p className="text-sm text-muted-foreground uppercase tracking-wide">Route</p>
+                <p className="text-elder text-foreground">{scannedResult.route}</p>
               </div>
             )}
 
