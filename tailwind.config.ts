@@ -14,7 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['DM Sans', 'Inter', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -50,6 +50,10 @@ export default {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
         },
+        info: {
+          DEFAULT: "hsl(var(--info))",
+          foreground: "hsl(var(--info-foreground))",
+        },
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
@@ -58,10 +62,22 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        morning: "hsl(var(--morning))",
-        afternoon: "hsl(var(--afternoon))",
-        evening: "hsl(var(--evening))",
-        bedtime: "hsl(var(--bedtime))",
+        morning: {
+          DEFAULT: "hsl(var(--morning))",
+          bg: "hsl(var(--morning-bg))",
+        },
+        afternoon: {
+          DEFAULT: "hsl(var(--afternoon))",
+          bg: "hsl(var(--afternoon-bg))",
+        },
+        evening: {
+          DEFAULT: "hsl(var(--evening))",
+          bg: "hsl(var(--evening-bg))",
+        },
+        bedtime: {
+          DEFAULT: "hsl(var(--bedtime))",
+          bg: "hsl(var(--bedtime-bg))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -79,6 +95,14 @@ export default {
         sm: "calc(var(--radius) - 4px)",
         xl: "calc(var(--radius) + 4px)",
         "2xl": "calc(var(--radius) + 8px)",
+        "3xl": "calc(var(--radius) + 12px)",
+      },
+      fontSize: {
+        'elder': ['1.25rem', { lineHeight: '1.75rem', letterSpacing: '0.01em' }],
+        'elder-lg': ['1.5rem', { lineHeight: '2rem', fontWeight: '600' }],
+        'elder-xl': ['1.875rem', { lineHeight: '2.25rem', fontWeight: '700' }],
+        'elder-2xl': ['2.25rem', { lineHeight: '2.5rem', fontWeight: '800' }],
+        'pin': ['3rem', { lineHeight: '1', fontWeight: '700', letterSpacing: '0.1em' }],
       },
       keyframes: {
         "accordion-down": {
@@ -97,6 +121,7 @@ export default {
       spacing: {
         'elder': '1.25rem',
         'elder-lg': '2rem',
+        'safe': 'env(safe-area-inset-bottom)',
       },
     },
   },
