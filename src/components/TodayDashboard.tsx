@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ElderHeader } from '@/components/ElderHeader';
 import { ElderBottomNav } from '@/components/ElderBottomNav';
 import { TimeOfDayHeader } from '@/components/TimeOfDayHeader';
@@ -12,11 +12,13 @@ import { InteractiveDoseClock } from '@/components/InteractiveDoseClock';
 import { PrescriptionScanner } from '@/components/PrescriptionScanner';
 import { MedicationsList } from '@/components/MedicationsList';
 import { RefillAlertsWidget } from '@/components/RefillAlertsWidget';
+import { RewardsWidget } from '@/components/RewardsWidget';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Heart, Info, AlertTriangle, Phone, PlayCircle, BookOpen, Clock, RefreshCw, Settings, ChevronRight, User, Shield, Loader2 } from 'lucide-react';
 import { useMedications, Medication, MedicationDose, TimeOfDay } from '@/hooks/useMedications';
+import { useRewards } from '@/hooks/useRewards';
 
 type NavItem = 'today' | 'medications' | 'scan' | 'stats' | 'profile';
 
@@ -78,6 +80,16 @@ export function TodayDashboard() {
     addMedication,
   } = useMedications();
 
+  const {
+    rewards,
+    badges,
+    spinning,
+    spin,
+    awardSpinForDose,
+    awardPerfectDayBonus,
+    awardBadge,
+  } = useRewards();
+
   // Group doses by time of day
   const groupedDoses = useMemo(() => {
     const groups: Record<TimeOfDay, { medication: Medication; dose: MedicationDose }[]> = {
@@ -115,8 +127,26 @@ export function TodayDashboard() {
     }));
   }, [doses]);
 
-  const handleTake = (dose: MedicationDose) => {
-    takeDose(dose);
+  const handleTake = async (dose: MedicationDose) => {
+    await takeDose(dose);
+    
+    // Award a spin for taking dose on time
+    await awardSpinForDose();
+    
+    // Check if this was the first dose ever
+    const previousTakenCount = doses.filter(d => d.status === 'taken').length;
+    if (previousTakenCount === 0) {
+      await awardBadge('first_dose');
+    }
+    
+    // Check for perfect day (all doses taken)
+    const updatedDoses = doses.map(d => 
+      d.scheduledDoseId === dose.scheduledDoseId ? { ...d, status: 'taken' as const } : d
+    );
+    const allTaken = updatedDoses.every(d => d.status === 'taken');
+    if (allTaken && doses.length > 0) {
+      await awardPerfectDayBonus();
+    }
   };
 
   const handleSkip = (dose: MedicationDose) => {
@@ -325,6 +355,14 @@ export function TodayDashboard() {
 
         {/* Today's Progress - Compact */}
         <AdherenceWidget stats={stats} size="compact" />
+
+        {/* Daily Rewards Slot Machine */}
+        <RewardsWidget 
+          rewards={rewards}
+          badges={badges}
+          onSpin={spin}
+          spinning={spinning}
+        />
 
         {/* Refill Alerts */}
         <RefillAlertsWidget 
