@@ -7,6 +7,7 @@ import { AdherenceWidget } from '@/components/AdherenceWidget';
 import { EmergencyCardElder } from '@/components/EmergencyCardElder';
 import { QuickActionsElder } from '@/components/QuickActionsElder';
 import { InteractiveDoseClock } from '@/components/InteractiveDoseClock';
+import { PrescriptionScanner } from '@/components/PrescriptionScanner';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -140,6 +141,7 @@ export function TodayDashboard() {
   const [doses, setDoses] = useState<MedicationDose[]>(initialDoses);
   const [selectedMedication, setSelectedMedication] = useState<Medication | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
 
   // Group doses by time of day
   const groupedDoses = useMemo(() => {
@@ -271,6 +273,42 @@ export function TodayDashboard() {
     }
   };
 
+  const handleOpenScanner = () => {
+    setShowScanner(true);
+    setActiveNav('scan');
+  };
+
+  const handleCloseScanner = () => {
+    setShowScanner(false);
+    setActiveNav('today');
+  };
+
+  const handleMedicationScanned = (scannedMed: { 
+    ndcCode: string; 
+    name: string; 
+    genericName?: string; 
+    strength: string; 
+    form: string; 
+    manufacturer?: string;
+  }) => {
+    // In production, this would add to the database
+    toast.success(`${scannedMed.name} ${scannedMed.strength} has been added to your medications!`, {
+      duration: 4000,
+    });
+    setShowScanner(false);
+    setActiveNav('today');
+  };
+
+  // Show scanner when 'scan' nav is active
+  if (showScanner || activeNav === 'scan') {
+    return (
+      <PrescriptionScanner 
+        onMedicationScanned={handleMedicationScanned}
+        onClose={handleCloseScanner}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background pb-32">
       <ElderHeader 
@@ -282,7 +320,7 @@ export function TodayDashboard() {
         {/* Quick Actions */}
         <QuickActionsElder 
           onAddMedication={() => toast.info('Add medication coming soon!')}
-          onScan={() => setActiveNav('scan')}
+          onScan={handleOpenScanner}
           pharmacyPhone="(555) 123-4567"
         />
 
