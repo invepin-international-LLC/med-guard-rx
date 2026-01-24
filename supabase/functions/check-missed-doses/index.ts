@@ -1,0 +1,131 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+serve(async (req: Request) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const now = new Date();
+    const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
+    const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
+
+    console.log(`Checking for missed doses between ${twoHoursAgo.toISOString()} and ${thirtyMinutesAgo.toISOString()}`);
+
+    // Find dose_logs that are:
+    // 1. Still pending
+    // 2. Scheduled between 2 hours ago and 30 minutes ago (giving grace period)
+    // 3. Haven't already triggered an alert
+    const { data: missedDoses, error: queryError } = await supabase
+      .from('dose_logs')
+      .select(`
+        id,
+        user_id,
+        medication_id,
+        scheduled_for,
+        status
+      `)
+      .eq('status', 'pending')
+      .gte('scheduled_for', twoHoursAgo.toISOString())
+      .lte('scheduled_for', thirtyMinutesAgo.toISOString());
+
+    if (queryError) {
+      console.error('Error querying missed doses:', queryError);
+      return new Response(
+        JSON.stringify({ success: false, error: queryError.message }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!missedDoses || missedDoses.length === 0) {
+      console.log('No missed doses found');
+      return new Response(
+        JSON.stringify({ success: true, message: 'No missed doses', alertsSent: 0 }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`Found ${missedDoses.length} missed doses`);
+
+    // Check which doses haven't had alerts sent yet
+    const doseLogIds = missedDoses.map(d => d.id);
+    const { data: existingAlerts } = await supabase
+      .from('caregiver_notifications')
+      .select('dose_log_id')
+      .in('dose_log_id', doseLogIds);
+
+    const alertedDoseIds = new Set(existingAlerts?.map(a => a.dose_log_id) || []);
+    const dosesToAlert = missedDoses.filter(d => !alertedDoseIds.has(d.id));
+
+    console.log(`${dosesToAlert.length} doses need alerts (${alertedDoseIds.size} already alerted)`);
+
+    let alertsSent = 0;
+
+    for (const dose of dosesToAlert) {
+      // Get medication name
+      const { data: medication } = await supabase
+        .from('medications')
+        .select('name')
+        .eq('id', dose.medication_id)
+        .single();
+
+      if (!medication) {
+        console.log(`Medication not found for dose ${dose.id}`);
+        continue;
+      }
+
+      // Call the send-caregiver-alert function
+      const alertResponse = await fetch(`${supabaseUrl}/functions/v1/send-caregiver-alert`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+        },
+        body: JSON.stringify({
+          userId: dose.user_id,
+          medicationName: medication.name,
+          scheduledTime: dose.scheduled_for,
+          doseLogId: dose.id,
+        }),
+      });
+
+      const alertResult = await alertResponse.json();
+      
+      if (alertResult.success && alertResult.notificationsSent > 0) {
+        alertsSent += alertResult.notificationsSent;
+        console.log(`Sent ${alertResult.notificationsSent} alerts for dose ${dose.id}`);
+      }
+    }
+
+    console.log(`Total alerts sent: ${alertsSent}`);
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        missedDosesFound: missedDoses.length,
+        dosesNeedingAlerts: dosesToAlert.length,
+        alertsSent 
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Error in check-missed-doses:', error);
+    return new Response(
+      JSON.stringify({ success: false, error: errorMessage }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});

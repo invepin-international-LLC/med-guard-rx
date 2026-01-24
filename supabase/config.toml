@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.send-caregiver-alert]
 verify_jwt = false
+
+[functions.check-missed-doses]
+verify_jwt = false
