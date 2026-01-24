@@ -28,6 +28,7 @@ export interface Medication {
   prescriber?: string;
   pharmacy?: string;
   imageUrl?: string;
+  quantityRemaining?: number;
 }
 
 export interface DailySchedule {
