@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { 
   Camera, 
   X, 
@@ -11,7 +12,9 @@ import {
   Loader2,
   Pill,
   AlertTriangle,
-  ScanLine
+  ScanLine,
+  Keyboard,
+  ArrowLeft
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -65,13 +68,17 @@ const mockNdcDatabase: Record<string, ScannedMedication> = {
   },
 };
 
+type ScannerMode = 'camera' | 'manual';
+
 export function PrescriptionScanner({ onMedicationScanned, onClose }: PrescriptionScannerProps) {
+  const [mode, setMode] = useState<ScannerMode>('camera');
   const [isScanning, setIsScanning] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [scannedResult, setScannedResult] = useState<ScannedMedication | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [torchOn, setTorchOn] = useState(false);
+  const [manualNdc, setManualNdc] = useState('');
   
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const scannerContainerId = 'ndc-scanner';
@@ -224,8 +231,78 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   const handleRetry = useCallback(() => {
     setScannedResult(null);
     setError(null);
+    if (mode === 'camera') {
+      startScanner();
+    }
+  }, [startScanner, mode]);
+
+  const switchToManualMode = useCallback(async () => {
+    await stopScanner();
+    setMode('manual');
+    setError(null);
+    setScannedResult(null);
+  }, [stopScanner]);
+
+  const switchToCameraMode = useCallback(() => {
+    setMode('camera');
+    setError(null);
+    setScannedResult(null);
+    setManualNdc('');
     startScanner();
   }, [startScanner]);
+
+  const formatNdcInput = (value: string): string => {
+    // Remove all non-numeric characters
+    const numbers = value.replace(/\D/g, '');
+    
+    // Format as 5-4-2 (FDA standard NDC format)
+    if (numbers.length <= 5) {
+      return numbers;
+    } else if (numbers.length <= 9) {
+      return `${numbers.slice(0, 5)}-${numbers.slice(5)}`;
+    } else {
+      return `${numbers.slice(0, 5)}-${numbers.slice(5, 9)}-${numbers.slice(9, 11)}`;
+    }
+  };
+
+  const handleManualNdcChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatNdcInput(e.target.value);
+    setManualNdc(formatted);
+  };
+
+  const handleManualLookup = async () => {
+    if (manualNdc.replace(/-/g, '').length < 10) {
+      setError('Please enter a valid 10-11 digit NDC code');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    // Haptic feedback
+    if (navigator.vibrate) {
+      navigator.vibrate(50);
+    }
+
+    try {
+      const medication = await lookupNdc(manualNdc);
+      
+      if (medication) {
+        setScannedResult(medication);
+        if (medication.name !== 'Unknown Medication') {
+          toast.success(`Found: ${medication.name} ${medication.strength}`);
+        } else {
+          toast.warning('Medication not found in database');
+        }
+      } else {
+        setError('Invalid NDC code. Please check and try again.');
+      }
+    } catch (err) {
+      setError('Error looking up medication');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Cleanup on unmount
   useEffect(() => {
@@ -234,9 +311,11 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     };
   }, [stopScanner]);
 
-  // Auto-start scanner when component mounts
+  // Auto-start scanner when component mounts (only in camera mode)
   useEffect(() => {
-    startScanner();
+    if (mode === 'camera') {
+      startScanner();
+    }
   }, []);
 
   return (
@@ -255,13 +334,16 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
           <X className="w-6 h-6" />
           <span className="text-lg">Cancel</span>
         </Button>
-        <h1 className="text-elder-xl font-bold">Scan Prescription</h1>
+        <h1 className="text-elder-xl font-bold">
+          {mode === 'camera' ? 'Scan Prescription' : 'Enter NDC Code'}
+        </h1>
         <div className="w-24" /> {/* Spacer for centering */}
       </header>
 
       {/* Scanner Area */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6 bg-muted">
-        {!scannedResult && !error && (
+      <div className="flex-1 flex flex-col items-center justify-center p-6 bg-muted overflow-auto">
+        {/* Camera Mode */}
+        {mode === 'camera' && !scannedResult && !error && (
           <>
             {/* Camera viewfinder */}
             <div className="relative w-full max-w-md aspect-[4/3] bg-black rounded-3xl overflow-hidden shadow-elder-lg">
@@ -318,18 +400,104 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
           </>
         )}
 
+        {/* Manual Entry Mode */}
+        {mode === 'manual' && !scannedResult && (
+          <Card className="w-full max-w-md p-8 space-y-6 bg-card border-2 border-border shadow-elder-lg">
+            <div className="text-center space-y-2">
+              <div className="w-20 h-20 bg-primary/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Keyboard className="w-12 h-12 text-primary" />
+              </div>
+              <h2 className="text-elder-xl font-bold text-foreground">Enter NDC Code</h2>
+              <p className="text-muted-foreground text-lg">
+                Find the 10 or 11 digit NDC code on your prescription label
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-lg font-medium text-foreground">NDC Code</label>
+                <Input
+                  type="text"
+                  placeholder="00000-0000-00"
+                  value={manualNdc}
+                  onChange={handleManualNdcChange}
+                  className="text-center text-elder-xl font-mono tracking-wider h-16 border-2"
+                  maxLength={13}
+                  inputMode="numeric"
+                  autoFocus
+                />
+                <p className="text-sm text-muted-foreground text-center">
+                  Format: 5-4-2 digits (e.g., 00071-0155-23)
+                </p>
+              </div>
+
+              {error && (
+                <div className="bg-destructive/10 border-2 border-destructive/30 rounded-xl p-4">
+                  <p className="text-destructive text-center">{error}</p>
+                </div>
+              )}
+
+              <Button 
+                variant="default" 
+                size="xl" 
+                onClick={handleManualLookup}
+                disabled={isLoading || manualNdc.replace(/-/g, '').length < 10}
+                className="w-full gap-3"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                    Looking Up...
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-6 h-6" />
+                    Look Up Medication
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {/* Example NDC codes for demo */}
+            <div className="pt-4 border-t border-border">
+              <p className="text-sm text-muted-foreground text-center mb-3">
+                Try these demo codes:
+              </p>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {Object.keys(mockNdcDatabase).slice(0, 3).map((ndc) => (
+                  <Button
+                    key={ndc}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setManualNdc(ndc)}
+                    className="font-mono text-sm"
+                  >
+                    {ndc}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </Card>
+        )}
+
         {/* Error State */}
-        {error && (
+        {error && mode === 'camera' && (
           <Card className="w-full max-w-md p-8 text-center space-y-6 bg-destructive/10 border-2 border-destructive/30">
             <AlertTriangle className="w-16 h-16 text-destructive mx-auto" />
             <div>
               <h2 className="text-elder-xl text-destructive mb-2">Scan Failed</h2>
               <p className="text-elder text-foreground">{error}</p>
             </div>
-            <Button variant="default" size="xl" onClick={handleRetry} className="w-full gap-3">
-              <RotateCcw className="w-6 h-6" />
-              Try Again
-            </Button>
+            <div className="flex flex-col gap-3">
+              <Button variant="default" size="xl" onClick={handleRetry} className="w-full gap-3">
+                <RotateCcw className="w-6 h-6" />
+                Try Again
+              </Button>
+              <Button variant="outline" size="xl" onClick={switchToManualMode} className="w-full gap-3">
+                <Keyboard className="w-6 h-6" />
+                Enter Code Manually
+              </Button>
+            </div>
           </Card>
         )}
 
@@ -387,7 +555,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
                 className="flex-1 gap-3"
               >
                 <RotateCcw className="w-6 h-6" />
-                Scan Again
+                {mode === 'camera' ? 'Scan Again' : 'Try Another'}
               </Button>
               <Button 
                 variant="default" 
@@ -403,11 +571,31 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         )}
       </div>
 
-      {/* Help Text */}
+      {/* Footer / Mode Toggle */}
       <div className="p-4 bg-card border-t-2 border-border">
-        <p className="text-center text-muted-foreground text-lg">
-          Can't scan? You can also <Button variant="link" className="text-lg p-0 h-auto text-primary">enter NDC code manually</Button>
-        </p>
+        {mode === 'camera' && !scannedResult && (
+          <p className="text-center text-muted-foreground text-lg">
+            Can't scan?{' '}
+            <Button 
+              variant="link" 
+              className="text-lg p-0 h-auto text-primary font-semibold"
+              onClick={switchToManualMode}
+            >
+              Enter NDC code manually
+            </Button>
+          </p>
+        )}
+        {mode === 'manual' && !scannedResult && (
+          <Button 
+            variant="ghost" 
+            size="lg" 
+            className="w-full gap-3 text-muted-foreground"
+            onClick={switchToCameraMode}
+          >
+            <Camera className="w-6 h-6" />
+            Switch to Camera Scanner
+          </Button>
+        )}
       </div>
     </div>
   );
