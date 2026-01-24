@@ -17,6 +17,7 @@ export interface Medication {
   sideEffects?: string[];
   importantWarnings?: string[];
   refillDate?: string;
+  quantityRemaining?: number;
   prescriber?: string;
   imageUrl?: string;
 }
@@ -100,6 +101,7 @@ export function useMedications() {
         sideEffects: med.side_effects || [],
         importantWarnings: med.important_warnings || [],
         refillDate: med.refill_date || undefined,
+        quantityRemaining: med.quantity_remaining ?? undefined,
         prescriber: med.prescriber || undefined,
         imageUrl: med.image_url || undefined,
       }));
