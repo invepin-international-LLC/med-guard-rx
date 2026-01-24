@@ -10,6 +10,7 @@ import { NotificationSettings } from '@/components/NotificationSettings';
 import { QuickActionsElder } from '@/components/QuickActionsElder';
 import { InteractiveDoseClock } from '@/components/InteractiveDoseClock';
 import { PrescriptionScanner } from '@/components/PrescriptionScanner';
+import { MedicationsList } from '@/components/MedicationsList';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -288,6 +289,17 @@ export function TodayDashboard() {
           </SheetContent>
         </Sheet>
       </div>
+    );
+  }
+
+  // Show medications list page
+  if (activeNav === 'medications') {
+    return (
+      <MedicationsList
+        onNavigate={setActiveNav}
+        onScan={handleOpenScanner}
+        userName={userName}
+      />
     );
   }
 
