@@ -19,9 +19,16 @@ export function Header({ user, onMenuClick, onProfileClick }: HeaderProps) {
           <Button variant="ghost" size="icon" onClick={onMenuClick} className="lg:hidden">
             <Menu className="w-6 h-6" />
           </Button>
-          <div>
-            <p className="text-muted-foreground text-sm">{greeting}</p>
-            <h1 className="text-elder-lg text-foreground">{firstName} 👋</h1>
+          <div className="flex items-center gap-3">
+            <img 
+              src="/favicon.png" 
+              alt="Med Guard Rx" 
+              className="w-10 h-10 rounded-lg"
+            />
+            <div>
+              <p className="text-muted-foreground text-sm">{greeting}, {firstName} 👋</p>
+              <h1 className="text-elder-base font-semibold text-primary">Med Guard Rx</h1>
+            </div>
           </div>
         </div>
 
