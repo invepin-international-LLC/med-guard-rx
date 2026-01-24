@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { ElderHeader } from '@/components/ElderHeader';
 import { ElderBottomNav } from '@/components/ElderBottomNav';
 import { TimeOfDayHeader } from '@/components/TimeOfDayHeader';
@@ -13,128 +13,10 @@ import { PrescriptionScanner } from '@/components/PrescriptionScanner';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Heart, Info, AlertTriangle, Phone, PlayCircle, BookOpen, Clock, RefreshCw, Settings, ChevronRight, User, Shield } from 'lucide-react';
+import { Heart, Info, AlertTriangle, Phone, PlayCircle, BookOpen, Clock, RefreshCw, Settings, ChevronRight, User, Shield, Loader2 } from 'lucide-react';
+import { useMedications, Medication, MedicationDose, TimeOfDay } from '@/hooks/useMedications';
 
 type NavItem = 'today' | 'medications' | 'scan' | 'stats' | 'profile';
-type TimeOfDay = 'morning' | 'afternoon' | 'evening' | 'bedtime';
-type DoseStatus = 'pending' | 'taken' | 'skipped' | 'snoozed' | 'missed';
-
-interface Medication {
-  id: string;
-  name: string;
-  genericName?: string;
-  strength: string;
-  form: string;
-  purpose?: string;
-  howItWorks?: string;
-  instructions?: string;
-  sideEffects?: string[];
-  importantWarnings?: string[];
-  refillDate?: string;
-  prescriber?: string;
-}
-
-interface MedicationDose {
-  id: string;
-  medicationId: string;
-  time: string;
-  timeOfDay: TimeOfDay;
-  status: DoseStatus;
-  takenAt?: string;
-  snoozeUntil?: string;
-}
-
-// Mock data
-const mockMedications: Medication[] = [
-  {
-    id: '1',
-    name: 'Metformin',
-    genericName: 'Metformin Hydrochloride',
-    strength: '500mg',
-    form: 'pill',
-    purpose: 'Helps control blood sugar levels for Type 2 diabetes',
-    howItWorks: 'Metformin helps your body use insulin better and reduces the amount of sugar your liver makes.',
-    instructions: 'Take with food to reduce stomach upset. Swallow whole with water.',
-    sideEffects: ['Upset stomach', 'Diarrhea', 'Nausea'],
-    importantWarnings: ['Tell your doctor if you have kidney problems', 'Avoid excessive alcohol'],
-    refillDate: '2025-02-15',
-    prescriber: 'Dr. Sarah Chen',
-  },
-  {
-    id: '2',
-    name: 'Lisinopril',
-    genericName: 'Lisinopril',
-    strength: '10mg',
-    form: 'pill',
-    purpose: 'Lowers blood pressure to protect your heart',
-    howItWorks: 'Relaxes blood vessels so blood flows more easily.',
-    instructions: 'Take at the same time each day.',
-    sideEffects: ['Dry cough', 'Dizziness', 'Headache'],
-    importantWarnings: ['Stand up slowly to prevent dizziness'],
-    refillDate: '2025-02-20',
-    prescriber: 'Dr. Sarah Chen',
-  },
-  {
-    id: '3',
-    name: 'Atorvastatin',
-    genericName: 'Atorvastatin Calcium',
-    strength: '20mg',
-    form: 'pill',
-    purpose: 'Lowers cholesterol to keep arteries clear',
-    howItWorks: 'Blocks an enzyme your body uses to make cholesterol.',
-    instructions: 'Take in the evening.',
-    sideEffects: ['Muscle pain', 'Weakness'],
-    importantWarnings: ['Avoid grapefruit juice', 'Report muscle pain immediately'],
-    refillDate: '2025-03-01',
-    prescriber: 'Dr. Michael Torres',
-  },
-  {
-    id: '4',
-    name: 'Vitamin D3',
-    strength: '2000 IU',
-    form: 'capsule',
-    purpose: 'Supports bone health and immune system',
-    howItWorks: 'Helps your body absorb calcium.',
-    instructions: 'Take with a meal.',
-    sideEffects: ['Usually well tolerated'],
-    importantWarnings: [],
-    refillDate: '2025-04-10',
-  },
-  {
-    id: '5',
-    name: 'Omeprazole',
-    strength: '20mg',
-    form: 'capsule',
-    purpose: 'Reduces stomach acid to prevent heartburn',
-    howItWorks: 'Blocks stomach acid pumps.',
-    instructions: 'Take 30 minutes before breakfast.',
-    sideEffects: ['Headache', 'Stomach pain'],
-    importantWarnings: ['Tell doctor if symptoms persist'],
-    refillDate: '2025-02-28',
-    prescriber: 'Dr. Sarah Chen',
-  },
-];
-
-const initialDoses: MedicationDose[] = [
-  { id: 'd1', medicationId: '5', time: '07:30', timeOfDay: 'morning', status: 'taken', takenAt: '07:35' },
-  { id: 'd2', medicationId: '1', time: '08:00', timeOfDay: 'morning', status: 'taken', takenAt: '08:05' },
-  { id: 'd3', medicationId: '2', time: '09:00', timeOfDay: 'morning', status: 'pending' },
-  { id: 'd4', medicationId: '4', time: '12:00', timeOfDay: 'afternoon', status: 'pending' },
-  { id: 'd5', medicationId: '1', time: '18:00', timeOfDay: 'evening', status: 'pending' },
-  { id: 'd6', medicationId: '3', time: '21:00', timeOfDay: 'bedtime', status: 'pending' },
-];
-
-const mockUserProfile = {
-  name: 'Yvonne',
-  dateOfBirth: '1952-03-15',
-  allergies: ['Penicillin', 'Sulfa drugs'],
-  conditions: ['Type 2 Diabetes', 'High Blood Pressure', 'High Cholesterol'],
-  emergencyContact: {
-    name: 'Michael (Son)',
-    phone: '(555) 234-5678',
-    relationship: 'Son',
-  },
-};
 
 const timeOrder: TimeOfDay[] = ['morning', 'afternoon', 'evening', 'bedtime'];
 
@@ -177,11 +59,22 @@ function ProfileMenuItem({
 
 export function TodayDashboard() {
   const [activeNav, setActiveNav] = useState<NavItem>('today');
-  const [doses, setDoses] = useState<MedicationDose[]>(initialDoses);
   const [selectedMedication, setSelectedMedication] = useState<Medication | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [showContactsManager, setShowContactsManager] = useState(false);
+
+  const {
+    medications,
+    doses,
+    profile,
+    stats,
+    loading,
+    takeDose,
+    skipDose,
+    snoozeDose,
+    addMedication,
+  } = useMedications();
 
   // Group doses by time of day
   const groupedDoses = useMemo(() => {
@@ -193,7 +86,7 @@ export function TodayDashboard() {
     };
 
     doses.forEach(dose => {
-      const medication = mockMedications.find(m => m.id === dose.medicationId);
+      const medication = medications.find(m => m.id === dose.medicationId);
       if (medication) {
         groups[dose.timeOfDay].push({ medication, dose });
       }
@@ -207,20 +100,7 @@ export function TodayDashboard() {
     });
 
     return groups;
-  }, [doses]);
-
-  // Calculate stats
-  const stats = useMemo(() => {
-    const takenCount = doses.filter(d => d.status === 'taken').length;
-    return {
-      currentStreak: 12,
-      longestStreak: 28,
-      weeklyAdherence: 94,
-      monthlyAdherence: 91,
-      todayTaken: takenCount,
-      todayTotal: doses.length,
-    };
-  }, [doses]);
+  }, [doses, medications]);
 
   // Clock doses
   const clockDoses = useMemo(() => {
@@ -233,66 +113,16 @@ export function TodayDashboard() {
     }));
   }, [doses]);
 
-  const handleTake = (doseId: string) => {
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      hour12: true 
-    });
-
-    setDoses(prev => prev.map(d => 
-      d.id === doseId 
-        ? { ...d, status: 'taken' as const, takenAt: timeStr }
-        : d
-    ));
-
-    // Haptic feedback
-    if (navigator.vibrate) {
-      navigator.vibrate([100, 50, 100]);
-    }
-
-    toast.success('Medication taken! Great job! 💪', {
-      duration: 3000,
-    });
+  const handleTake = (dose: MedicationDose) => {
+    takeDose(dose);
   };
 
-  const handleSkip = (doseId: string) => {
-    setDoses(prev => prev.map(d => 
-      d.id === doseId 
-        ? { ...d, status: 'skipped' as const }
-        : d
-    ));
-
-    toast.info('Dose skipped', {
-      description: 'Remember to take your next dose on time.',
-      duration: 3000,
-    });
+  const handleSkip = (dose: MedicationDose) => {
+    skipDose(dose);
   };
 
-  const handleSnooze = (doseId: string) => {
-    const snoozeUntil = new Date();
-    snoozeUntil.setMinutes(snoozeUntil.getMinutes() + 10);
-    const timeStr = snoozeUntil.toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      hour12: true 
-    });
-
-    setDoses(prev => prev.map(d => 
-      d.id === doseId 
-        ? { ...d, status: 'snoozed' as const, snoozeUntil: timeStr }
-        : d
-    ));
-
-    if (navigator.vibrate) {
-      navigator.vibrate(50);
-    }
-
-    toast('Snoozed for 10 minutes ⏰', {
-      description: `We'll remind you at ${timeStr}`,
-      duration: 3000,
-    });
+  const handleSnooze = (dose: MedicationDose) => {
+    snoozeDose(dose);
   };
 
   const handleViewDetails = (medication: Medication) => {
@@ -300,7 +130,7 @@ export function TodayDashboard() {
     setDetailsOpen(true);
   };
 
-  const handleVoiceRead = (medication: Medication, dose: MedicationDose) => {
+  const handleVoiceRead = (medication: Medication) => {
     if ('speechSynthesis' in window) {
       const text = `It's time for ${medication.name}, ${medication.strength}. ${medication.instructions || ''}`;
       const utterance = new SpeechSynthesisUtterance(text);
@@ -323,7 +153,7 @@ export function TodayDashboard() {
     setActiveNav('today');
   };
 
-  const handleMedicationScanned = (scannedMed: { 
+  const handleMedicationScanned = async (scannedMed: { 
     ndcCode: string; 
     name: string; 
     genericName?: string; 
@@ -331,13 +161,27 @@ export function TodayDashboard() {
     form: string; 
     manufacturer?: string;
   }) => {
-    // In production, this would add to the database
-    toast.success(`${scannedMed.name} ${scannedMed.strength} has been added to your medications!`, {
-      duration: 4000,
-    });
+    const result = await addMedication(scannedMed);
+    if (result) {
+      toast.success(`${scannedMed.name} ${scannedMed.strength} has been added to your medications!`, {
+        duration: 4000,
+      });
+    }
     setShowScanner(false);
     setActiveNav('today');
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-16 h-16 text-accent animate-spin mx-auto mb-4" />
+          <p className="text-elder text-muted-foreground">Loading your medications...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Show scanner when 'scan' nav is active
   if (showScanner || activeNav === 'scan') {
@@ -349,12 +193,25 @@ export function TodayDashboard() {
     );
   }
 
+  const userName = profile?.name || 'User';
+  const userInfo = {
+    name: userName,
+    dateOfBirth: profile?.dateOfBirth || '',
+    allergies: profile?.allergies || [],
+    conditions: profile?.conditions || [],
+    emergencyContact: {
+      name: 'Emergency Contact',
+      phone: '911',
+      relationship: 'Emergency',
+    },
+  };
+
   // Show profile page
   if (activeNav === 'profile') {
     return (
       <div className="min-h-screen bg-background pb-32">
         <ElderHeader 
-          userName={mockUserProfile.name}
+          userName={userName}
           notificationCount={0}
         />
         
@@ -366,14 +223,16 @@ export function TodayDashboard() {
                 <User className="w-10 h-10 text-primary" />
               </div>
               <div>
-                <h1 className="text-elder-2xl text-foreground">{mockUserProfile.name}</h1>
-                <p className="text-muted-foreground">
-                  {new Date(mockUserProfile.dateOfBirth).toLocaleDateString('en-US', { 
-                    month: 'long', 
-                    day: 'numeric', 
-                    year: 'numeric' 
-                  })}
-                </p>
+                <h1 className="text-elder-2xl text-foreground">{userName}</h1>
+                {profile?.dateOfBirth && (
+                  <p className="text-muted-foreground">
+                    {new Date(profile.dateOfBirth).toLocaleDateString('en-US', { 
+                      month: 'long', 
+                      day: 'numeric', 
+                      year: 'numeric' 
+                    })}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -417,7 +276,7 @@ export function TodayDashboard() {
           </div>
 
           {/* Emergency Card */}
-          <EmergencyCardElder info={mockUserProfile} />
+          <EmergencyCardElder info={userInfo} />
         </main>
 
         <ElderBottomNav activeItem={activeNav} onNavigate={setActiveNav} />
@@ -432,11 +291,15 @@ export function TodayDashboard() {
     );
   }
 
+  // Check if there are no medications
+  const hasMedications = medications.length > 0;
+  const hasDoses = doses.length > 0;
+
   return (
     <div className="min-h-screen bg-background pb-32">
       <ElderHeader 
-        userName={mockUserProfile.name}
-        notificationCount={2}
+        userName={userName}
+        notificationCount={doses.filter(d => d.status === 'pending').length}
       />
       
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-8">
@@ -450,53 +313,78 @@ export function TodayDashboard() {
         {/* Today's Progress - Compact */}
         <AdherenceWidget stats={stats} size="compact" />
 
+        {/* Empty State */}
+        {!hasMedications && (
+          <div className="bg-card rounded-3xl p-8 shadow-elder-lg border-2 border-border text-center">
+            <div className="w-24 h-24 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <img src="/favicon.png" alt="Med Guard Rx" className="w-16 h-16" />
+            </div>
+            <h2 className="text-elder-xl text-foreground mb-4">No Medications Yet</h2>
+            <p className="text-elder text-muted-foreground mb-6">
+              Scan a prescription label or add your first medication to get started.
+            </p>
+            <Button 
+              variant="accent" 
+              size="xl" 
+              className="w-full"
+              onClick={handleOpenScanner}
+            >
+              Scan Prescription
+            </Button>
+          </div>
+        )}
+
         {/* 24-Hour Clock */}
-        <div className="bg-card rounded-3xl p-6 shadow-elder-lg border-2 border-border">
-          <h2 className="text-elder-xl text-foreground mb-6 text-center">Today's Schedule</h2>
-          <InteractiveDoseClock doses={clockDoses} size="md" />
-        </div>
+        {hasDoses && (
+          <div className="bg-card rounded-3xl p-6 shadow-elder-lg border-2 border-border">
+            <h2 className="text-elder-xl text-foreground mb-6 text-center">Today's Schedule</h2>
+            <InteractiveDoseClock doses={clockDoses} size="md" />
+          </div>
+        )}
 
         {/* Timeline by Time of Day */}
-        <div>
-          <h2 className="text-elder-2xl text-foreground mb-6">Medications</h2>
-          
-          {timeOrder.map(timeOfDay => {
-            const items = groupedDoses[timeOfDay];
-            if (items.length === 0) return null;
+        {hasDoses && (
+          <div>
+            <h2 className="text-elder-2xl text-foreground mb-6">Medications</h2>
             
-            const completedCount = items.filter(
-              i => i.dose.status === 'taken' || i.dose.status === 'skipped'
-            ).length;
+            {timeOrder.map(timeOfDay => {
+              const items = groupedDoses[timeOfDay];
+              if (items.length === 0) return null;
+              
+              const completedCount = items.filter(
+                i => i.dose.status === 'taken' || i.dose.status === 'skipped'
+              ).length;
 
-            return (
-              <section key={timeOfDay} className="mb-8">
-                <TimeOfDayHeader 
-                  timeOfDay={timeOfDay}
-                  medicationCount={items.length}
-                  completedCount={completedCount}
-                />
-                
-                <div className="space-y-4 mt-4">
-                  {items.map(({ medication, dose }) => (
-                    <ElderMedicationCard
-                      key={dose.id}
-                      medication={medication}
-                      dose={dose}
-                      onTake={() => handleTake(dose.id)}
-                      onSkip={() => handleSkip(dose.id)}
-                      onSnooze={() => handleSnooze(dose.id)}
-                      onViewDetails={() => handleViewDetails(medication)}
-                      onVoiceRead={() => handleVoiceRead(medication, dose)}
-                    />
-                  ))}
-                </div>
-              </section>
-            );
-          })}
-        </div>
+              return (
+                <section key={timeOfDay} className="mb-8">
+                  <TimeOfDayHeader 
+                    timeOfDay={timeOfDay}
+                    medicationCount={items.length}
+                    completedCount={completedCount}
+                  />
+                  
+                  <div className="space-y-4 mt-4">
+                    {items.map(({ medication, dose }) => (
+                      <ElderMedicationCard
+                        key={dose.id}
+                        medication={medication}
+                        dose={dose}
+                        onTake={() => handleTake(dose)}
+                        onSkip={() => handleSkip(dose)}
+                        onSnooze={() => handleSnooze(dose)}
+                        onViewDetails={() => handleViewDetails(medication)}
+                        onVoiceRead={() => handleVoiceRead(medication)}
+                      />
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
+          </div>
+        )}
 
         {/* Emergency Info */}
-        <EmergencyCardElder info={mockUserProfile} />
+        <EmergencyCardElder info={userInfo} />
       </main>
 
       <ElderBottomNav activeItem={activeNav} onNavigate={setActiveNav} />
@@ -527,13 +415,15 @@ export function TodayDashboard() {
 
               <div className="py-6 space-y-6">
                 {/* Purpose */}
-                <section className="bg-primary/10 rounded-2xl p-6 border-2 border-primary/20">
-                  <div className="flex items-center gap-3 mb-3">
-                    <Heart className="w-8 h-8 text-primary" />
-                    <h3 className="text-elder-xl text-foreground">What It's For</h3>
-                  </div>
-                  <p className="text-elder text-foreground">{selectedMedication.purpose}</p>
-                </section>
+                {selectedMedication.purpose && (
+                  <section className="bg-primary/10 rounded-2xl p-6 border-2 border-primary/20">
+                    <div className="flex items-center gap-3 mb-3">
+                      <Heart className="w-8 h-8 text-primary" />
+                      <h3 className="text-elder-xl text-foreground">What It's For</h3>
+                    </div>
+                    <p className="text-elder text-foreground">{selectedMedication.purpose}</p>
+                  </section>
+                )}
 
                 {/* How it works */}
                 {selectedMedication.howItWorks && (
