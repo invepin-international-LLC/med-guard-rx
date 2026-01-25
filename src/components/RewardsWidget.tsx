@@ -3,33 +3,51 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Coins, Trophy, Zap, Shield, ChevronRight, Target } from 'lucide-react';
+import { Coins, Trophy, Zap, Shield, ChevronRight, Target, ShoppingBag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SlotMachine } from './SlotMachine';
 import { BadgeCollection } from './BadgeCollection';
 import { WeeklyChallenges } from './WeeklyChallenges';
+import { CoinShop } from './CoinShop';
 import { UserRewards, Badge as RewardBadge, SpinResult, BADGE_DEFINITIONS } from '@/hooks/useRewards';
 import { UserChallenge } from '@/hooks/useChallenges';
+import { ShopItem } from '@/hooks/useShop';
 
 interface RewardsWidgetProps {
   rewards: UserRewards | null;
   badges: RewardBadge[];
   userChallenges: UserChallenge[];
+  shopItems: {
+    themes: ShopItem[];
+    avatars: ShopItem[];
+    powerups: ShopItem[];
+  };
   onSpin: () => Promise<SpinResult | null>;
   onClaimChallengeReward: (userChallengeId: string) => Promise<boolean>;
+  onPurchaseItem: (item: ShopItem) => Promise<boolean>;
+  onEquipItem: (item: ShopItem) => Promise<boolean>;
+  ownsItem: (item: ShopItem) => boolean;
+  isEquipped: (item: ShopItem) => boolean;
   spinning: boolean;
+  onRefreshRewards: () => void;
 }
 
 export function RewardsWidget({ 
   rewards, 
   badges, 
   userChallenges,
+  shopItems,
   onSpin, 
   onClaimChallengeReward,
-  spinning 
+  onPurchaseItem,
+  onEquipItem,
+  ownsItem,
+  isEquipped,
+  spinning,
+  onRefreshRewards,
 }: RewardsWidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'spin' | 'challenges' | 'badges'>('spin');
+  const [activeTab, setActiveTab] = useState<'spin' | 'challenges' | 'shop' | 'badges'>('spin');
 
   if (!rewards) return null;
 
@@ -115,29 +133,40 @@ export function RewardsWidget({
         </SheetHeader>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-1 mb-6 overflow-x-auto pb-1">
           <Button
             variant={activeTab === 'spin' ? 'default' : 'outline'}
             onClick={() => setActiveTab('spin')}
-            className="flex-1 text-sm"
+            className="flex-1 text-xs px-2"
+            size="sm"
           >
             🎰 Slots
-            {hasSpins && <Badge variant="secondary" className="ml-1">{rewards.availableSpins}</Badge>}
+            {hasSpins && <Badge variant="secondary" className="ml-1 text-xs">{rewards.availableSpins}</Badge>}
           </Button>
           <Button
             variant={activeTab === 'challenges' ? 'default' : 'outline'}
             onClick={() => setActiveTab('challenges')}
-            className="flex-1 text-sm relative"
+            className="flex-1 text-xs px-2"
+            size="sm"
           >
             🎯 Challenges
             {claimableChallenges > 0 && (
-              <Badge variant="destructive" className="ml-1 animate-pulse">{claimableChallenges}</Badge>
+              <Badge variant="destructive" className="ml-1 text-xs animate-pulse">{claimableChallenges}</Badge>
             )}
+          </Button>
+          <Button
+            variant={activeTab === 'shop' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('shop')}
+            className="flex-1 text-xs px-2"
+            size="sm"
+          >
+            🛒 Shop
           </Button>
           <Button
             variant={activeTab === 'badges' ? 'default' : 'outline'}
             onClick={() => setActiveTab('badges')}
-            className="flex-1 text-sm"
+            className="flex-1 text-xs px-2"
+            size="sm"
           >
             🏆 Badges
           </Button>
@@ -233,6 +262,20 @@ export function RewardsWidget({
             <WeeklyChallenges 
               userChallenges={userChallenges}
               onClaimReward={onClaimChallengeReward}
+            />
+          )}
+          
+          {activeTab === 'shop' && (
+            <CoinShop
+              coins={rewards.coins}
+              themes={shopItems.themes}
+              avatars={shopItems.avatars}
+              powerups={shopItems.powerups}
+              onPurchase={onPurchaseItem}
+              onEquip={onEquipItem}
+              ownsItem={ownsItem}
+              isEquipped={isEquipped}
+              onCoinsUpdated={onRefreshRewards}
             />
           )}
           
