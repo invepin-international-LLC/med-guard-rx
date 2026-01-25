@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import { Heart, Info, AlertTriangle, Phone, PlayCircle, BookOpen, Clock, RefreshCw, Settings, ChevronRight, User, Shield, Loader2 } from 'lucide-react';
 import { useMedications, Medication, MedicationDose, TimeOfDay } from '@/hooks/useMedications';
 import { useRewards } from '@/hooks/useRewards';
+import { useChallenges } from '@/hooks/useChallenges';
 
 type NavItem = 'today' | 'medications' | 'scan' | 'stats' | 'profile';
 
@@ -88,7 +89,14 @@ export function TodayDashboard() {
     awardSpinForDose,
     awardPerfectDayBonus,
     awardBadge,
+    refetch: refetchRewards,
   } = useRewards();
+
+  const {
+    userChallenges,
+    updateChallengeProgress,
+    claimChallengeReward,
+  } = useChallenges();
 
   // Group doses by time of day
   const groupedDoses = useMemo(() => {
@@ -132,6 +140,19 @@ export function TodayDashboard() {
     
     // Award a spin for taking dose on time
     await awardSpinForDose();
+    
+    // Determine if dose was taken on time and early
+    const scheduledTime = new Date();
+    const [hours, minutes] = dose.time.split(':').map(Number);
+    scheduledTime.setHours(hours, minutes, 0, 0);
+    const now = new Date();
+    const timeDiff = (now.getTime() - scheduledTime.getTime()) / 1000 / 60; // minutes
+    const wasOnTime = timeDiff <= 30; // Within 30 min of scheduled time
+    const wasEarly = timeDiff <= 5 && timeDiff >= -5; // Within 5 min
+    const wasSnoozed = dose.status === 'snoozed';
+    
+    // Update challenge progress
+    await updateChallengeProgress(dose.timeOfDay, wasOnTime, wasEarly, wasSnoozed);
     
     // Check if this was the first dose ever
     const previousTakenCount = doses.filter(d => d.status === 'taken').length;
@@ -360,7 +381,13 @@ export function TodayDashboard() {
         <RewardsWidget 
           rewards={rewards}
           badges={badges}
+          userChallenges={userChallenges}
           onSpin={spin}
+          onClaimChallengeReward={async (id) => {
+            const success = await claimChallengeReward(id);
+            if (success) refetchRewards();
+            return success;
+          }}
           spinning={spinning}
         />
 
