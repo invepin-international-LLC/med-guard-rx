@@ -20,6 +20,7 @@ import { Heart, Info, AlertTriangle, Phone, PlayCircle, BookOpen, Clock, Refresh
 import { useMedications, Medication, MedicationDose, TimeOfDay } from '@/hooks/useMedications';
 import { useRewards } from '@/hooks/useRewards';
 import { useChallenges } from '@/hooks/useChallenges';
+import { useShop } from '@/hooks/useShop';
 
 type NavItem = 'today' | 'medications' | 'scan' | 'stats' | 'profile';
 
@@ -97,6 +98,16 @@ export function TodayDashboard() {
     updateChallengeProgress,
     claimChallengeReward,
   } = useChallenges();
+
+  const {
+    shopItems,
+    purchaseItem,
+    equipItem,
+    ownsItem,
+    isEquipped,
+    getItemsByCategory,
+    refetch: refetchShop,
+  } = useShop();
 
   // Group doses by time of day
   const groupedDoses = useMemo(() => {
@@ -382,13 +393,34 @@ export function TodayDashboard() {
           rewards={rewards}
           badges={badges}
           userChallenges={userChallenges}
+          shopItems={{
+            themes: getItemsByCategory('theme'),
+            avatars: getItemsByCategory('avatar'),
+            powerups: getItemsByCategory('powerup'),
+          }}
           onSpin={spin}
           onClaimChallengeReward={async (id) => {
             const success = await claimChallengeReward(id);
             if (success) refetchRewards();
             return success;
           }}
+          onPurchaseItem={async (item) => {
+            if (!rewards) return false;
+            const success = await purchaseItem(item, rewards.coins);
+            if (success) {
+              refetchRewards();
+              refetchShop();
+            }
+            return success;
+          }}
+          onEquipItem={equipItem}
+          ownsItem={ownsItem}
+          isEquipped={isEquipped}
           spinning={spinning}
+          onRefreshRewards={() => {
+            refetchRewards();
+            refetchShop();
+          }}
         />
 
         {/* Refill Alerts */}

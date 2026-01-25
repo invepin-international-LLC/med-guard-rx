@@ -486,6 +486,48 @@ export type Database = {
           },
         ]
       }
+      shop_items: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          duration_hours: number | null
+          icon: string | null
+          id: string
+          is_active: boolean
+          item_type: string
+          name: string
+          preview_data: Json | null
+          price: number
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description: string
+          duration_hours?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          item_type: string
+          name: string
+          preview_data?: Json | null
+          price: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          duration_hours?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          item_type?: string
+          name?: string
+          preview_data?: Json | null
+          price?: number
+        }
+        Relationships: []
+      }
       spin_history: {
         Row: {
           created_at: string
@@ -586,6 +628,68 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_inventory: {
+        Row: {
+          expires_at: string | null
+          id: string
+          is_equipped: boolean
+          item_id: string
+          purchased_at: string
+          user_id: string
+        }
+        Insert: {
+          expires_at?: string | null
+          id?: string
+          is_equipped?: boolean
+          item_id: string
+          purchased_at?: string
+          user_id: string
+        }
+        Update: {
+          expires_at?: string | null
+          id?: string
+          is_equipped?: boolean
+          item_id?: string
+          purchased_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_inventory_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "shop_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_preferences: {
+        Row: {
+          created_at: string
+          equipped_avatar: string | null
+          equipped_theme: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          equipped_avatar?: string | null
+          equipped_theme?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          equipped_avatar?: string | null
+          equipped_theme?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_rewards: {
         Row: {
