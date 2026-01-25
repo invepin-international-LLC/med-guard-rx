@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Coins } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useSoundEffects } from '@/hooks/useSoundEffects';
 
 interface CoinEarnAnimationProps {
   amount: number;
@@ -26,10 +27,14 @@ export function CoinEarnAnimation({
   const [coins, setCoins] = useState<FlyingCoin[]>([]);
   const [showAmount, setShowAmount] = useState(false);
   const [animating, setAnimating] = useState(false);
+  const { playSound } = useSoundEffects();
 
   useEffect(() => {
     if (isVisible && !animating) {
       setAnimating(true);
+      
+      // Play coin sound
+      playSound('coinEarn');
       
       // Generate flying coins with random positions
       const coinCount = Math.min(amount, 12); // Max 12 coins for performance

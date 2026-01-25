@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Coins, Sparkles, Zap, Gift } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SpinResult } from '@/hooks/useRewards';
+import { useSoundEffects } from '@/hooks/useSoundEffects';
 
 interface SlotMachineProps {
   availableSpins: number;
@@ -29,6 +30,7 @@ export function SlotMachine({
   const [result, setResult] = useState<SpinResult | null>(null);
   const [showWin, setShowWin] = useState(false);
   const reelRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
+  const { playSound } = useSoundEffects();
 
   const handleSpin = async () => {
     if (availableSpins <= 0 || isSpinning || spinning) return;
@@ -36,6 +38,9 @@ export function SlotMachine({
     setIsSpinning(true);
     setShowWin(false);
     setResult(null);
+
+    // Play spin start sound
+    playSound('spinStart');
 
     // Haptic feedback
     if (navigator.vibrate) {
@@ -67,6 +72,15 @@ export function SlotMachine({
       setDisplaySymbols(spinResult.symbols);
       setResult(spinResult);
       setShowWin(true);
+
+      // Play appropriate sound
+      if (spinResult.prizeType === 'jackpot') {
+        playSound('jackpot');
+      } else {
+        playSound('spinStop');
+        // Play coin sound after a short delay
+        setTimeout(() => playSound('coinEarn'), 200);
+      }
 
       // Victory haptic
       if (navigator.vibrate) {
