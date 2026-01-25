@@ -6,6 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Coins, Check, ShoppingBag, Palette, User, Zap, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ShopItem } from '@/hooks/useShop';
+import { StreakShieldAnimation } from '@/components/StreakShieldAnimation';
+import { useSoundEffects } from '@/hooks/useSoundEffects';
 
 interface CoinShopProps {
   coins: number;
@@ -31,12 +33,29 @@ export function CoinShop({
   onCoinsUpdated,
 }: CoinShopProps) {
   const [purchasing, setPurchasing] = useState<string | null>(null);
+  const [shieldAnimation, setShieldAnimation] = useState<{ active: boolean; duration: string }>({ 
+    active: false, 
+    duration: '24h' 
+  });
+  const { playSound } = useSoundEffects();
 
   const handlePurchase = async (item: ShopItem) => {
     setPurchasing(item.id);
     const success = await onPurchase(item);
     if (success) {
       onCoinsUpdated();
+      
+      // Trigger streak shield animation for shield power-ups
+      if (item.itemType.startsWith('shield_')) {
+        const durationText = item.durationHours 
+          ? item.durationHours >= 24 
+            ? `${Math.floor(item.durationHours / 24)} day${item.durationHours >= 48 ? 's' : ''}`
+            : `${item.durationHours} hours`
+          : '24h';
+        
+        playSound('success');
+        setShieldAnimation({ active: true, duration: durationText });
+      }
     }
     setPurchasing(null);
   };
@@ -181,7 +200,15 @@ export function CoinShop({
   };
 
   return (
-    <div className="space-y-4">
+    <>
+      {/* Streak Shield Animation Overlay */}
+      <StreakShieldAnimation 
+        isActive={shieldAnimation.active}
+        duration={shieldAnimation.duration}
+        onComplete={() => setShieldAnimation({ active: false, duration: '24h' })}
+      />
+
+      <div className="space-y-4">
       {/* Coin Balance */}
       <Card className="bg-gradient-to-r from-warning/20 to-accent/20">
         <CardContent className="p-4">
@@ -250,6 +277,7 @@ export function CoinShop({
           </p>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </>
   );
 }
