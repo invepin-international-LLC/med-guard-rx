@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useTheme } from './useTheme';
 
 export interface ShopItem {
   id: string;
@@ -34,6 +35,7 @@ export function useShop() {
   const [preferences, setPreferences] = useState<UserPreferences>({ equippedTheme: 'default', equippedAvatar: 'default' });
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
+  const { applyTheme } = useTheme();
 
   // Get current user
   useEffect(() => {
@@ -273,6 +275,11 @@ export function useShop() {
         [item.category === 'theme' ? 'equippedTheme' : 'equippedAvatar']: item.itemType,
       }));
 
+      // Apply theme dynamically if it's a theme item
+      if (item.category === 'theme') {
+        applyTheme(item);
+      }
+
       toast.success(`${item.name} equipped!`);
       return true;
     } catch (error) {
@@ -280,7 +287,7 @@ export function useShop() {
       toast.error('Failed to equip item');
       return false;
     }
-  }, [userId]);
+  }, [userId, applyTheme]);
 
   // Check if user owns an item
   const ownsItem = useCallback((item: ShopItem): boolean => {
@@ -321,6 +328,18 @@ export function useShop() {
       fetchPreferences();
     }
   }, [userId, fetchInventory, fetchPreferences]);
+
+  // Apply theme when preferences or shop items change (for initial load)
+  useEffect(() => {
+    if (preferences.equippedTheme && preferences.equippedTheme !== 'default' && shopItems.length > 0) {
+      const themeItem = shopItems.find(item => 
+        item.category === 'theme' && item.itemType === preferences.equippedTheme
+      );
+      if (themeItem) {
+        applyTheme(themeItem);
+      }
+    }
+  }, [preferences.equippedTheme, shopItems, applyTheme]);
 
   return {
     shopItems,
