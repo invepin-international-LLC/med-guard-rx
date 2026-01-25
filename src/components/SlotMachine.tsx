@@ -6,6 +6,7 @@ import { Coins, Sparkles, Zap, Gift } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SpinResult } from '@/hooks/useRewards';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
+import { ConfettiAnimation } from '@/components/ConfettiAnimation';
 
 interface SlotMachineProps {
   availableSpins: number;
@@ -29,6 +30,7 @@ export function SlotMachine({
   const [isSpinning, setIsSpinning] = useState(false);
   const [result, setResult] = useState<SpinResult | null>(null);
   const [showWin, setShowWin] = useState(false);
+  const [showJackpotConfetti, setShowJackpotConfetti] = useState(false);
   const reelRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
   const { playSound } = useSoundEffects();
 
@@ -73,9 +75,10 @@ export function SlotMachine({
       setResult(spinResult);
       setShowWin(true);
 
-      // Play appropriate sound
+      // Play appropriate sound and confetti
       if (spinResult.prizeType === 'jackpot') {
         playSound('jackpot');
+        setShowJackpotConfetti(true);
       } else {
         playSound('spinStop');
         // Play coin sound after a short delay
@@ -96,6 +99,12 @@ export function SlotMachine({
   };
 
   return (
+    <>
+    <ConfettiAnimation 
+      isVisible={showJackpotConfetti}
+      onComplete={() => setShowJackpotConfetti(false)}
+      variant="jackpot"
+    />
     <Card className="overflow-hidden bg-gradient-to-b from-primary/5 to-primary/10 border-2 border-primary/20">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
@@ -227,5 +236,6 @@ export function SlotMachine({
         </p>
       </CardContent>
     </Card>
+    </>
   );
 }
