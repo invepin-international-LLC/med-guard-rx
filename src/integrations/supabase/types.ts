@@ -540,6 +540,53 @@ export type Database = {
         }
         Relationships: []
       }
+      user_challenges: {
+        Row: {
+          challenge_id: string
+          completed_at: string | null
+          created_at: string
+          current_progress: number
+          id: string
+          is_completed: boolean
+          reward_claimed: boolean
+          updated_at: string
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          challenge_id: string
+          completed_at?: string | null
+          created_at?: string
+          current_progress?: number
+          id?: string
+          is_completed?: boolean
+          reward_claimed?: boolean
+          updated_at?: string
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          challenge_id?: string
+          completed_at?: string | null
+          created_at?: string
+          current_progress?: number
+          id?: string
+          is_completed?: boolean
+          reward_claimed?: boolean
+          updated_at?: string
+          user_id?: string
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_challenges_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_rewards: {
         Row: {
           available_spins: number
@@ -579,6 +626,42 @@ export type Database = {
           total_spins_used?: number
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      weekly_challenges: {
+        Row: {
+          challenge_type: string
+          created_at: string
+          description: string
+          id: string
+          name: string
+          reward_coins: number
+          reward_spins: number
+          target_count: number
+          time_of_day: string | null
+        }
+        Insert: {
+          challenge_type: string
+          created_at?: string
+          description: string
+          id?: string
+          name: string
+          reward_coins?: number
+          reward_spins?: number
+          target_count?: number
+          time_of_day?: string | null
+        }
+        Update: {
+          challenge_type?: string
+          created_at?: string
+          description?: string
+          id?: string
+          name?: string
+          reward_coins?: number
+          reward_spins?: number
+          target_count?: number
+          time_of_day?: string | null
         }
         Relationships: []
       }

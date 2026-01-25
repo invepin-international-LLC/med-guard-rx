@@ -3,33 +3,46 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Coins, Trophy, Zap, Shield, ChevronRight } from 'lucide-react';
+import { Coins, Trophy, Zap, Shield, ChevronRight, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SlotMachine } from './SlotMachine';
 import { BadgeCollection } from './BadgeCollection';
+import { WeeklyChallenges } from './WeeklyChallenges';
 import { UserRewards, Badge as RewardBadge, SpinResult, BADGE_DEFINITIONS } from '@/hooks/useRewards';
+import { UserChallenge } from '@/hooks/useChallenges';
 
 interface RewardsWidgetProps {
   rewards: UserRewards | null;
   badges: RewardBadge[];
+  userChallenges: UserChallenge[];
   onSpin: () => Promise<SpinResult | null>;
+  onClaimChallengeReward: (userChallengeId: string) => Promise<boolean>;
   spinning: boolean;
 }
 
-export function RewardsWidget({ rewards, badges, onSpin, spinning }: RewardsWidgetProps) {
+export function RewardsWidget({ 
+  rewards, 
+  badges, 
+  userChallenges,
+  onSpin, 
+  onClaimChallengeReward,
+  spinning 
+}: RewardsWidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'spin' | 'badges'>('spin');
+  const [activeTab, setActiveTab] = useState<'spin' | 'challenges' | 'badges'>('spin');
 
   if (!rewards) return null;
 
   const hasSpins = rewards.availableSpins > 0;
+  const claimableChallenges = userChallenges.filter(uc => uc.isCompleted && !uc.rewardClaimed).length;
+  const activeChallenges = userChallenges.filter(uc => !uc.rewardClaimed).length;
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Card className={cn(
           "cursor-pointer transition-all duration-300 hover:shadow-lg overflow-hidden",
-          hasSpins && "ring-2 ring-accent/50 animate-gentle-pulse"
+          (hasSpins || claimableChallenges > 0) && "ring-2 ring-accent/50 animate-gentle-pulse"
         )}>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -37,7 +50,7 @@ export function RewardsWidget({ rewards, badges, onSpin, spinning }: RewardsWidg
                 {/* Slot icon */}
                 <div className={cn(
                   "w-14 h-14 rounded-xl flex items-center justify-center text-3xl",
-                  hasSpins 
+                  (hasSpins || claimableChallenges > 0)
                     ? "bg-gradient-to-br from-accent to-warning shadow-accent" 
                     : "bg-muted"
                 )}>
@@ -53,6 +66,11 @@ export function RewardsWidget({ rewards, badges, onSpin, spinning }: RewardsWidg
                         {rewards.availableSpins} Spins!
                       </Badge>
                     )}
+                    {claimableChallenges > 0 && (
+                      <Badge variant="default" className="animate-pulse bg-accent">
+                        {claimableChallenges} Rewards!
+                      </Badge>
+                    )}
                   </h3>
                   <div className="flex items-center gap-3 text-muted-foreground">
                     <span className="flex items-center gap-1">
@@ -65,6 +83,10 @@ export function RewardsWidget({ rewards, badges, onSpin, spinning }: RewardsWidg
                         {rewards.streakMultiplier}x
                       </span>
                     )}
+                    <span className="flex items-center gap-1">
+                      <Target className="w-4 h-4 text-primary" />
+                      {activeChallenges}
+                    </span>
                     <span className="flex items-center gap-1">
                       <Trophy className="w-4 h-4 text-primary" />
                       {badges.length}
@@ -97,22 +119,33 @@ export function RewardsWidget({ rewards, badges, onSpin, spinning }: RewardsWidg
           <Button
             variant={activeTab === 'spin' ? 'default' : 'outline'}
             onClick={() => setActiveTab('spin')}
-            className="flex-1"
+            className="flex-1 text-sm"
           >
-            🎰 Slot Machine
+            🎰 Slots
+            {hasSpins && <Badge variant="secondary" className="ml-1">{rewards.availableSpins}</Badge>}
+          </Button>
+          <Button
+            variant={activeTab === 'challenges' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('challenges')}
+            className="flex-1 text-sm relative"
+          >
+            🎯 Challenges
+            {claimableChallenges > 0 && (
+              <Badge variant="destructive" className="ml-1 animate-pulse">{claimableChallenges}</Badge>
+            )}
           </Button>
           <Button
             variant={activeTab === 'badges' ? 'default' : 'outline'}
             onClick={() => setActiveTab('badges')}
-            className="flex-1"
+            className="flex-1 text-sm"
           >
-            🏆 Badges ({badges.length})
+            🏆 Badges
           </Button>
         </div>
 
         {/* Content */}
-        <div className="overflow-y-auto pb-safe">
-          {activeTab === 'spin' ? (
+        <div className="overflow-y-auto pb-safe max-h-[calc(85vh-140px)]">
+          {activeTab === 'spin' && (
             <div className="space-y-4">
               <SlotMachine
                 availableSpins={rewards.availableSpins}
@@ -187,14 +220,23 @@ export function RewardsWidget({ rewards, badges, onSpin, spinning }: RewardsWidg
                       <span>7-day streak = 3 bonus spins</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-lg">🏆</span>
-                      <span>30-day streak = 10 bonus spins!</span>
+                      <span className="text-lg">🎯</span>
+                      <span>Complete weekly challenges = bonus rewards!</span>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
-          ) : (
+          )}
+          
+          {activeTab === 'challenges' && (
+            <WeeklyChallenges 
+              userChallenges={userChallenges}
+              onClaimReward={onClaimChallengeReward}
+            />
+          )}
+          
+          {activeTab === 'badges' && (
             <BadgeCollection badges={badges} />
           )}
         </div>
