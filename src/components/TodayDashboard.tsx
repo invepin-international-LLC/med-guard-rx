@@ -14,6 +14,7 @@ import { MedicationsList } from '@/components/MedicationsList';
 import { RefillAlertsWidget } from '@/components/RefillAlertsWidget';
 import { RewardsWidget } from '@/components/RewardsWidget';
 import { CoinEarnAnimation } from '@/components/CoinEarnAnimation';
+import { ConfettiAnimation } from '@/components/ConfettiAnimation';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -71,6 +72,7 @@ export function TodayDashboard() {
   const [showScanner, setShowScanner] = useState(false);
   const [showContactsManager, setShowContactsManager] = useState(false);
   const [coinAnimation, setCoinAnimation] = useState<{ show: boolean; amount: number }>({ show: false, amount: 0 });
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const showCoinAnimation = (amount: number) => {
     setCoinAnimation({ show: true, amount });
@@ -78,6 +80,14 @@ export function TodayDashboard() {
 
   const hideCoinAnimation = () => {
     setCoinAnimation({ show: false, amount: 0 });
+  };
+
+  const triggerConfetti = () => {
+    setShowConfetti(true);
+  };
+
+  const hideConfetti = () => {
+    setShowConfetti(false);
   };
   const {
     medications,
@@ -190,6 +200,12 @@ export function TodayDashboard() {
     const allTaken = updatedDoses.every(d => d.status === 'taken');
     if (allTaken && doses.length > 0) {
       await awardPerfectDayBonus();
+      // Trigger confetti celebration for perfect day!
+      triggerConfetti();
+      toast.success('🎉 Perfect Day!', {
+        description: 'You took all your medications today!',
+        duration: 4000,
+      });
     }
   };
 
@@ -388,6 +404,11 @@ export function TodayDashboard() {
       amount={coinAnimation.amount}
       isVisible={coinAnimation.show}
       onComplete={hideCoinAnimation}
+    />
+    <ConfettiAnimation 
+      isVisible={showConfetti}
+      onComplete={hideConfetti}
+      variant="celebration"
     />
     <div className="min-h-screen bg-background pb-32">
       <ElderHeader 
