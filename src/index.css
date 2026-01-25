@@ -306,6 +306,76 @@
     animation: jackpot-glow 0.5s ease-in-out infinite;
   }
 
+  /* Coin earning animations */
+  @keyframes coin-fly {
+    0% { 
+      transform: translateY(0) translateX(0) scale(0);
+      opacity: 0;
+    }
+    20% {
+      transform: translateY(-20px) translateX(var(--coin-x, 0px)) scale(1);
+      opacity: 1;
+    }
+    80% {
+      transform: translateY(-80px) translateX(var(--coin-x, 0px)) scale(1);
+      opacity: 1;
+    }
+    100% { 
+      transform: translateY(-120px) translateX(var(--coin-x, 0px)) scale(0.5);
+      opacity: 0;
+    }
+  }
+
+  @keyframes coin-spin {
+    0% { transform: rotateY(0deg); }
+    100% { transform: rotateY(360deg); }
+  }
+
+  @keyframes amount-pop {
+    0% { 
+      transform: scale(0) translateY(20px);
+      opacity: 0;
+    }
+    50% {
+      transform: scale(1.2) translateY(-10px);
+      opacity: 1;
+    }
+    70% {
+      transform: scale(0.95) translateY(0);
+    }
+    100% { 
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes sparkle {
+    0%, 100% { 
+      transform: scale(0);
+      opacity: 0;
+    }
+    50% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  .animate-coin-fly {
+    animation: coin-fly 1.2s ease-out forwards;
+  }
+
+  .animate-coin-spin {
+    animation: coin-spin 0.6s linear infinite;
+  }
+
+  .animate-amount-pop {
+    animation: amount-pop 0.5s ease-out forwards;
+  }
+
+  .animate-sparkle {
+    animation: sparkle 0.4s ease-out forwards;
+  }
+
   /* Safe area padding for mobile */
   .pb-safe {
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
