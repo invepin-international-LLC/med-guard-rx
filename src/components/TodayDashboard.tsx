@@ -13,6 +13,7 @@ import { PrescriptionScanner } from '@/components/PrescriptionScanner';
 import { MedicationsList } from '@/components/MedicationsList';
 import { RefillAlertsWidget } from '@/components/RefillAlertsWidget';
 import { RewardsWidget } from '@/components/RewardsWidget';
+import { CoinEarnAnimation } from '@/components/CoinEarnAnimation';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -69,7 +70,15 @@ export function TodayDashboard() {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [showContactsManager, setShowContactsManager] = useState(false);
+  const [coinAnimation, setCoinAnimation] = useState<{ show: boolean; amount: number }>({ show: false, amount: 0 });
 
+  const showCoinAnimation = (amount: number) => {
+    setCoinAnimation({ show: true, amount });
+  };
+
+  const hideCoinAnimation = () => {
+    setCoinAnimation({ show: false, amount: 0 });
+  };
   const {
     medications,
     doses,
@@ -151,6 +160,9 @@ export function TodayDashboard() {
     
     // Award a spin for taking dose on time
     await awardSpinForDose();
+    
+    // Show coin animation for taking dose (base coins for dose)
+    showCoinAnimation(5);
     
     // Determine if dose was taken on time and early
     const scheduledTime = new Date();
@@ -371,6 +383,12 @@ export function TodayDashboard() {
   const hasDoses = doses.length > 0;
 
   return (
+    <>
+    <CoinEarnAnimation 
+      amount={coinAnimation.amount}
+      isVisible={coinAnimation.show}
+      onComplete={hideCoinAnimation}
+    />
     <div className="min-h-screen bg-background pb-32">
       <ElderHeader 
         userName={userName}
@@ -400,8 +418,16 @@ export function TodayDashboard() {
           }}
           onSpin={spin}
           onClaimChallengeReward={async (id) => {
+            // Find the challenge to get its reward amount
+            const challenge = userChallenges.find(uc => uc.id === id);
             const success = await claimChallengeReward(id);
-            if (success) refetchRewards();
+            if (success) {
+              refetchRewards();
+              // Show coin animation with the actual reward amount
+              if (challenge) {
+                showCoinAnimation(challenge.challenge.rewardCoins);
+              }
+            }
             return success;
           }}
           onPurchaseItem={async (item) => {
@@ -663,5 +689,6 @@ export function TodayDashboard() {
         </SheetContent>
       </Sheet>
     </div>
+    </>
   );
 }
