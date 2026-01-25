@@ -7,6 +7,7 @@ import { Coins, Check, ShoppingBag, Palette, User, Zap, Lock } from 'lucide-reac
 import { cn } from '@/lib/utils';
 import { ShopItem } from '@/hooks/useShop';
 import { StreakShieldAnimation } from '@/components/StreakShieldAnimation';
+import { DoubleCoinsAnimation } from '@/components/DoubleCoinsAnimation';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
 
 interface CoinShopProps {
@@ -37,6 +38,7 @@ export function CoinShop({
     active: false, 
     duration: '24h' 
   });
+  const [doubleCoinsAnimation, setDoubleCoinsAnimation] = useState(false);
   const { playSound } = useSoundEffects();
 
   const handlePurchase = async (item: ShopItem) => {
@@ -55,6 +57,12 @@ export function CoinShop({
         
         playSound('success');
         setShieldAnimation({ active: true, duration: durationText });
+      }
+      
+      // Trigger double coins animation
+      if (item.itemType === 'double_coins_24h') {
+        playSound('jackpot');
+        setDoubleCoinsAnimation(true);
       }
     }
     setPurchasing(null);
@@ -206,6 +214,12 @@ export function CoinShop({
         isActive={shieldAnimation.active}
         duration={shieldAnimation.duration}
         onComplete={() => setShieldAnimation({ active: false, duration: '24h' })}
+      />
+
+      {/* Double Coins Animation Overlay */}
+      <DoubleCoinsAnimation 
+        isActive={doubleCoinsAnimation}
+        onComplete={() => setDoubleCoinsAnimation(false)}
       />
 
       <div className="space-y-4">
