@@ -6,6 +6,7 @@ import { Coins, Sparkles, Gift, CheckCircle, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserChallenge } from '@/hooks/useChallenges';
 import { format, differenceInDays, endOfWeek, startOfWeek } from 'date-fns';
+import { useSoundEffects } from '@/hooks/useSoundEffects';
 
 interface WeeklyChallengesProps {
   userChallenges: UserChallenge[];
@@ -29,6 +30,7 @@ export function WeeklyChallenges({ userChallenges, onClaimReward }: WeeklyChalle
   const today = new Date();
   const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
   const daysRemaining = differenceInDays(weekEnd, today);
+  const { playSound } = useSoundEffects();
 
   // Sort: claimable first, then in-progress, then completed
   const sortedChallenges = [...userChallenges].sort((a, b) => {
@@ -164,7 +166,10 @@ export function WeeklyChallenges({ userChallenges, onClaimReward }: WeeklyChalle
                       <Button
                         size="sm"
                         className="w-full mt-2 bg-gradient-to-r from-accent to-warning text-accent-foreground"
-                        onClick={() => onClaimReward(uc.id)}
+                        onClick={() => {
+                          playSound('success');
+                          onClaimReward(uc.id);
+                        }}
                       >
                         <Gift className="w-4 h-4 mr-2" />
                         Claim {uc.challenge.rewardCoins} Coins + {uc.challenge.rewardSpins} Spins
