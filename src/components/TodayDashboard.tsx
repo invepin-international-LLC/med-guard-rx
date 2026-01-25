@@ -7,6 +7,7 @@ import { AdherenceWidget } from '@/components/AdherenceWidget';
 import { EmergencyCardElder } from '@/components/EmergencyCardElder';
 import { EmergencyContactsManager } from '@/components/EmergencyContactsManager';
 import { NotificationSettings } from '@/components/NotificationSettings';
+import { SoundSettings } from '@/components/SoundSettings';
 import { QuickActionsElder } from '@/components/QuickActionsElder';
 import { InteractiveDoseClock } from '@/components/InteractiveDoseClock';
 import { PrescriptionScanner } from '@/components/PrescriptionScanner';
@@ -343,6 +344,9 @@ export function TodayDashboard() {
 
           {/* Push Notification Settings */}
           <NotificationSettings />
+
+          {/* Sound Settings */}
+          <SoundSettings />
 
           {/* Profile Menu Items */}
           <div className="space-y-3">

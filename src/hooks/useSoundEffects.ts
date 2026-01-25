@@ -1,6 +1,23 @@
-import { useCallback, useRef } from 'react';
+import { useCallback } from 'react';
 
 type SoundType = 'coinEarn' | 'spinStart' | 'spinStop' | 'jackpot' | 'click' | 'success';
+
+// LocalStorage key for sound preference
+const SOUND_ENABLED_KEY = 'medguard_sound_enabled';
+
+// Global sound enabled state (persisted to localStorage)
+let soundEnabled = typeof window !== 'undefined' 
+  ? localStorage.getItem(SOUND_ENABLED_KEY) !== 'false' 
+  : true;
+
+// Export getter/setter for global sound state
+export const getSoundEnabled = (): boolean => soundEnabled;
+export const setSoundEnabled = (enabled: boolean): void => {
+  soundEnabled = enabled;
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(SOUND_ENABLED_KEY, String(enabled));
+  }
+};
 
 // Audio context singleton for better performance
 let audioContext: AudioContext | null = null;
@@ -123,10 +140,8 @@ const sounds: Record<SoundType, (ctx: AudioContext) => void> = {
 };
 
 export function useSoundEffects() {
-  const enabledRef = useRef(true);
-  
   const playSound = useCallback((type: SoundType) => {
-    if (!enabledRef.current) return;
+    if (!soundEnabled) return;
     
     try {
       const ctx = getAudioContext();
@@ -136,12 +151,9 @@ export function useSoundEffects() {
     }
   }, []);
   
-  const setEnabled = useCallback((enabled: boolean) => {
-    enabledRef.current = enabled;
-  }, []);
-  
   return {
     playSound,
-    setEnabled,
+    isEnabled: getSoundEnabled,
+    setEnabled: setSoundEnabled,
   };
 }
