@@ -17,6 +17,7 @@ import { RewardsWidget } from '@/components/RewardsWidget';
 import { CoinEarnAnimation } from '@/components/CoinEarnAnimation';
 import { ConfettiAnimation } from '@/components/ConfettiAnimation';
 import { CoinMilestoneAnimation } from '@/components/CoinMilestoneAnimation';
+import { HipaaSection } from '@/components/HipaaSection';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -25,6 +26,7 @@ import { useMedications, Medication, MedicationDose, TimeOfDay } from '@/hooks/u
 import { useRewards } from '@/hooks/useRewards';
 import { useChallenges } from '@/hooks/useChallenges';
 import { useShop } from '@/hooks/useShop';
+import { useMedicationReminders } from '@/hooks/useMedicationReminders';
 
 type NavItem = 'today' | 'medications' | 'scan' | 'stats' | 'profile';
 
@@ -73,6 +75,7 @@ export function TodayDashboard() {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [showContactsManager, setShowContactsManager] = useState(false);
+  const [showHipaaSection, setShowHipaaSection] = useState(false);
   const [coinAnimation, setCoinAnimation] = useState<{ show: boolean; amount: number }>({ show: false, amount: 0 });
   const [showConfetti, setShowConfetti] = useState(false);
 
@@ -132,7 +135,21 @@ export function TodayDashboard() {
     refetch: refetchShop,
   } = useShop();
 
-  // Group doses by time of day
+  // Medication reminders - chime and vibrate when dose time arrives
+  const dosesWithNames = useMemo(() => {
+    return doses.map(dose => {
+      const medication = medications.find(m => m.id === dose.medicationId);
+      return {
+        ...dose,
+        medicationName: medication?.name || 'Medication',
+      };
+    });
+  }, [doses, medications]);
+
+  const { triggerReminder } = useMedicationReminders({ 
+    doses: dosesWithNames, 
+    enabled: true 
+  });
   const groupedDoses = useMemo(() => {
     const groups: Record<TimeOfDay, { medication: Medication; dose: MedicationDose }[]> = {
       morning: [],
@@ -362,9 +379,10 @@ export function TodayDashboard() {
             />
             <ProfileMenuItem 
               icon={Shield}
-              label="Medical Info"
-              description="Allergies, conditions, insurance"
-              onClick={() => toast.info('Medical info coming soon!')}
+              label="HIPAA Health Records"
+              description="Secure medical info & insurance"
+              onClick={() => setShowHipaaSection(true)}
+              highlight
             />
             <ProfileMenuItem 
               icon={Settings}
@@ -384,6 +402,19 @@ export function TodayDashboard() {
         <Sheet open={showContactsManager} onOpenChange={setShowContactsManager}>
           <SheetContent side="bottom" className="h-[90vh] overflow-y-auto rounded-t-3xl">
             <EmergencyContactsManager onClose={() => setShowContactsManager(false)} />
+          </SheetContent>
+        </Sheet>
+
+        {/* HIPAA Section Sheet */}
+        <Sheet open={showHipaaSection} onOpenChange={setShowHipaaSection}>
+          <SheetContent side="bottom" className="h-[90vh] overflow-y-auto rounded-t-3xl">
+            <SheetHeader className="pb-4">
+              <SheetTitle className="flex items-center gap-2 text-2xl">
+                <Shield className="w-6 h-6 text-success" />
+                Health Records Vault
+              </SheetTitle>
+            </SheetHeader>
+            <HipaaSection onClose={() => setShowHipaaSection(false)} />
           </SheetContent>
         </Sheet>
       </div>
