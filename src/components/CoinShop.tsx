@@ -10,6 +10,7 @@ import { StreakShieldAnimation } from '@/components/StreakShieldAnimation';
 import { DoubleCoinsAnimation } from '@/components/DoubleCoinsAnimation';
 import { TripleSpinsAnimation } from '@/components/TripleSpinsAnimation';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
+import { useEquippedAvatar } from '@/contexts/EquippedAvatarContext';
 
 interface CoinShopProps {
   coins: number;
@@ -42,6 +43,7 @@ export function CoinShop({
   const [doubleCoinsAnimation, setDoubleCoinsAnimation] = useState(false);
   const [tripleSpinsAnimation, setTripleSpinsAnimation] = useState(false);
   const { playSound } = useSoundEffects();
+  const { refreshAvatar } = useEquippedAvatar();
 
   const handlePurchase = async (item: ShopItem) => {
     setPurchasing(item.id);
@@ -77,7 +79,11 @@ export function CoinShop({
   };
 
   const handleEquip = async (item: ShopItem) => {
-    await onEquip(item);
+    const success = await onEquip(item);
+    if (success && item.category === 'avatar') {
+      // Refresh the global equipped avatar state
+      refreshAvatar();
+    }
   };
 
   const renderItem = (item: ShopItem) => {

@@ -173,8 +173,8 @@ export function useRewards() {
     setSpinning(true);
 
     try {
-      // TEMPORARY: Force jackpot for testing - REVERT THIS AFTER TESTING
-      const symbols = ['🔥', '🔥', '🔥'];
+      // Generate result
+      const symbols = [getRandomSymbol(), getRandomSymbol(), getRandomSymbol()];
       const resultKey = symbols.join('');
 
       let prize: { type: string; value: number; name: string };

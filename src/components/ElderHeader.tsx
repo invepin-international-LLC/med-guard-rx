@@ -1,5 +1,6 @@
-import { Bell, Menu, User } from 'lucide-react';
+import { Bell, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useEquippedAvatar } from '@/contexts/EquippedAvatarContext';
 
 interface ElderHeaderProps {
   userName: string;
@@ -18,6 +19,7 @@ export function ElderHeader({
 }: ElderHeaderProps) {
   const greeting = getGreeting();
   const firstName = userName.split(' ')[0];
+  const { equippedAvatar } = useEquippedAvatar();
 
   return (
     <header className="sticky top-0 z-50 bg-card/98 backdrop-blur-sm border-b-4 border-border px-4 py-4 shadow-elder">
@@ -62,9 +64,10 @@ export function ElderHeader({
             variant="ghost" 
             size="icon" 
             onClick={onProfileClick}
-            className="w-14 h-14 rounded-xl bg-primary/10"
+            className="w-14 h-14 rounded-xl bg-primary/10 text-3xl"
+            title={equippedAvatar.name}
           >
-            <User className="w-8 h-8 text-primary" />
+            {equippedAvatar.icon}
           </Button>
         </div>
       </div>
