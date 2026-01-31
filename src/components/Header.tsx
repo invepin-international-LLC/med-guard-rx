@@ -1,6 +1,7 @@
 import { UserProfile } from '@/types/medication';
-import { Bell, Menu, User } from 'lucide-react';
+import { Bell, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useEquippedAvatar } from '@/contexts/EquippedAvatarContext';
 
 interface HeaderProps {
   user: UserProfile;
@@ -11,6 +12,7 @@ interface HeaderProps {
 export function Header({ user, onMenuClick, onProfileClick }: HeaderProps) {
   const greeting = getGreeting();
   const firstName = user.name.split(' ')[0];
+  const { equippedAvatar } = useEquippedAvatar();
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border px-4 py-4">
@@ -41,9 +43,10 @@ export function Header({ user, onMenuClick, onProfileClick }: HeaderProps) {
             variant="ghost" 
             size="icon" 
             onClick={onProfileClick}
-            className="rounded-full bg-primary/10"
+            className="rounded-full bg-primary/10 text-2xl"
+            title={equippedAvatar.name}
           >
-            <User className="w-6 h-6 text-primary" />
+            {equippedAvatar.icon}
           </Button>
         </div>
       </div>
