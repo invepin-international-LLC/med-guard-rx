@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { ShopItem } from '@/hooks/useShop';
 import { StreakShieldAnimation } from '@/components/StreakShieldAnimation';
 import { DoubleCoinsAnimation } from '@/components/DoubleCoinsAnimation';
+import { TripleSpinsAnimation } from '@/components/TripleSpinsAnimation';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
 
 interface CoinShopProps {
@@ -39,6 +40,7 @@ export function CoinShop({
     duration: '24h' 
   });
   const [doubleCoinsAnimation, setDoubleCoinsAnimation] = useState(false);
+  const [tripleSpinsAnimation, setTripleSpinsAnimation] = useState(false);
   const { playSound } = useSoundEffects();
 
   const handlePurchase = async (item: ShopItem) => {
@@ -63,6 +65,12 @@ export function CoinShop({
       if (item.itemType === 'double_coins_24h') {
         playSound('jackpot');
         setDoubleCoinsAnimation(true);
+      }
+      
+      // Trigger triple spins animation
+      if (item.itemType === 'triple_spins' || item.itemType.includes('spin')) {
+        playSound('jackpot');
+        setTripleSpinsAnimation(true);
       }
     }
     setPurchasing(null);
@@ -220,6 +228,12 @@ export function CoinShop({
       <DoubleCoinsAnimation 
         isActive={doubleCoinsAnimation}
         onComplete={() => setDoubleCoinsAnimation(false)}
+      />
+
+      {/* Triple Spins Animation Overlay */}
+      <TripleSpinsAnimation 
+        isActive={tripleSpinsAnimation}
+        onComplete={() => setTripleSpinsAnimation(false)}
       />
 
       <div className="space-y-4">
