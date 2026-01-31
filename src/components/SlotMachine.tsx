@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { SpinResult } from '@/hooks/useRewards';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
 import { ConfettiAnimation } from '@/components/ConfettiAnimation';
+import { JackpotAnimation } from '@/components/JackpotAnimation';
 
 interface SlotMachineProps {
   availableSpins: number;
@@ -31,6 +32,8 @@ export function SlotMachine({
   const [result, setResult] = useState<SpinResult | null>(null);
   const [showWin, setShowWin] = useState(false);
   const [showJackpotConfetti, setShowJackpotConfetti] = useState(false);
+  const [showJackpotAnimation, setShowJackpotAnimation] = useState(false);
+  const [jackpotPrizeValue, setJackpotPrizeValue] = useState(0);
   const reelRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
   const { playSound } = useSoundEffects();
 
@@ -75,10 +78,12 @@ export function SlotMachine({
       setResult(spinResult);
       setShowWin(true);
 
-      // Play appropriate sound and confetti
+      // Play appropriate sound and celebration
       if (spinResult.prizeType === 'jackpot') {
         playSound('jackpot');
         setShowJackpotConfetti(true);
+        setJackpotPrizeValue(spinResult.prizeValue || 100);
+        setShowJackpotAnimation(true);
       } else {
         playSound('spinStop');
         // Play coin sound after a short delay
@@ -104,6 +109,11 @@ export function SlotMachine({
       isVisible={showJackpotConfetti}
       onComplete={() => setShowJackpotConfetti(false)}
       variant="jackpot"
+    />
+    <JackpotAnimation 
+      isActive={showJackpotAnimation}
+      prizeValue={jackpotPrizeValue}
+      onComplete={() => setShowJackpotAnimation(false)}
     />
     <Card className="overflow-hidden bg-gradient-to-b from-primary/5 to-primary/10 border-2 border-primary/20">
       <CardHeader className="pb-2">
