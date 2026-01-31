@@ -233,6 +233,96 @@ export type Database = {
         }
         Relationships: []
       }
+      hipaa_access_log: {
+        Row: {
+          accessed_at: string
+          action: string
+          id: string
+          ip_address: string | null
+          record_section: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          accessed_at?: string
+          action: string
+          id?: string
+          ip_address?: string | null
+          record_section?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          accessed_at?: string
+          action?: string
+          id?: string
+          ip_address?: string | null
+          record_section?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      hipaa_records: {
+        Row: {
+          access_log: Json | null
+          advance_directives: string | null
+          blood_type: string | null
+          created_at: string
+          diagnoses: Json | null
+          id: string
+          immunizations: Json | null
+          insurance_info: Json | null
+          lab_results: Json | null
+          last_accessed_at: string | null
+          medical_power_of_attorney: Json | null
+          organ_donor: boolean | null
+          primary_care_provider: Json | null
+          procedures: Json | null
+          specialists: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_log?: Json | null
+          advance_directives?: string | null
+          blood_type?: string | null
+          created_at?: string
+          diagnoses?: Json | null
+          id?: string
+          immunizations?: Json | null
+          insurance_info?: Json | null
+          lab_results?: Json | null
+          last_accessed_at?: string | null
+          medical_power_of_attorney?: Json | null
+          organ_donor?: boolean | null
+          primary_care_provider?: Json | null
+          procedures?: Json | null
+          specialists?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_log?: Json | null
+          advance_directives?: string | null
+          blood_type?: string | null
+          created_at?: string
+          diagnoses?: Json | null
+          id?: string
+          immunizations?: Json | null
+          insurance_info?: Json | null
+          lab_results?: Json | null
+          last_accessed_at?: string | null
+          medical_power_of_attorney?: Json | null
+          organ_donor?: boolean | null
+          primary_care_provider?: Json | null
+          procedures?: Json | null
+          specialists?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       medications: {
         Row: {
           color: string | null
