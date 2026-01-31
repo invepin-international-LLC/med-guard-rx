@@ -904,6 +904,62 @@
     animation: jackpot-bounce 0.6s ease-in-out infinite;
   }
 
+  /* Coin Milestone Animation Keyframes */
+  @keyframes milestone-ray {
+    0% {
+      transform: rotate(var(--rotation, 0deg)) scaleY(0);
+      opacity: 0;
+    }
+    30% {
+      transform: rotate(var(--rotation, 0deg)) scaleY(1.5);
+      opacity: 1;
+    }
+    100% {
+      transform: rotate(var(--rotation, 0deg)) scaleY(0);
+      opacity: 0;
+    }
+  }
+
+  @keyframes milestone-coin {
+    0% {
+      transform: scale(0) rotate(0deg);
+      opacity: 0;
+    }
+    30% {
+      transform: scale(1.2) rotate(180deg);
+      opacity: 1;
+    }
+    70% {
+      transform: scale(0.9) rotate(270deg);
+      opacity: 0.8;
+    }
+    100% {
+      transform: scale(0) rotate(360deg);
+      opacity: 0;
+    }
+  }
+
+  @keyframes spin-slow {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  .animate-milestone-ray {
+    animation: milestone-ray 0.8s ease-out forwards;
+  }
+
+  .animate-milestone-coin {
+    animation: milestone-coin 1.5s ease-out forwards;
+  }
+
+  .animate-spin-slow {
+    animation: spin-slow 3s linear infinite;
+  }
+
   /* Safe area padding for mobile */
   .pb-safe {
     padding-bottom: max(1rem, env(safe-area-inset-bottom));

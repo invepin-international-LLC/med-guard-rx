@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { COIN_MILESTONES } from '@/components/CoinMilestoneAnimation';
 
 export interface UserRewards {
   coins: number;
@@ -10,6 +11,11 @@ export interface UserRewards {
   streakShieldActive: boolean;
   streakShieldExpiresAt?: string;
   lastSpinDate?: string;
+}
+
+export interface MilestoneEvent {
+  milestone: number;
+  timestamp: number;
 }
 
 export interface Badge {
@@ -67,6 +73,8 @@ export function useRewards() {
   const [loading, setLoading] = useState(true);
   const [spinning, setSpinning] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [pendingMilestone, setPendingMilestone] = useState<MilestoneEvent | null>(null);
+  const previousCoinsRef = useRef<number | null>(null);
 
   // Get current user
   useEffect(() => {
@@ -252,7 +260,8 @@ export function useRewards() {
         prize_value: finalValue,
       });
 
-      // Update local state
+      // Update local state and check for milestones
+      const prevCoins = rewards.coins;
       setRewards(prev => prev ? {
         ...prev,
         coins: newCoins,
@@ -262,6 +271,9 @@ export function useRewards() {
         streakShieldActive: newShieldActive,
         streakShieldExpiresAt: newShieldExpires,
       } : null);
+
+      // Check for coin milestones
+      checkAndTriggerMilestone(prevCoins, newCoins);
 
       // Check for high roller badge
       if (newCoins >= 1000 && !badges.find(b => b.type === 'high_roller')) {
@@ -445,6 +457,21 @@ export function useRewards() {
     fetchAll();
   }, [userId, fetchRewards, fetchBadges]);
 
+  // Check if coins crossed a milestone threshold
+  const checkAndTriggerMilestone = useCallback((prevCoins: number, newCoins: number) => {
+    for (const milestone of COIN_MILESTONES) {
+      if (prevCoins < milestone && newCoins >= milestone) {
+        setPendingMilestone({ milestone, timestamp: Date.now() });
+        break; // Only trigger one milestone at a time
+      }
+    }
+  }, []);
+
+  // Clear milestone after animation completes
+  const clearMilestone = useCallback(() => {
+    setPendingMilestone(null);
+  }, []);
+
   return {
     rewards,
     badges,
@@ -455,6 +482,8 @@ export function useRewards() {
     awardBonusSpinsForStreak,
     awardBadge,
     awardPerfectDayBonus,
+    pendingMilestone,
+    clearMilestone,
     refetch: () => {
       fetchRewards();
       fetchBadges();
