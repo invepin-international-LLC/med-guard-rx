@@ -16,6 +16,7 @@ import { RefillAlertsWidget } from '@/components/RefillAlertsWidget';
 import { RewardsWidget } from '@/components/RewardsWidget';
 import { CoinEarnAnimation } from '@/components/CoinEarnAnimation';
 import { ConfettiAnimation } from '@/components/ConfettiAnimation';
+import { CoinMilestoneAnimation } from '@/components/CoinMilestoneAnimation';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -110,6 +111,8 @@ export function TodayDashboard() {
     awardSpinForDose,
     awardPerfectDayBonus,
     awardBadge,
+    pendingMilestone,
+    clearMilestone,
     refetch: refetchRewards,
   } = useRewards();
 
@@ -413,6 +416,11 @@ export function TodayDashboard() {
       isVisible={showConfetti}
       onComplete={hideConfetti}
       variant="celebration"
+    />
+    <CoinMilestoneAnimation 
+      milestone={pendingMilestone?.milestone || 500}
+      isVisible={!!pendingMilestone}
+      onComplete={clearMilestone}
     />
     <div className="min-h-screen bg-background pb-32">
       <ElderHeader 
