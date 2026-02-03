@@ -47,6 +47,45 @@ export type Database = {
         }
         Relationships: []
       }
+      caregiver_invitations: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          invite_code: string
+          invitee_email: string | null
+          patient_id: string
+          relationship: string
+          status: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          invite_code?: string
+          invitee_email?: string | null
+          patient_id: string
+          relationship?: string
+          status?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          invite_code?: string
+          invitee_email?: string | null
+          patient_id?: string
+          relationship?: string
+          status?: string
+        }
+        Relationships: []
+      }
       caregiver_notifications: {
         Row: {
           channel: string
@@ -97,6 +136,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      caregiver_relationships: {
+        Row: {
+          can_receive_alerts: boolean | null
+          can_view_adherence: boolean | null
+          can_view_medications: boolean | null
+          can_view_schedule: boolean | null
+          caregiver_id: string
+          created_at: string
+          id: string
+          nickname: string | null
+          patient_id: string
+          relationship: string
+          updated_at: string
+        }
+        Insert: {
+          can_receive_alerts?: boolean | null
+          can_view_adherence?: boolean | null
+          can_view_medications?: boolean | null
+          can_view_schedule?: boolean | null
+          caregiver_id: string
+          created_at?: string
+          id?: string
+          nickname?: string | null
+          patient_id: string
+          relationship?: string
+          updated_at?: string
+        }
+        Update: {
+          can_receive_alerts?: boolean | null
+          can_view_adherence?: boolean | null
+          can_view_medications?: boolean | null
+          can_view_schedule?: boolean | null
+          caregiver_id?: string
+          created_at?: string
+          id?: string
+          nickname?: string | null
+          patient_id?: string
+          relationship?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       dose_logs: {
         Row: {
@@ -864,7 +945,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_caregiver_for: { Args: { patient_user_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

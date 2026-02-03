@@ -22,7 +22,10 @@ import { HipaaSection } from '@/components/HipaaSection';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Heart, Info, AlertTriangle, Phone, PlayCircle, BookOpen, Clock, RefreshCw, Settings, ChevronRight, User, Shield, Loader2, Smartphone } from 'lucide-react';
+import { Heart, Info, AlertTriangle, Phone, PlayCircle, BookOpen, Clock, RefreshCw, Settings, ChevronRight, User, Shield, Loader2, Smartphone, Users } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { CaregiverInviteManager } from '@/components/CaregiverInviteManager';
+import { useCaregiver } from '@/hooks/useCaregiver';
 import { useMedications, Medication, MedicationDose, TimeOfDay } from '@/hooks/useMedications';
 import { useRewards } from '@/hooks/useRewards';
 import { useChallenges } from '@/hooks/useChallenges';
@@ -71,6 +74,7 @@ function ProfileMenuItem({
 }
 
 export function TodayDashboard() {
+  const navigate = useNavigate();
   const [activeNav, setActiveNav] = useState<NavItem>('today');
   const [selectedMedication, setSelectedMedication] = useState<Medication | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -79,6 +83,8 @@ export function TodayDashboard() {
   const [showHipaaSection, setShowHipaaSection] = useState(false);
   const [coinAnimation, setCoinAnimation] = useState<{ show: boolean; amount: number }>({ show: false, amount: 0 });
   const [showConfetti, setShowConfetti] = useState(false);
+  
+  const { isCaregiver, patientsICareFor } = useCaregiver();
 
   const showCoinAnimation = (amount: number) => {
     setCoinAnimation({ show: true, amount });
@@ -371,6 +377,30 @@ export function TodayDashboard() {
 
           {/* Apple Health & Siri */}
           <AppleHealthSettings />
+
+          {/* Family & Caregivers */}
+          <CaregiverInviteManager />
+
+          {/* Caregiver Dashboard Link (if user is a caregiver) */}
+          {isCaregiver && (
+            <div 
+              className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl p-4 border-2 border-primary/20 cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => navigate('/caregiver')}
+            >
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center">
+                  <Users className="h-6 w-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-lg">Caregiver Dashboard</h3>
+                  <p className="text-sm text-muted-foreground">
+                    View {patientsICareFor.length} {patientsICareFor.length === 1 ? 'person' : 'people'} you care for
+                  </p>
+                </div>
+                <ChevronRight className="h-6 w-6 text-muted-foreground" />
+              </div>
+            </div>
+          )}
 
           {/* Profile Menu Items */}
           <div className="space-y-3">
