@@ -8,6 +8,7 @@ import { EmergencyCardElder } from '@/components/EmergencyCardElder';
 import { EmergencyContactsManager } from '@/components/EmergencyContactsManager';
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { SoundSettings } from '@/components/SoundSettings';
+import { AppleHealthSettings } from '@/components/AppleHealthSettings';
 import { QuickActionsElder } from '@/components/QuickActionsElder';
 import { InteractiveDoseClock } from '@/components/InteractiveDoseClock';
 import { PrescriptionScanner } from '@/components/PrescriptionScanner';
@@ -21,7 +22,7 @@ import { HipaaSection } from '@/components/HipaaSection';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Heart, Info, AlertTriangle, Phone, PlayCircle, BookOpen, Clock, RefreshCw, Settings, ChevronRight, User, Shield, Loader2 } from 'lucide-react';
+import { Heart, Info, AlertTriangle, Phone, PlayCircle, BookOpen, Clock, RefreshCw, Settings, ChevronRight, User, Shield, Loader2, Smartphone } from 'lucide-react';
 import { useMedications, Medication, MedicationDose, TimeOfDay } from '@/hooks/useMedications';
 import { useRewards } from '@/hooks/useRewards';
 import { useChallenges } from '@/hooks/useChallenges';
@@ -367,6 +368,9 @@ export function TodayDashboard() {
 
           {/* Sound Settings */}
           <SoundSettings />
+
+          {/* Apple Health & Siri */}
+          <AppleHealthSettings />
 
           {/* Profile Menu Items */}
           <div className="space-y-3">
