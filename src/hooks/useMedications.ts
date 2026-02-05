@@ -418,6 +418,10 @@ export function useMedications() {
     strength: string;
     form: string;
     manufacturer?: string;
+   purpose?: string;
+   instructions?: string;
+   prescriber?: string;
+   schedules?: { time: string; timeOfDay: 'morning' | 'afternoon' | 'evening' | 'bedtime' }[];
   }) => {
     if (!userId) return null;
 
@@ -431,6 +435,9 @@ export function useMedications() {
           generic_name: med.genericName,
           strength: med.strength,
           form: med.form,
+         purpose: med.purpose,
+         instructions: med.instructions,
+         prescriber: med.prescriber,
           is_active: true,
         })
         .select()
@@ -438,8 +445,28 @@ export function useMedications() {
 
       if (error) throw error;
 
+     // If schedules are provided, create them
+     if (med.schedules && med.schedules.length > 0 && data) {
+       const schedulesToInsert = med.schedules.map(schedule => ({
+         user_id: userId,
+         medication_id: data.id,
+         scheduled_time: schedule.time,
+         time_of_day: schedule.timeOfDay,
+         is_active: true,
+       }));
+
+       const { error: scheduleError } = await supabase
+         .from('scheduled_doses')
+         .insert(schedulesToInsert);
+
+       if (scheduleError) {
+         console.error('Error adding schedules:', scheduleError);
+       }
+     }
+
       // Refresh medications
       await fetchMedications();
+     await fetchTodaysDoses();
 
       return data;
     } catch (error) {
