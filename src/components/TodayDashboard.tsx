@@ -31,6 +31,8 @@ import { useRewards } from '@/hooks/useRewards';
 import { useChallenges } from '@/hooks/useChallenges';
 import { useShop } from '@/hooks/useShop';
 import { useMedicationReminders } from '@/hooks/useMedicationReminders';
+import { AddMedicationSheet, NewMedicationData } from '@/components/AddMedicationSheet';
+import { NavigationDrawer } from '@/components/NavigationDrawer';
 
 type NavItem = 'today' | 'medications' | 'scan' | 'stats' | 'profile';
 
@@ -83,6 +85,8 @@ export function TodayDashboard() {
   const [showHipaaSection, setShowHipaaSection] = useState(false);
   const [coinAnimation, setCoinAnimation] = useState<{ show: boolean; amount: number }>({ show: false, amount: 0 });
   const [showConfetti, setShowConfetti] = useState(false);
+  const [showAddMedication, setShowAddMedication] = useState(false);
+  const [showNavigationDrawer, setShowNavigationDrawer] = useState(false);
   
   const { isCaregiver, patientsICareFor } = useCaregiver();
 
@@ -291,6 +295,24 @@ export function TodayDashboard() {
     setActiveNav('today');
   };
 
+  const handleAddMedicationManually = async (newMed: NewMedicationData) => {
+    const result = await addMedication({
+      name: newMed.name,
+      genericName: newMed.genericName,
+      strength: newMed.strength,
+      form: newMed.form,
+      purpose: newMed.purpose,
+      instructions: newMed.instructions,
+      prescriber: newMed.prescriber,
+      schedules: newMed.schedules,
+    });
+    if (result) {
+      toast.success(`${newMed.name} ${newMed.strength} has been added!`, {
+        duration: 4000,
+      });
+    }
+  };
+
   // Loading state
   if (loading) {
     return (
@@ -333,6 +355,7 @@ export function TodayDashboard() {
         <ElderHeader 
           userName={userName}
           notificationCount={0}
+          onMenuClick={() => setShowNavigationDrawer(true)}
         />
         
         <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
@@ -451,6 +474,16 @@ export function TodayDashboard() {
             <HipaaSection onClose={() => setShowHipaaSection(false)} />
           </SheetContent>
         </Sheet>
+
+        {/* Navigation Drawer for Profile */}
+        <NavigationDrawer
+          open={showNavigationDrawer}
+          onClose={() => setShowNavigationDrawer(false)}
+          onNavigate={setActiveNav}
+          activeItem={activeNav}
+          isCaregiver={isCaregiver}
+          onCaregiverDashboard={() => navigate('/caregiver')}
+        />
       </div>
     );
   }
@@ -491,12 +524,13 @@ export function TodayDashboard() {
       <ElderHeader 
         userName={userName}
         notificationCount={doses.filter(d => d.status === 'pending').length}
+        onMenuClick={() => setShowNavigationDrawer(true)}
       />
       
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-8">
         {/* Quick Actions */}
         <QuickActionsElder 
-          onAddMedication={() => toast.info('Add medication coming soon!')}
+          onAddMedication={() => setShowAddMedication(true)}
           onScan={handleOpenScanner}
           pharmacyPhone="(555) 123-4567"
         />
@@ -786,6 +820,23 @@ export function TodayDashboard() {
           )}
         </SheetContent>
       </Sheet>
+
+      {/* Add Medication Sheet */}
+      <AddMedicationSheet
+        open={showAddMedication}
+        onClose={() => setShowAddMedication(false)}
+        onSave={handleAddMedicationManually}
+      />
+
+      {/* Navigation Drawer */}
+      <NavigationDrawer
+        open={showNavigationDrawer}
+        onClose={() => setShowNavigationDrawer(false)}
+        onNavigate={setActiveNav}
+        activeItem={activeNav}
+        isCaregiver={isCaregiver}
+        onCaregiverDashboard={() => navigate('/caregiver')}
+      />
     </div>
     </>
   );
