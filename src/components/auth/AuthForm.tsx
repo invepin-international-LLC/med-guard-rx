@@ -211,6 +211,7 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
         </p>
         <Button
           variant="link"
+          type="button"
           onClick={() => setIsLogin(!isLogin)}
           className="text-xl font-semibold"
         >
