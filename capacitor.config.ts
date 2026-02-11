@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.45501de00fa248198669d3873eb1bd90',
+  appId: 'com.medguardrx.app',
   appName: 'Med Guard Rx',
   webDir: 'dist',
   server: {
