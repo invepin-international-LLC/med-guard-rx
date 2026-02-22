@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ArrowLeft, Send, Loader2, Sparkles } from 'lucide-react';
+import { ArrowLeft, Send, Loader2, Sparkles, Mic, MicOff } from 'lucide-react';
 import { toast } from 'sonner';
 import drRxAvatar from '@/assets/dr-rx-avatar.png';
 
@@ -28,8 +28,12 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [medications, setMedications] = useState<any[]>([]);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const speechSupported = typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
   // Fetch user's current medications
   useEffect(() => {
@@ -166,6 +170,48 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
     sendMessage(input);
   };
 
+  const toggleListening = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error('Voice input is not supported in this browser.');
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+    recognitionRef.current = recognition;
+
+    recognition.onresult = (event: any) => {
+      const transcript = Array.from(event.results)
+        .map((r: any) => r[0].transcript)
+        .join('');
+      setInput(transcript);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error);
+      setIsListening(false);
+      if (event.error === 'not-allowed') {
+        toast.error('Microphone access denied. Please enable it in your browser settings.');
+      }
+    };
+
+    recognition.start();
+    setIsListening(true);
+  };
+
   return (
     <div className="flex flex-col h-full min-h-screen bg-background">
       {/* Header */}
@@ -263,12 +309,24 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
         <form onSubmit={handleSubmit} className="flex gap-2 max-w-2xl mx-auto">
           <Input
             ref={inputRef}
-            placeholder="Ask Dr. Rx about your medications..."
+            placeholder={isListening ? "Listening..." : "Ask Dr. Rx about your medications..."}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             disabled={isLoading}
-            className="h-12 rounded-xl text-base flex-1"
+            className={`h-12 rounded-xl text-base flex-1 ${isListening ? 'border-destructive ring-1 ring-destructive' : ''}`}
           />
+          {speechSupported && (
+            <Button
+              type="button"
+              variant={isListening ? "destructive" : "outline"}
+              size="icon"
+              className="h-12 w-12 rounded-xl shrink-0"
+              onClick={toggleListening}
+              disabled={isLoading}
+            >
+              {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+            </Button>
+          )}
           <Button
             type="submit"
             variant="accent"
