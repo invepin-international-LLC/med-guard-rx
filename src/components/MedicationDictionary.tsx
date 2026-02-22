@@ -3,7 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Search, Loader2, Pill, AlertTriangle, Info, ChevronRight, BookOpen, ArrowLeft } from 'lucide-react';
+import { Search, Loader2, Pill, AlertTriangle, Info, ChevronRight, BookOpen, ArrowLeft, PlusCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 interface DrugInfo {
@@ -27,9 +28,10 @@ interface DrugInfo {
 
 interface MedicationDictionaryProps {
   onBack: () => void;
+  onAddMedication?: (drug: DrugInfo) => void;
 }
 
-export function MedicationDictionary({ onBack }: MedicationDictionaryProps) {
+export function MedicationDictionary({ onBack, onAddMedication }: MedicationDictionaryProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<DrugInfo[]>([]);
   const [selectedDrug, setSelectedDrug] = useState<DrugInfo | null>(null);
@@ -185,8 +187,27 @@ export function MedicationDictionary({ onBack }: MedicationDictionaryProps) {
                 </div>
               </SheetHeader>
 
+              {/* Add to My Medications Button */}
+              {onAddMedication && (
+                <div className="py-4">
+                  <Button
+                    variant="accent"
+                    size="xl"
+                    className="w-full"
+                    onClick={() => {
+                      onAddMedication(detailDrug);
+                      setSelectedDrug(null);
+                      setDetailDrug(null);
+                      toast.success('Opening medication form — fill in your dosage details');
+                    }}
+                  >
+                    <PlusCircle className="w-5 h-5 mr-2" />
+                    Add to My Medications
+                  </Button>
+                </div>
+              )}
+
               <div className="py-6 space-y-5">
-                {/* Description / Purpose */}
                 {(detailDrug.purpose || detailDrug.description) && (
                   <section className="bg-primary/5 rounded-2xl p-5">
                     <div className="flex items-center gap-3 mb-3">

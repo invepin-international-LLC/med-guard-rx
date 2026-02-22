@@ -1,4 +1,4 @@
- import { useState } from 'react';
+ import { useState, useEffect } from 'react';
  import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
  import { Button } from '@/components/ui/button';
  import { Input } from '@/components/ui/input';
@@ -8,11 +8,12 @@
  import { toast } from 'sonner';
  import { Pill, Plus, Clock } from 'lucide-react';
  
- interface AddMedicationSheetProps {
-   open: boolean;
-   onClose: () => void;
-   onSave: (medication: NewMedicationData) => Promise<void>;
- }
+interface AddMedicationSheetProps {
+  open: boolean;
+  onClose: () => void;
+  onSave: (medication: NewMedicationData) => Promise<void>;
+  initialData?: Partial<NewMedicationData>;
+}
  
  export interface NewMedicationData {
    name: string;
@@ -47,18 +48,26 @@
    { value: 'bedtime', label: 'Bedtime', defaultTime: '21:00' },
  ];
  
- export function AddMedicationSheet({ open, onClose, onSave }: AddMedicationSheetProps) {
-   const [saving, setSaving] = useState(false);
-   const [formData, setFormData] = useState<NewMedicationData>({
-     name: '',
-     genericName: '',
-     strength: '',
-     form: 'pill',
-     purpose: '',
-     instructions: '',
-     prescriber: '',
-     schedules: [{ time: '08:00', timeOfDay: 'morning' }],
-   });
+export function AddMedicationSheet({ open, onClose, onSave, initialData }: AddMedicationSheetProps) {
+  const [saving, setSaving] = useState(false);
+  const defaultData: NewMedicationData = {
+    name: '',
+    genericName: '',
+    strength: '',
+    form: 'pill',
+    purpose: '',
+    instructions: '',
+    prescriber: '',
+    schedules: [{ time: '08:00', timeOfDay: 'morning' }],
+  };
+  const [formData, setFormData] = useState<NewMedicationData>({ ...defaultData, ...initialData });
+
+  // Update form when initialData changes (e.g. from dictionary)
+  useEffect(() => {
+    if (initialData && open) {
+      setFormData(prev => ({ ...defaultData, ...initialData, schedules: prev.schedules }));
+    }
+  }, [initialData, open]);
  
    const handleAddSchedule = () => {
      const nextTimeOfDay = TIME_OF_DAY_OPTIONS.find(

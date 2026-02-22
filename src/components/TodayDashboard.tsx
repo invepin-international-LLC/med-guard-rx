@@ -88,6 +88,7 @@ export function TodayDashboard() {
   const [coinAnimation, setCoinAnimation] = useState<{ show: boolean; amount: number }>({ show: false, amount: 0 });
   const [showConfetti, setShowConfetti] = useState(false);
   const [showAddMedication, setShowAddMedication] = useState(false);
+  const [prefillMedData, setPrefillMedData] = useState<Partial<import('@/components/AddMedicationSheet').NewMedicationData> | undefined>(undefined);
   const [showNavigationDrawer, setShowNavigationDrawer] = useState(false);
   const [showDictionary, setShowDictionary] = useState(false);
   
@@ -316,6 +317,29 @@ export function TodayDashboard() {
     }
   };
 
+  const handleAddFromDictionary = (drug: any) => {
+    // Map dictionary drug to AddMedicationSheet format
+    const formMap: Record<string, string> = {
+      'oral': 'pill', 'tablet': 'pill', 'capsule': 'capsule',
+      'liquid': 'liquid', 'injection': 'injection', 'patch': 'patch',
+      'inhaler': 'inhaler', 'drops': 'drops', 'cream': 'cream',
+    };
+    const doseForm = (drug.doseForms?.[0] || '').toLowerCase();
+    const mappedForm = Object.entries(formMap).find(([key]) => doseForm.includes(key))?.[1] || 'pill';
+    
+    const strength = drug.activeIngredients?.[0]?.strength || '';
+    
+    setPrefillMedData({
+      name: drug.name,
+      genericName: drug.genericName || undefined,
+      strength,
+      form: mappedForm,
+      purpose: drug.purpose?.substring(0, 200) || drug.description?.substring(0, 200) || undefined,
+    });
+    setShowDictionary(false);
+    setShowAddMedication(true);
+  };
+
   // Loading state
   if (loading) {
     return (
@@ -498,7 +522,7 @@ export function TodayDashboard() {
         <div className="min-h-screen bg-background pb-32">
           <ElderHeader userName={userName} notificationCount={0} />
           <main className="max-w-2xl mx-auto px-4 py-6">
-            <MedicationDictionary onBack={() => setShowDictionary(false)} />
+            <MedicationDictionary onBack={() => setShowDictionary(false)} onAddMedication={handleAddFromDictionary} />
           </main>
           <ElderBottomNav activeItem={activeNav} onNavigate={(item) => { setShowDictionary(false); setActiveNav(item); }} />
         </div>
@@ -850,8 +874,9 @@ export function TodayDashboard() {
       {/* Add Medication Sheet */}
       <AddMedicationSheet
         open={showAddMedication}
-        onClose={() => setShowAddMedication(false)}
+        onClose={() => { setShowAddMedication(false); setPrefillMedData(undefined); }}
         onSave={handleAddMedicationManually}
+        initialData={prefillMedData}
       />
 
       {/* Navigation Drawer */}
