@@ -35,6 +35,7 @@ import { AddMedicationSheet, NewMedicationData } from '@/components/AddMedicatio
 import { NavigationDrawer } from '@/components/NavigationDrawer';
 import { DrugInteractionWarnings } from '@/components/DrugInteractionWarnings';
 import { MedicationDictionary } from '@/components/MedicationDictionary';
+import { DrRxChat } from '@/components/DrRxChat';
 
 type NavItem = 'today' | 'medications' | 'scan' | 'stats' | 'profile';
 
@@ -91,6 +92,7 @@ export function TodayDashboard() {
   const [prefillMedData, setPrefillMedData] = useState<Partial<import('@/components/AddMedicationSheet').NewMedicationData> | undefined>(undefined);
   const [showNavigationDrawer, setShowNavigationDrawer] = useState(false);
   const [showDictionary, setShowDictionary] = useState(false);
+  const [showDrRx, setShowDrRx] = useState(false);
   
   const { isCaregiver, patientsICareFor } = useCaregiver();
 
@@ -339,6 +341,11 @@ export function TodayDashboard() {
     setShowDictionary(false);
     setShowAddMedication(true);
   };
+
+  // Show Dr. Rx Chat
+  if (showDrRx) {
+    return <DrRxChat onBack={() => setShowDrRx(false)} />;
+  }
 
   // Loading state
   if (loading) {
@@ -888,6 +895,15 @@ export function TodayDashboard() {
         isCaregiver={isCaregiver}
         onCaregiverDashboard={() => navigate('/caregiver')}
       />
+
+      {/* Dr. Rx Floating Button */}
+      <button
+        onClick={() => setShowDrRx(true)}
+        className="fixed bottom-24 right-4 z-40 w-14 h-14 rounded-full bg-primary shadow-lg shadow-primary/30 flex items-center justify-center hover:scale-105 transition-transform active:scale-95 border-2 border-primary-foreground/20"
+        aria-label="Ask Dr. Rx"
+      >
+        <span className="text-2xl">💊</span>
+      </button>
     </div>
     </>
   );
