@@ -3,6 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { Shield, Pill, Bell, Users, Brain, Trophy, ChevronRight, ChevronLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
+import demoDashboard from '@/assets/demo-dashboard.png';
+import demoDrRx from '@/assets/demo-dr-rx.png';
+import demoRewards from '@/assets/demo-rewards.png';
+
+const APP_SCREENS = [
+  { image: demoDashboard, label: 'Track Your Meds', description: 'Organized by time of day with one-tap dose logging' },
+  { image: demoDrRx, label: 'Ask Dr. Rx', description: 'AI pharmacist answers your medication questions instantly' },
+  { image: demoRewards, label: 'Earn Rewards', description: 'Spin the Lucky Dose slot machine and collect badges' },
+];
 
 const FEATURES = [
   {
@@ -168,6 +177,52 @@ export default function Landing() {
                 <h3 className="font-bold text-foreground">{f.title}</h3>
                 <p className="text-sm text-muted-foreground mt-0.5">{f.description}</p>
               </div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* App Showcase */}
+      <section className="max-w-2xl mx-auto px-6 py-16 overflow-hidden">
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-50px' }}
+          transition={{ duration: 0.5 }}
+          className="text-2xl font-bold text-center mb-3"
+        >
+          See It in Action
+        </motion.h2>
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-30px' }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="text-muted-foreground text-center mb-10 text-sm"
+        >
+          A quick look at what Med Guard Rx can do for you
+        </motion.p>
+        <div className="grid grid-cols-3 gap-4 md:gap-6">
+          {APP_SCREENS.map((screen, i) => (
+            <motion.div
+              key={screen.label}
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-30px' }}
+              transition={{ duration: 0.5, delay: i * 0.15 }}
+              whileHover={{ y: -8, scale: 1.03 }}
+              className="flex flex-col items-center"
+            >
+              <div className="rounded-2xl overflow-hidden shadow-lg border border-border/50 bg-card mb-3">
+                <img
+                  src={screen.image}
+                  alt={screen.label}
+                  className="w-full h-auto object-cover"
+                  loading="lazy"
+                />
+              </div>
+              <h3 className="font-bold text-sm text-foreground">{screen.label}</h3>
+              <p className="text-xs text-muted-foreground text-center mt-0.5 leading-snug">{screen.description}</p>
             </motion.div>
           ))}
         </div>
