@@ -10,8 +10,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Pencil, Trash2, ChevronRight, Calendar, User } from 'lucide-react';
+import { Pencil, Trash2, ChevronRight, Calendar, User, Pill } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useMedicationImage } from '@/hooks/useMedicationImage';
 
 interface MedicationListCardProps {
   medication: {
@@ -23,6 +24,7 @@ interface MedicationListCardProps {
     purpose?: string;
     refillDate?: string;
     prescriber?: string;
+    imageUrl?: string;
   };
   scheduleCount: number;
   onEdit: () => void;
@@ -50,6 +52,11 @@ export function MedicationListCard({
   onViewDetails,
 }: MedicationListCardProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const { imageUrl } = useMedicationImage({
+    name: medication.name,
+    genericName: medication.genericName,
+    existingImageUrl: medication.imageUrl,
+  });
 
   const handleDelete = () => {
     setShowDeleteDialog(false);
@@ -69,10 +76,14 @@ export function MedicationListCard({
           className="w-full text-left focus:outline-none"
         >
           <div className="flex items-start gap-4">
-            {/* Medication Icon */}
-            <div className="text-4xl flex-shrink-0">
-              {formEmojis[medication.form] || '💊'}
-            </div>
+            {/* Medication Image */}
+            {imageUrl ? (
+              <img src={imageUrl} alt={medication.name} className="w-16 h-16 rounded-xl object-cover shadow-md flex-shrink-0" />
+            ) : (
+              <div className="text-4xl flex-shrink-0">
+                {formEmojis[medication.form] || '💊'}
+              </div>
+            )}
 
             {/* Medication Info */}
             <div className="flex-1 min-w-0">

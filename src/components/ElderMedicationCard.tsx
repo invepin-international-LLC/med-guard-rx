@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Check, Clock, X, ChevronRight, Volume2 } from 'lucide-react';
+import { useMedicationImage } from '@/hooks/useMedicationImage';
 import { cn } from '@/lib/utils';
 
 type TimeOfDay = 'morning' | 'afternoon' | 'evening' | 'bedtime';
@@ -21,6 +22,7 @@ interface Medication {
   strength: string;
   form: string;
   purpose?: string;
+  imageUrl?: string;
 }
 
 interface ElderMedicationCardProps {
@@ -65,6 +67,11 @@ export function ElderMedicationCard({
   const isTaken = dose.status === 'taken';
   const isSkipped = dose.status === 'skipped';
   const isMissed = dose.status === 'missed';
+  const { imageUrl } = useMedicationImage({ 
+    name: medication.name, 
+    genericName: medication.genericName,
+    existingImageUrl: medication.imageUrl,
+  });
 
   return (
     <div 
@@ -79,7 +86,11 @@ export function ElderMedicationCard({
       {/* Header */}
       <div className="flex items-start justify-between mb-5">
         <div className="flex items-center gap-4">
-          <div className="text-5xl">{formEmojis[medication.form] || '💊'}</div>
+          {imageUrl ? (
+            <img src={imageUrl} alt={medication.name} className="w-16 h-16 rounded-xl object-cover shadow-md" />
+          ) : (
+            <div className="text-5xl">{formEmojis[medication.form] || '💊'}</div>
+          )}
           <div>
             <h3 className="text-elder-xl text-foreground">{medication.name}</h3>
             <p className="text-elder text-muted-foreground">{medication.strength}</p>
