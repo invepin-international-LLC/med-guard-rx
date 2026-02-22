@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -26,8 +27,24 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [medications, setMedications] = useState<any[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch user's current medications
+  useEffect(() => {
+    const fetchMeds = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from('medications')
+        .select('name, strength, form, purpose, instructions, generic_name')
+        .eq('user_id', user.id)
+        .eq('is_active', true);
+      if (data) setMedications(data);
+    };
+    fetchMeds();
+  }, []);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -53,7 +70,7 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ messages: allMessages }),
+        body: JSON.stringify({ messages: allMessages, medications }),
       });
 
       if (!resp.ok) {

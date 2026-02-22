@@ -32,8 +32,16 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages } = await req.json();
+    const { messages, medications } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+
+    // Build personalized context from the user's medication list
+    let medContext = '';
+    if (medications && Array.isArray(medications) && medications.length > 0) {
+      medContext = `\n\nThe user currently takes these medications:\n${medications.map((m: any) =>
+        `- ${m.name}${m.strength ? ' ' + m.strength : ''}${m.form ? ' (' + m.form + ')' : ''}${m.purpose ? ' — for: ' + m.purpose : ''}${m.instructions ? ' | Instructions: ' + m.instructions : ''}`
+      ).join('\n')}\n\nUse this medication list to give personalized, relevant answers. Proactively flag potential interactions between their medications when relevant. Reference their specific medications by name when applicable.`;
+    }
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -45,7 +53,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: SYSTEM_PROMPT + medContext },
           ...messages,
         ],
         stream: true,
