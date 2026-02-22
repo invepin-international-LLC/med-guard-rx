@@ -33,6 +33,8 @@ import { useShop } from '@/hooks/useShop';
 import { useMedicationReminders } from '@/hooks/useMedicationReminders';
 import { AddMedicationSheet, NewMedicationData } from '@/components/AddMedicationSheet';
 import { NavigationDrawer } from '@/components/NavigationDrawer';
+import { DrugInteractionWarnings } from '@/components/DrugInteractionWarnings';
+import { MedicationDictionary } from '@/components/MedicationDictionary';
 
 type NavItem = 'today' | 'medications' | 'scan' | 'stats' | 'profile';
 
@@ -87,6 +89,7 @@ export function TodayDashboard() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showAddMedication, setShowAddMedication] = useState(false);
   const [showNavigationDrawer, setShowNavigationDrawer] = useState(false);
+  const [showDictionary, setShowDictionary] = useState(false);
   
   const { isCaregiver, patientsICareFor } = useCaregiver();
 
@@ -490,11 +493,23 @@ export function TodayDashboard() {
 
   // Show medications list page
   if (activeNav === 'medications') {
+    if (showDictionary) {
+      return (
+        <div className="min-h-screen bg-background pb-32">
+          <ElderHeader userName={userName} notificationCount={0} />
+          <main className="max-w-2xl mx-auto px-4 py-6">
+            <MedicationDictionary onBack={() => setShowDictionary(false)} />
+          </main>
+          <ElderBottomNav activeItem={activeNav} onNavigate={(item) => { setShowDictionary(false); setActiveNav(item); }} />
+        </div>
+      );
+    }
     return (
       <MedicationsList
-        onNavigate={setActiveNav}
+        onNavigate={(item) => { setShowDictionary(false); setActiveNav(item); }}
         onScan={handleOpenScanner}
         userName={userName}
+        onOpenDictionary={() => setShowDictionary(true)}
       />
     );
   }
@@ -604,6 +619,17 @@ export function TodayDashboard() {
             window.location.href = 'tel:+15551234567';
           }}
         />
+
+        {/* Drug Interaction Warnings */}
+        {medications.length >= 2 && (
+          <DrugInteractionWarnings
+            medications={medications.map(m => ({
+              name: m.name,
+              genericName: m.genericName,
+            }))}
+          />
+        )}
+
         {!hasMedications && (
           <div className="bg-card rounded-3xl p-8 shadow-elder-lg border-2 border-border text-center">
             <div className="w-24 h-24 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-6">

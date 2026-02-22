@@ -8,7 +8,8 @@ import { MedicationDetailSheet } from '@/components/MedicationDetailSheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { Loader2, Search, Plus, Pill, Camera } from 'lucide-react';
+import { Loader2, Search, Plus, Pill, Camera, BookOpen } from 'lucide-react';
+import { DrugInteractionWarnings } from '@/components/DrugInteractionWarnings';
 
 type NavItem = 'today' | 'medications' | 'scan' | 'stats' | 'profile';
 
@@ -37,9 +38,10 @@ interface MedicationsListProps {
   onNavigate: (item: NavItem) => void;
   onScan: () => void;
   userName: string;
+  onOpenDictionary?: () => void;
 }
 
-export function MedicationsList({ onNavigate, onScan, userName }: MedicationsListProps) {
+export function MedicationsList({ onNavigate, onScan, userName, onOpenDictionary }: MedicationsListProps) {
   const [medications, setMedications] = useState<MedicationWithSchedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -227,7 +229,28 @@ export function MedicationsList({ onNavigate, onScan, userName }: MedicationsLis
           >
             <Camera className="w-6 h-6" />
           </Button>
+          {onOpenDictionary && (
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-14 w-14 rounded-xl"
+              onClick={onOpenDictionary}
+              title="Medication Dictionary"
+            >
+              <BookOpen className="w-6 h-6" />
+            </Button>
+          )}
         </div>
+
+        {/* Drug Interaction Warnings */}
+        {medications.length >= 2 && (
+          <DrugInteractionWarnings
+            medications={medications.map(m => ({
+              name: m.name,
+              genericName: m.genericName,
+            }))}
+          />
+        )}
 
         {/* Empty State */}
         {medications.length === 0 && (

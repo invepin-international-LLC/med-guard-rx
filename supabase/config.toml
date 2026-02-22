@@ -17,3 +17,12 @@ verify_jwt = false
 
 [functions.check-refill-reminders]
 verify_jwt = false
+
+[functions.rximage-lookup]
+verify_jwt = false
+
+[functions.drug-interaction-check]
+verify_jwt = false
+
+[functions.medication-dictionary]
+verify_jwt = false
