@@ -12,82 +12,107 @@ interface InteractionResult {
   drug2: string;
 }
 
-async function getRxcuiForDrug(drugName: string): Promise<string | null> {
+// Known high-severity interaction pairs (common dangerous combinations)
+const KNOWN_INTERACTIONS: Record<string, { severity: string; description: string }> = {
+  'warfarin+aspirin': {
+    severity: 'high',
+    description: 'Aspirin may increase the anticoagulant effect of Warfarin, significantly raising the risk of bleeding. This combination should be used with extreme caution and medical supervision.',
+  },
+  'warfarin+ibuprofen': {
+    severity: 'high',
+    description: 'Ibuprofen can increase the risk of bleeding when taken with Warfarin by inhibiting platelet function and potentially increasing Warfarin levels.',
+  },
+  'warfarin+naproxen': {
+    severity: 'high',
+    description: 'Naproxen may enhance the anticoagulant effect of Warfarin, increasing bleeding risk.',
+  },
+  'lisinopril+potassium': {
+    severity: 'moderate',
+    description: 'ACE inhibitors like Lisinopril can increase potassium levels. Taking additional potassium supplements may lead to dangerously high potassium (hyperkalemia).',
+  },
+  'lisinopril+spironolactone': {
+    severity: 'moderate',
+    description: 'Both Lisinopril and Spironolactone can raise potassium levels, increasing the risk of hyperkalemia.',
+  },
+  'metformin+alcohol': {
+    severity: 'high',
+    description: 'Alcohol can increase the risk of lactic acidosis when taken with Metformin, a potentially life-threatening condition.',
+  },
+  'simvastatin+amiodarone': {
+    severity: 'high',
+    description: 'Amiodarone increases simvastatin levels significantly, raising the risk of severe muscle damage (rhabdomyolysis).',
+  },
+  'methotrexate+ibuprofen': {
+    severity: 'high',
+    description: 'NSAIDs like Ibuprofen can decrease methotrexate elimination, leading to toxic levels.',
+  },
+  'ssri+maoi': {
+    severity: 'high',
+    description: 'Combining SSRIs with MAOIs can cause serotonin syndrome, a potentially fatal condition.',
+  },
+};
+
+function normalizedrugName(name: string): string {
+  return name.toLowerCase().trim()
+    .replace(/\s*(sodium|hydrochloride|hcl|tablets?|capsules?|pills?)\s*/gi, '')
+    .trim();
+}
+
+function checkKnownInteraction(drug1: string, drug2: string): { severity: string; description: string } | null {
+  const d1 = normalizedrugName(drug1);
+  const d2 = normalizedrugName(drug2);
+  
+  const key1 = `${d1}+${d2}`;
+  const key2 = `${d2}+${d1}`;
+  
+  return KNOWN_INTERACTIONS[key1] || KNOWN_INTERACTIONS[key2] || null;
+}
+
+async function checkOpenFdaInteraction(drug1: string, drug2: string): Promise<string | null> {
   try {
-    const url = `https://rxnav.nlm.nih.gov/REST/rxcui.json?name=${encodeURIComponent(drugName)}&search=1`;
+    const d1 = encodeURIComponent(normalizedrugName(drug1));
+    const d2 = encodeURIComponent(normalizedrugName(drug2));
+    
+    const url = `https://api.fda.gov/drug/label.json?search=openfda.generic_name:"${d1}"+AND+drug_interactions:"${d2}"&limit=1`;
+    console.log(`OpenFDA check: ${url}`);
+    
     const response = await fetch(url);
-    if (!response.ok) return null;
+    if (!response.ok) {
+      await response.text();
+      return null;
+    }
+    
     const data = await response.json();
-    return data?.idGroup?.rxnormId?.[0] || null;
-  } catch {
+    const results = data?.results;
+    
+    if (results && results.length > 0 && results[0].drug_interactions) {
+      const interactionText = results[0].drug_interactions.join(' ');
+      // Find the relevant sentence about drug2
+      const sentences = interactionText.split(/\.\s+/);
+      const relevant = sentences.find((s: string) => 
+        s.toLowerCase().includes(normalizedrugName(drug2))
+      );
+      if (relevant) {
+        return relevant.trim().substring(0, 300) + (relevant.length > 300 ? '...' : '');
+      }
+      // Return first 300 chars of interaction section
+      return interactionText.substring(0, 300) + '...';
+    }
+    return null;
+  } catch (error) {
+    console.error('OpenFDA interaction check error:', error);
     return null;
   }
 }
 
-async function getInteractionsForRxcui(rxcui: string): Promise<any[]> {
-  try {
-    const url = `https://rxnav.nlm.nih.gov/REST/interaction/interaction.json?rxcui=${rxcui}&sources=DrugBank`;
-    console.log(`Interaction check: ${url}`);
-    const response = await fetch(url);
-    if (!response.ok) return [];
-    const data = await response.json();
-    
-    const groups = data?.interactionTypeGroup || [];
-    const interactions: any[] = [];
-    
-    for (const group of groups) {
-      for (const type of group.interactionType || []) {
-        for (const pair of type.interactionPair || []) {
-          interactions.push({
-            severity: pair.severity || 'N/A',
-            description: pair.description || '',
-            drugs: pair.interactionConcept?.map((c: any) => ({
-              name: c.minConceptItem?.name,
-              rxcui: c.minConceptItem?.rxcui,
-            })) || [],
-          });
-        }
-      }
-    }
-    
-    return interactions;
-  } catch (error) {
-    console.error('Interaction lookup error:', error);
-    return [];
-  }
-}
-
-async function checkPairInteraction(rxcui1: string, rxcui2: string): Promise<any[]> {
-  try {
-    const url = `https://rxnav.nlm.nih.gov/REST/interaction/list.json?rxcuis=${rxcui1}+${rxcui2}`;
-    console.log(`Pair interaction check: ${url}`);
-    const response = await fetch(url);
-    if (!response.ok) return [];
-    const data = await response.json();
-    
-    const results: any[] = [];
-    const groups = data?.fullInteractionTypeGroup || [];
-    
-    for (const group of groups) {
-      for (const type of group.fullInteractionType || []) {
-        for (const pair of type.interactionPair || []) {
-          results.push({
-            severity: pair.severity || 'N/A',
-            description: pair.description || '',
-            drugs: pair.interactionConcept?.map((c: any) => ({
-              name: c.minConceptItem?.name,
-              rxcui: c.minConceptItem?.rxcui,
-            })) || [],
-          });
-        }
-      }
-    }
-    
-    return results;
-  } catch (error) {
-    console.error('Pair interaction error:', error);
-    return [];
-  }
+function classifySeverity(description: string): string {
+  const lowerDesc = description.toLowerCase();
+  const highKeywords = ['fatal', 'death', 'life-threatening', 'contraindicated', 'severe bleeding', 'do not use', 'never', 'rhabdomyolysis', 'serotonin syndrome', 'significantly'];
+  const moderateKeywords = ['caution', 'monitor', 'may increase', 'may decrease', 'risk of', 'elevated'];
+  
+  if (highKeywords.some(k => lowerDesc.includes(k))) return 'high';
+  if (moderateKeywords.some(k => lowerDesc.includes(k))) return 'moderate';
+  return 'low';
 }
 
 serve(async (req: Request) => {
@@ -105,39 +130,34 @@ serve(async (req: Request) => {
       );
     }
 
-    // Get RxCUI for each medication
-    const medsWithRxcui = await Promise.all(
-      medications.map(async (med: { name: string; genericName?: string; rxcui?: string }) => {
-        let rxcui = med.rxcui || null;
-        if (!rxcui) {
-          // Try generic name first (more reliable), then brand name
-          if (med.genericName) {
-            rxcui = await getRxcuiForDrug(med.genericName);
-          }
-          if (!rxcui) {
-            rxcui = await getRxcuiForDrug(med.name);
-          }
-        }
-        return { ...med, rxcui };
-      })
-    );
-
     const interactions: InteractionResult[] = [];
     
     // Check all pairs
-    for (let i = 0; i < medsWithRxcui.length; i++) {
-      for (let j = i + 1; j < medsWithRxcui.length; j++) {
-        const med1 = medsWithRxcui[i];
-        const med2 = medsWithRxcui[j];
+    for (let i = 0; i < medications.length; i++) {
+      for (let j = i + 1; j < medications.length; j++) {
+        const med1 = medications[i];
+        const med2 = medications[j];
+        const name1 = med1.genericName || med1.name;
+        const name2 = med2.genericName || med2.name;
         
-        if (!med1.rxcui || !med2.rxcui) continue;
-        
-        const pairInteractions = await checkPairInteraction(med1.rxcui, med2.rxcui);
-        
-        for (const interaction of pairInteractions) {
+        // First check known interactions (instant, reliable)
+        const known = checkKnownInteraction(name1, name2);
+        if (known) {
           interactions.push({
-            severity: interaction.severity,
-            description: interaction.description,
+            severity: known.severity,
+            description: known.description,
+            drug1: med1.name,
+            drug2: med2.name,
+          });
+          continue;
+        }
+        
+        // Fall back to OpenFDA API
+        const fdaResult = await checkOpenFdaInteraction(name1, name2);
+        if (fdaResult) {
+          interactions.push({
+            severity: classifySeverity(fdaResult),
+            description: fdaResult,
             drug1: med1.name,
             drug2: med2.name,
           });
@@ -148,7 +168,7 @@ serve(async (req: Request) => {
     console.log(`Found ${interactions.length} interactions for ${medications.length} medications`);
 
     return new Response(
-      JSON.stringify({ success: true, interactions, checkedCount: medsWithRxcui.filter(m => m.rxcui).length }),
+      JSON.stringify({ success: true, interactions, checkedCount: medications.length }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
