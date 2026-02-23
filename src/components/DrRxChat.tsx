@@ -4,11 +4,21 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ArrowLeft, Send, Loader2, Sparkles, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
+import { ArrowLeft, Send, Loader2, Sparkles, Mic, MicOff, Volume2, VolumeX, ChevronDown } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import drRxAvatar from '@/assets/dr-rx-avatar.png';
 
 type Message = { role: 'user' | 'assistant'; content: string };
+
+const VOICE_OPTIONS = [
+  { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah', description: 'Warm & clear (Female)' },
+  { id: 'FGY2WhTYpPnrIDTdsKH5', name: 'Laura', description: 'Calm & gentle (Female)' },
+  { id: 'Xb7hH8MSUJpSbSDYk0k2', name: 'Alice', description: 'Friendly & bright (Female)' },
+  { id: 'JBFqnCBsd6RMkjVDRZzb', name: 'George', description: 'Deep & reassuring (Male)' },
+  { id: 'TX3LPaxmHKxFdv7VOQHJ', name: 'Liam', description: 'Youthful & clear (Male)' },
+  { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel', description: 'Warm & professional (Male)' },
+];
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/dr-rx-chat`;
 
@@ -28,6 +38,7 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [medications, setMedications] = useState<any[]>([]);
+  const [selectedVoice, setSelectedVoice] = useState(VOICE_OPTIONS[0].id);
   const [isListening, setIsListening] = useState(false);
   const [ttsEnabled, setTtsEnabled] = useState(true);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -70,7 +81,7 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
-          body: JSON.stringify({ text: clean }),
+          body: JSON.stringify({ text: clean, voiceId: selectedVoice }),
         }
       );
 
@@ -97,7 +108,7 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
       console.error('ElevenLabs TTS error:', e);
       setIsSpeaking(false);
     }
-  }, [ttsEnabled]);
+  }, [ttsEnabled, selectedVoice]);
 
   const stopSpeaking = useCallback(() => {
     if (audioRef.current) {
@@ -312,10 +323,24 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
         <img src={drRxAvatar} alt="Dr. Rx" className="w-10 h-10 rounded-full border-2 border-primary" />
         <div className="flex-1 min-w-0">
           <h2 className="text-lg font-bold text-foreground leading-tight">Dr. Rx</h2>
-          <p className="text-xs text-muted-foreground flex items-center gap-1">
-            <Sparkles className="w-3 h-3 text-primary" />
-            AI Medication Assistant
-          </p>
+          <div className="flex items-center gap-1">
+            <Sparkles className="w-3 h-3 text-primary shrink-0" />
+            <Select value={selectedVoice} onValueChange={setSelectedVoice}>
+              <SelectTrigger className="h-5 border-0 p-0 shadow-none text-xs text-muted-foreground font-normal hover:text-foreground transition-colors gap-0.5 w-auto [&>svg]:w-3 [&>svg]:h-3">
+                <span>Voice: {VOICE_OPTIONS.find(v => v.id === selectedVoice)?.name}</span>
+              </SelectTrigger>
+              <SelectContent>
+                {VOICE_OPTIONS.map(voice => (
+                  <SelectItem key={voice.id} value={voice.id}>
+                    <div>
+                      <span className="font-medium">{voice.name}</span>
+                      <span className="text-muted-foreground ml-1.5">— {voice.description}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         <Button
           variant="ghost"
