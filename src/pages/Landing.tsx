@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Pill, Bell, Users, Brain, Trophy, ChevronRight, ChevronLeft, ArrowRight, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
 import demoDashboard from '@/assets/demo-dashboard.png';
 import demoDrRx from '@/assets/demo-dr-rx.png';
 import demoRewards from '@/assets/demo-rewards.png';
@@ -96,6 +96,8 @@ export default function Landing() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [showTutorial, setShowTutorial] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 200, damping: 30 });
 
   useEffect(() => {
     const onScroll = () => setShowBackToTop(window.scrollY > 400);
@@ -108,6 +110,11 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      {/* Scroll Progress Bar */}
+      <motion.div
+        style={{ scaleX }}
+        className="fixed top-0 left-0 right-0 h-1 bg-accent origin-left z-50"
+      />
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-accent/10" />
