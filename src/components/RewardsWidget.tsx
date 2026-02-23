@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +30,8 @@ interface RewardsWidgetProps {
   isEquipped: (item: ShopItem) => boolean;
   spinning: boolean;
   onRefreshRewards: () => void;
+  openToShop?: boolean;
+  onOpenToShopHandled?: () => void;
 }
 
 export function RewardsWidget({ 
@@ -45,9 +47,19 @@ export function RewardsWidget({
   isEquipped,
   spinning,
   onRefreshRewards,
+  openToShop,
+  onOpenToShopHandled,
 }: RewardsWidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'spin' | 'challenges' | 'shop' | 'badges'>('spin');
+
+  useEffect(() => {
+    if (openToShop) {
+      setActiveTab('shop');
+      setIsOpen(true);
+      onOpenToShopHandled?.();
+    }
+  }, [openToShop, onOpenToShopHandled]);
 
   if (!rewards) return null;
 
