@@ -8,9 +8,9 @@ import demoDrRx from '@/assets/demo-dr-rx.png';
 import demoRewards from '@/assets/demo-rewards.png';
 
 const APP_SCREENS = [
-  { image: demoDashboard, label: 'Track Your Meds', description: 'Organized by time of day with one-tap dose logging' },
-  { image: demoDrRx, label: 'Ask Dr. Rx', description: 'AI pharmacist answers your medication questions instantly' },
-  { image: demoRewards, label: 'Earn Rewards', description: 'Spin the Lucky Dose slot machine and collect badges' },
+  { image: demoDashboard, label: 'Track Your Meds', description: 'Organized by time of day with one-tap dose logging', route: '/app' },
+  { image: demoDrRx, label: 'Ask Dr. Rx', description: 'AI pharmacist answers your medication questions instantly', route: '/app?tab=dr-rx' },
+  { image: demoRewards, label: 'Earn Rewards', description: 'Spin the Lucky Dose slot machine and collect badges', route: '/app?tab=rewards' },
 ];
 
 const FEATURES = [
@@ -211,9 +211,10 @@ export default function Landing() {
               viewport={{ once: true, margin: '-30px' }}
               transition={{ duration: 0.5, delay: i * 0.15 }}
               whileHover={{ y: -8, scale: 1.03 }}
-              className="flex flex-col items-center"
+              className="flex flex-col items-center cursor-pointer group"
+              onClick={() => navigate(screen.route)}
             >
-              <div className="rounded-2xl overflow-hidden shadow-lg border border-border/50 bg-card mb-3">
+              <div className="rounded-2xl overflow-hidden shadow-lg border border-border/50 bg-card mb-3 group-hover:ring-2 group-hover:ring-accent transition-all">
                 <img
                   src={screen.image}
                   alt={screen.label}
@@ -221,7 +222,7 @@ export default function Landing() {
                   loading="lazy"
                 />
               </div>
-              <h3 className="font-bold text-sm text-foreground">{screen.label}</h3>
+              <h3 className="font-bold text-sm text-foreground group-hover:text-accent transition-colors">{screen.label}</h3>
               <p className="text-xs text-muted-foreground text-center mt-0.5 leading-snug">{screen.description}</p>
             </motion.div>
           ))}
