@@ -392,6 +392,7 @@ export function TodayDashboard() {
           userName={userName}
           notificationCount={0}
           onMenuClick={() => setShowNavigationDrawer(true)}
+          onDrBombayClick={() => setShowDrRx(true)}
         />
         
         <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
@@ -519,6 +520,7 @@ export function TodayDashboard() {
           activeItem={activeNav}
           isCaregiver={isCaregiver}
           onCaregiverDashboard={() => navigate('/caregiver')}
+          onDrBombayClick={() => setShowDrRx(true)}
         />
       </div>
     );
@@ -557,6 +559,7 @@ export function TodayDashboard() {
           onMenuClick={() => setShowNavigationDrawer(true)}
           onShopClick={() => setOpenShop(true)}
           coinBalance={rewards?.coins}
+          onDrBombayClick={() => setShowDrRx(true)}
         />
         <main className="max-w-2xl mx-auto px-4 py-6">
           <h2 className="text-2xl font-bold text-foreground mb-4">📊 Medication History</h2>
@@ -570,6 +573,7 @@ export function TodayDashboard() {
           activeItem={activeNav}
           isCaregiver={isCaregiver}
           onCaregiverDashboard={() => navigate('/caregiver')}
+          onDrBombayClick={() => setShowDrRx(true)}
         />
       </div>
     );
@@ -602,6 +606,7 @@ export function TodayDashboard() {
         onMenuClick={() => setShowNavigationDrawer(true)}
         onShopClick={() => setOpenShop(true)}
         coinBalance={rewards?.coins}
+        onDrBombayClick={() => setShowDrRx(true)}
       />
       
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-8">
@@ -927,13 +932,14 @@ export function TodayDashboard() {
         activeItem={activeNav}
         isCaregiver={isCaregiver}
         onCaregiverDashboard={() => navigate('/caregiver')}
+        onDrBombayClick={() => setShowDrRx(true)}
       />
 
-      {/* Dr. Rx Floating Button */}
+      {/* Dr. Bombay Floating Button */}
       <button
         onClick={() => setShowDrRx(true)}
         className="fixed bottom-24 right-4 z-40 w-14 h-14 rounded-full bg-primary shadow-lg shadow-primary/30 flex items-center justify-center hover:scale-105 transition-transform active:scale-95 border-2 border-primary-foreground/20"
-        aria-label="Ask Dr. Rx"
+        aria-label="Ask Dr. Bombay"
       >
         <span className="text-2xl">💊</span>
       </button>

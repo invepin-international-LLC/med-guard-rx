@@ -11,11 +11,13 @@
    Shield,
    Settings,
    LogOut,
-   Heart
+   Heart,
+   Stethoscope
  } from 'lucide-react';
  import { cn } from '@/lib/utils';
  import { supabase } from '@/integrations/supabase/client';
  import { toast } from 'sonner';
+ import drBombayAvatar from '@/assets/dr-rx-avatar.png';
  
  interface NavigationDrawerProps {
    open: boolean;
@@ -24,16 +26,18 @@
    activeItem: string;
    isCaregiver?: boolean;
    onCaregiverDashboard?: () => void;
+   onDrBombayClick?: () => void;
  }
  
  export function NavigationDrawer({ 
    open, 
-   onClose, 
-   onNavigate, 
-   activeItem,
-   isCaregiver,
-   onCaregiverDashboard 
- }: NavigationDrawerProps) {
+    onClose, 
+    onNavigate, 
+    activeItem,
+    isCaregiver,
+    onCaregiverDashboard,
+    onDrBombayClick
+  }: NavigationDrawerProps) {
    
    const handleNavigation = (item: 'today' | 'medications' | 'scan' | 'stats' | 'profile') => {
      onNavigate(item);
@@ -103,10 +107,30 @@
              ))}
            </div>
  
-           {/* Divider */}
-           <div className="my-4 border-t border-border" />
+            {/* Divider */}
+            <div className="my-4 border-t border-border" />
  
-           {/* Additional Actions */}
+            {/* Dr. Bombay */}
+            <div className="px-3 mb-1">
+              <button
+                onClick={() => {
+                  onDrBombayClick?.();
+                  onClose();
+                }}
+                className="w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-primary/10 text-left bg-primary/5 border border-primary/20"
+              >
+                <img src={drBombayAvatar} alt="Dr. Bombay" className="w-10 h-10 rounded-full border-2 border-primary" />
+                <div>
+                  <p className="font-semibold text-primary">Dr. Bombay</p>
+                  <p className="text-sm text-muted-foreground">AI medication assistant</p>
+                </div>
+              </button>
+            </div>
+
+            {/* Divider */}
+            <div className="my-4 border-t border-border" />
+
+            {/* Additional Actions */}
            <div className="px-3 space-y-1">
              {isCaregiver && (
                <button
