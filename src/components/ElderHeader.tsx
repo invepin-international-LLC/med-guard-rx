@@ -61,33 +61,33 @@ export function ElderHeader({
   }, [targetBalance]);
 
   return (
-    <header className="sticky top-0 z-50 bg-card/98 backdrop-blur-sm border-b-2 sm:border-b-4 border-border px-2 sm:px-4 py-2 sm:py-4 shadow-elder">
-      <div className="flex items-center justify-between max-w-2xl mx-auto gap-1">
-        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+    <header className="sticky top-0 z-50 bg-background/70 backdrop-blur-md border-b border-border/50 px-3 sm:px-4 py-3 sm:py-4">
+      <div className="flex items-center justify-between max-w-2xl mx-auto gap-2">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <Button 
             variant="ghost" 
             size="icon" 
             onClick={onMenuClick} 
-            className="w-9 h-9 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl shrink-0"
+            className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl shrink-0"
           >
-            <Menu className="w-5 h-5 sm:w-7 sm:h-7" />
+            <Menu className="w-6 h-6 sm:w-7 sm:h-7" />
           </Button>
           <img 
             src="/favicon.png" 
             alt="Med Guard Rx" 
-            className="w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl shadow-md shrink-0"
+            className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl shadow-md shrink-0"
           />
           <div className="min-w-0">
-            <p className="text-muted-foreground text-xs sm:text-sm leading-tight truncate">{greeting}, {firstName} 👋</p>
+            <p className="text-muted-foreground text-sm leading-tight truncate">{greeting}, {firstName} 👋</p>
             <h1 className="text-sm sm:text-base font-bold text-primary leading-tight">Med Guard Rx</h1>
           </div>
         </div>
 
-        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <button 
             onClick={onShopClick}
             className={cn(
-              "flex items-center gap-1 px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl bg-accent/10 hover:bg-accent/20 transition-all",
+              "flex items-center gap-1 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-accent/10 hover:bg-accent/20 transition-all",
               isBouncing && "scale-110"
             )}
             style={{ transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
@@ -100,11 +100,11 @@ export function ElderHeader({
             variant="ghost" 
             size="icon" 
             onClick={onNotificationsClick}
-            className="relative w-9 h-9 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl"
+            className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl"
           >
-            <Bell className="w-5 h-5 sm:w-8 sm:h-8" />
+            <Bell className="w-6 h-6 sm:w-7 sm:h-7" />
             {notificationCount > 0 && (
-              <span className="absolute top-1 right-1 sm:top-2 sm:right-2 w-4 h-4 sm:w-5 sm:h-5 bg-accent rounded-full text-[10px] sm:text-xs font-bold text-accent-foreground flex items-center justify-center">
+              <span className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 w-4 h-4 sm:w-5 sm:h-5 bg-accent rounded-full text-[10px] sm:text-xs font-bold text-accent-foreground flex items-center justify-center">
                 {notificationCount > 9 ? '9+' : notificationCount}
               </span>
             )}
@@ -113,7 +113,7 @@ export function ElderHeader({
             variant="ghost" 
             size="icon" 
             onClick={onProfileClick}
-            className="w-9 h-9 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl bg-primary/10 text-xl sm:text-3xl overflow-hidden"
+            className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-primary/10 text-2xl sm:text-3xl overflow-hidden"
             title={equippedAvatar.name}
           >
             {equippedAvatar.imageUrl ? (
