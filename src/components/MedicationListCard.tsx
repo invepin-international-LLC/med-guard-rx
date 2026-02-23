@@ -53,6 +53,7 @@ export function MedicationListCard({
 }: MedicationListCardProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { imageUrl } = useMedicationImage({
+    medicationId: medication.id,
     name: medication.name,
     genericName: medication.genericName,
     existingImageUrl: medication.imageUrl,
