@@ -1,10 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ArrowLeft, Send, Loader2, Sparkles, Mic, MicOff } from 'lucide-react';
+import { ArrowLeft, Send, Loader2, Sparkles, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 import { toast } from 'sonner';
 import drRxAvatar from '@/assets/dr-rx-avatar.png';
 
@@ -29,9 +29,43 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [medications, setMedications] = useState<any[]>([]);
   const [isListening, setIsListening] = useState(false);
+  const [ttsEnabled, setTtsEnabled] = useState(true);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const recognitionRef = useRef<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const lastSpokenIndexRef = useRef(-1);
+
+  const ttsSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
+
+  const speakText = useCallback((text: string) => {
+    if (!ttsSupported || !ttsEnabled) return;
+    // Strip markdown formatting for cleaner speech
+    const clean = text
+      .replace(/[#*_~`>]/g, '')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .replace(/\n{2,}/g, '. ')
+      .replace(/\n/g, '. ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (!clean) return;
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(clean);
+    utterance.rate = 0.95;
+    utterance.pitch = 1.0;
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+    window.speechSynthesis.speak(utterance);
+  }, [ttsEnabled, ttsSupported]);
+
+  const stopSpeaking = useCallback(() => {
+    if (ttsSupported) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
+  }, [ttsSupported]);
 
   const speechSupported = typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
@@ -49,6 +83,22 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
     };
     fetchMeds();
   }, []);
+
+  // Auto-speak completed assistant responses
+  useEffect(() => {
+    if (isLoading || messages.length === 0) return;
+    const lastIndex = messages.length - 1;
+    const lastMsg = messages[lastIndex];
+    if (lastMsg.role === 'assistant' && lastIndex > lastSpokenIndexRef.current) {
+      lastSpokenIndexRef.current = lastIndex;
+      speakText(lastMsg.content);
+    }
+  }, [isLoading, messages, speakText]);
+
+  // Stop speaking on unmount
+  useEffect(() => {
+    return () => { stopSpeaking(); };
+  }, [stopSpeaking]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -227,6 +277,20 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
             AI Medication Assistant
           </p>
         </div>
+        {ttsSupported && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`rounded-xl shrink-0 ${isSpeaking ? 'text-primary animate-pulse' : ''}`}
+            onClick={() => {
+              if (isSpeaking) stopSpeaking();
+              setTtsEnabled(prev => !prev);
+            }}
+            title={ttsEnabled ? 'Disable voice' : 'Enable voice'}
+          >
+            {ttsEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+          </Button>
+        )}
         <span className="text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 px-2 py-1 rounded-full font-medium">Online</span>
       </div>
 
