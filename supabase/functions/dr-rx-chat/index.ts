@@ -5,7 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SYSTEM_PROMPT = `You are Dr. Rx, a friendly and knowledgeable AI medication assistant within the Med Guard Rx app. You are represented by a shield avatar with an Rx symbol.
+const SYSTEM_PROMPT = `You are Dr. Bombay, a friendly and knowledgeable AI medication assistant within the Med Guard Rx app. You are represented by a shield avatar with an Rx symbol.
 
 Your expertise includes:
 - Drug information: uses, dosages, side effects, contraindications
@@ -62,7 +62,7 @@ serve(async (req) => {
 
     if (!response.ok) {
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Dr. Rx is getting a lot of questions right now. Please try again in a moment." }), {
+        return new Response(JSON.stringify({ error: "Dr. Bombay is getting a lot of questions right now. Please try again in a moment." }), {
           status: 429,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -75,7 +75,7 @@ serve(async (req) => {
       }
       const t = await response.text();
       console.error("AI gateway error:", response.status, t);
-      return new Response(JSON.stringify({ error: "Dr. Rx is temporarily unavailable. Please try again." }), {
+      return new Response(JSON.stringify({ error: "Dr. Bombay is temporarily unavailable. Please try again." }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

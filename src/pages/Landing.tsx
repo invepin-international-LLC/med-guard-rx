@@ -9,7 +9,7 @@ import demoRewards from '@/assets/demo-rewards.png';
 
 const APP_SCREENS = [
   { image: demoDashboard, label: 'Track Your Meds', description: 'Organized by time of day with one-tap dose logging', route: '/app' },
-  { image: demoDrRx, label: 'Ask Dr. Rx', description: 'AI pharmacist answers your medication questions instantly', route: '/app?tab=dr-rx' },
+  { image: demoDrRx, label: 'Ask Dr. Bombay', description: 'AI pharmacist answers your medication questions instantly', route: '/app?tab=dr-rx' },
   { image: demoRewards, label: 'Earn Rewards', description: 'Spin the Lucky Dose slot machine and collect badges', route: '/app?tab=rewards' },
 ];
 
@@ -28,7 +28,7 @@ const FEATURES = [
   },
   {
     icon: Brain,
-    title: 'Dr. Rx AI Assistant',
+    title: 'Dr. Bombay AI Assistant',
     description: 'Ask our AI-powered pharmacist about side effects, interactions, and medication questions.',
     scrollTo: 'showcase',
   },
@@ -73,7 +73,7 @@ const TUTORIAL_SLIDES = [
   },
   {
     emoji: '🤖',
-    title: 'Ask Dr. Rx Anything',
+    title: 'Ask Dr. Bombay Anything',
     description: 'Our AI pharmacist can answer questions about side effects, drug interactions, and safe storage.',
     tip: 'Try asking: "Can I take ibuprofen with my blood thinner?"',
   },

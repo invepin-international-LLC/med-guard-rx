@@ -52,10 +52,10 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
   const cleanTextForSpeech = (text: string) => {
     return text
       .replace(/[#*_~`>]/g, '')
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-      .replace(/\n{2,}/g, '. ')
-      .replace(/\n/g, '. ')
-      .replace(/\s+/g, ' ')
+      .replace(/\\\\[([^\\\\]]+)\\\\]\\\\([^)]+\\\\)/g, '$1')
+      .replace(/\\\\n{2,}/g, '. ')
+      .replace(/\\\\n/g, '. ')
+      .replace(/\\\\s+/g, ' ')
       .trim();
   };
 
@@ -64,7 +64,6 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
     const clean = cleanTextForSpeech(text);
     if (!clean) return;
 
-    // Stop any current playback
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
@@ -120,7 +119,6 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
 
   const speechSupported = typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
-  // Fetch user's current medications
   useEffect(() => {
     const fetchMeds = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -135,7 +133,6 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
     fetchMeds();
   }, []);
 
-  // Auto-speak completed assistant responses
   useEffect(() => {
     if (isLoading || messages.length === 0) return;
     const lastIndex = messages.length - 1;
@@ -146,7 +143,6 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
     }
   }, [isLoading, messages, speakText]);
 
-  // Stop speaking on unmount
   useEffect(() => {
     return () => { stopSpeaking(); };
   }, [stopSpeaking]);
@@ -179,7 +175,7 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
       });
 
       if (!resp.ok) {
-        const errData = await resp.json().catch(() => ({ error: 'Dr. Rx is unavailable right now.' }));
+        const errData = await resp.json().catch(() => ({ error: 'Dr. Bombay is unavailable right now.' }));
         toast.error(errData.error || 'Something went wrong');
         setIsLoading(false);
         return;
@@ -198,11 +194,11 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
         textBuffer += decoder.decode(value, { stream: true });
 
         let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf('\n')) !== -1) {
+        while ((newlineIndex = textBuffer.indexOf('\\\\n')) !== -1) {
           let line = textBuffer.slice(0, newlineIndex);
           textBuffer = textBuffer.slice(newlineIndex + 1);
 
-          if (line.endsWith('\r')) line = line.slice(0, -1);
+          if (line.endsWith('\\\\r')) line = line.slice(0, -1);
           if (line.startsWith(':') || line.trim() === '') continue;
           if (!line.startsWith('data: ')) continue;
 
@@ -226,7 +222,7 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
               });
             }
           } catch {
-            textBuffer = line + '\n' + textBuffer;
+            textBuffer = line + '\\\\n' + textBuffer;
             break;
           }
         }
@@ -234,9 +230,9 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
 
       // Final flush
       if (textBuffer.trim()) {
-        for (let raw of textBuffer.split('\n')) {
+        for (let raw of textBuffer.split('\\\\n')) {
           if (!raw) continue;
-          if (raw.endsWith('\r')) raw = raw.slice(0, -1);
+          if (raw.endsWith('\\\\r')) raw = raw.slice(0, -1);
           if (raw.startsWith(':') || raw.trim() === '') continue;
           if (!raw.startsWith('data: ')) continue;
           const jsonStr = raw.slice(6).trim();
@@ -258,8 +254,8 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
         }
       }
     } catch (e) {
-      console.error('Dr. Rx chat error:', e);
-      toast.error('Failed to reach Dr. Rx. Please try again.');
+      console.error('Dr. Bombay chat error:', e);
+      toast.error('Failed to reach Dr. Bombay. Please try again.');
     } finally {
       setIsLoading(false);
       inputRef.current?.focus();
@@ -320,9 +316,9 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
         <Button variant="ghost" size="icon" onClick={onBack} className="rounded-xl shrink-0">
           <ArrowLeft className="w-5 h-5" />
         </Button>
-        <img src={drRxAvatar} alt="Dr. Rx" className="w-10 h-10 rounded-full border-2 border-primary" />
+        <img src={drRxAvatar} alt="Dr. Bombay" className="w-10 h-10 rounded-full border-2 border-primary" />
         <div className="flex-1 min-w-0">
-          <h2 className="text-lg font-bold text-foreground leading-tight">Dr. Rx</h2>
+          <h2 className="text-lg font-bold text-foreground leading-tight">Dr. Bombay</h2>
           <div className="flex items-center gap-1">
             <Sparkles className="w-3 h-3 text-primary shrink-0" />
             <Select value={selectedVoice} onValueChange={setSelectedVoice}>
@@ -363,9 +359,9 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
         {messages.length === 0 && (
           <div className="space-y-4">
             <div className="flex gap-3">
-              <img src={drRxAvatar} alt="Dr. Rx" className="w-9 h-9 rounded-full border border-primary shrink-0 mt-1" />
+              <img src={drRxAvatar} alt="Dr. Bombay" className="w-9 h-9 rounded-full border border-primary shrink-0 mt-1" />
               <div className="bg-card border border-border rounded-2xl rounded-tl-md p-4 max-w-[85%] shadow-sm">
-                <p className="text-foreground font-medium mb-2">Hi there! 👋 I'm Dr. Rx</p>
+                <p className="text-foreground font-medium mb-2">Hi there! 👋 I'm Dr. Bombay</p>
                 <p className="text-muted-foreground text-sm leading-relaxed">
                   I'm your AI medication assistant. Ask me anything about your medications — side effects, interactions, how they work, storage tips, and more.
                 </p>
@@ -397,7 +393,7 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
         {messages.map((msg, i) => (
           <div key={i} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>
             {msg.role === 'assistant' && (
-              <img src={drRxAvatar} alt="Dr. Rx" className="w-9 h-9 rounded-full border border-primary shrink-0 mt-1" />
+              <img src={drRxAvatar} alt="Dr. Bombay" className="w-9 h-9 rounded-full border border-primary shrink-0 mt-1" />
             )}
             <div
               className={`rounded-2xl p-4 max-w-[85%] shadow-sm ${
@@ -420,11 +416,11 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
         {/* Loading indicator */}
         {isLoading && messages[messages.length - 1]?.role === 'user' && (
           <div className="flex gap-3">
-            <img src={drRxAvatar} alt="Dr. Rx" className="w-9 h-9 rounded-full border border-primary shrink-0 mt-1" />
+            <img src={drRxAvatar} alt="Dr. Bombay" className="w-9 h-9 rounded-full border border-primary shrink-0 mt-1" />
             <div className="bg-card border border-border rounded-2xl rounded-tl-md p-4 shadow-sm">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span className="text-sm">Dr. Rx is thinking...</span>
+                <span className="text-sm">Dr. Bombay is thinking...</span>
               </div>
             </div>
           </div>
@@ -436,7 +432,7 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
         <form onSubmit={handleSubmit} className="flex gap-2 max-w-2xl mx-auto">
           <Input
             ref={inputRef}
-            placeholder={isListening ? "Listening..." : "Ask Dr. Rx about your medications..."}
+            placeholder={isListening ? "Listening..." : "Ask Dr. Bombay about your medications..."}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             disabled={isLoading}
