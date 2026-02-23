@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, Clock, X, ChevronRight, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useMedicationImage } from '@/hooks/useMedicationImage';
 
 interface MedicationCardProps {
   medication: Medication;
@@ -42,6 +43,11 @@ export function MedicationCard({
   const isTaken = dose.status === 'taken';
   const isSkipped = dose.status === 'skipped';
   const isLowStock = medication.quantityRemaining !== undefined && medication.quantityRemaining <= 7;
+  const { imageUrl } = useMedicationImage({
+    name: medication.name,
+    genericName: medication.genericName,
+    existingImageUrl: medication.imageUrl,
+  });
 
   return (
     <div 
@@ -55,7 +61,11 @@ export function MedicationCard({
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="text-3xl">{formIcons[medication.form] || '💊'}</div>
+          {imageUrl ? (
+            <img src={imageUrl} alt={medication.name} className="w-12 h-12 rounded-xl object-cover shadow-md" />
+          ) : (
+            <div className="text-3xl">{formIcons[medication.form] || '💊'}</div>
+          )}
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-elder-lg text-foreground">{medication.name}</h3>
