@@ -36,6 +36,7 @@ import { NavigationDrawer } from '@/components/NavigationDrawer';
 import { DrugInteractionWarnings } from '@/components/DrugInteractionWarnings';
 import { MedicationDictionary } from '@/components/MedicationDictionary';
 import { DrRxChat } from '@/components/DrRxChat';
+import { AdherenceHistory } from '@/components/AdherenceHistory';
 
 type NavItem = 'today' | 'medications' | 'scan' | 'stats' | 'profile';
 
@@ -546,7 +547,34 @@ export function TodayDashboard() {
     );
   }
 
-  // Check if there are no medications
+  // Show stats/history page
+  if (activeNav === 'stats') {
+    return (
+      <div className="min-h-screen bg-background pb-32">
+        <ElderHeader 
+          userName={userName} 
+          notificationCount={0}
+          onMenuClick={() => setShowNavigationDrawer(true)}
+          onShopClick={() => setOpenShop(true)}
+          coinBalance={rewards?.coins}
+        />
+        <main className="max-w-2xl mx-auto px-4 py-6">
+          <h2 className="text-2xl font-bold text-foreground mb-4">📊 Medication History</h2>
+          <AdherenceHistory />
+        </main>
+        <ElderBottomNav activeItem={activeNav} onNavigate={setActiveNav} />
+        <NavigationDrawer
+          open={showNavigationDrawer}
+          onClose={() => setShowNavigationDrawer(false)}
+          onNavigate={setActiveNav}
+          activeItem={activeNav}
+          isCaregiver={isCaregiver}
+          onCaregiverDashboard={() => navigate('/caregiver')}
+        />
+      </div>
+    );
+  }
+
   const hasMedications = medications.length > 0;
   const hasDoses = doses.length > 0;
 
