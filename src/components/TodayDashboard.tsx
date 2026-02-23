@@ -573,6 +573,7 @@ export function TodayDashboard() {
         notificationCount={doses.filter(d => d.status === 'pending').length}
         onMenuClick={() => setShowNavigationDrawer(true)}
         onShopClick={() => setOpenShop(true)}
+        coinBalance={rewards?.coins}
       />
       
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-8">
