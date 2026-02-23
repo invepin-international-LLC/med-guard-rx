@@ -52,10 +52,10 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
   const cleanTextForSpeech = (text: string) => {
     return text
       .replace(/[#*_~`>]/g, '')
-      .replace(/\\\\[([^\\\\]]+)\\\\]\\\\([^)]+\\\\)/g, '$1')
-      .replace(/\\\\n{2,}/g, '. ')
-      .replace(/\\\\n/g, '. ')
-      .replace(/\\\\s+/g, ' ')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .replace(/\n{2,}/g, '. ')
+      .replace(/\n/g, '. ')
+      .replace(/\s+/g, ' ')
       .trim();
   };
 
