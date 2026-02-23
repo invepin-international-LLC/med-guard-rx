@@ -68,6 +68,7 @@ export function ElderMedicationCard({
   const isSkipped = dose.status === 'skipped';
   const isMissed = dose.status === 'missed';
   const { imageUrl } = useMedicationImage({ 
+    medicationId: medication.id,
     name: medication.name, 
     genericName: medication.genericName,
     existingImageUrl: medication.imageUrl,

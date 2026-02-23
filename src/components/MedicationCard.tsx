@@ -44,6 +44,7 @@ export function MedicationCard({
   const isSkipped = dose.status === 'skipped';
   const isLowStock = medication.quantityRemaining !== undefined && medication.quantityRemaining <= 7;
   const { imageUrl } = useMedicationImage({
+    medicationId: medication.id,
     name: medication.name,
     genericName: medication.genericName,
     existingImageUrl: medication.imageUrl,
