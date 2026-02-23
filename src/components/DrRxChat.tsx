@@ -36,36 +36,76 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const lastSpokenIndexRef = useRef(-1);
 
-  const ttsSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const speakText = useCallback((text: string) => {
-    if (!ttsSupported || !ttsEnabled) return;
-    // Strip markdown formatting for cleaner speech
-    const clean = text
+  const cleanTextForSpeech = (text: string) => {
+    return text
       .replace(/[#*_~`>]/g, '')
       .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
       .replace(/\n{2,}/g, '. ')
       .replace(/\n/g, '. ')
       .replace(/\s+/g, ' ')
       .trim();
+  };
+
+  const speakText = useCallback(async (text: string) => {
+    if (!ttsEnabled) return;
+    const clean = cleanTextForSpeech(text);
     if (!clean) return;
 
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(clean);
-    utterance.rate = 0.95;
-    utterance.pitch = 1.0;
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-    window.speechSynthesis.speak(utterance);
-  }, [ttsEnabled, ttsSupported]);
+    // Stop any current playback
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
 
-  const stopSpeaking = useCallback(() => {
-    if (ttsSupported) {
-      window.speechSynthesis.cancel();
+    setIsSpeaking(true);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ text: clean }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`TTS request failed: ${response.status}`);
+      }
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+      audio.onended = () => {
+        setIsSpeaking(false);
+        URL.revokeObjectURL(audioUrl);
+        audioRef.current = null;
+      };
+      audio.onerror = () => {
+        setIsSpeaking(false);
+        URL.revokeObjectURL(audioUrl);
+        audioRef.current = null;
+      };
+      await audio.play();
+    } catch (e) {
+      console.error('ElevenLabs TTS error:', e);
       setIsSpeaking(false);
     }
-  }, [ttsSupported]);
+  }, [ttsEnabled]);
+
+  const stopSpeaking = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    setIsSpeaking(false);
+  }, []);
 
   const speechSupported = typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
@@ -277,20 +317,18 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
             AI Medication Assistant
           </p>
         </div>
-        {ttsSupported && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className={`rounded-xl shrink-0 ${isSpeaking ? 'text-primary animate-pulse' : ''}`}
-            onClick={() => {
-              if (isSpeaking) stopSpeaking();
-              setTtsEnabled(prev => !prev);
-            }}
-            title={ttsEnabled ? 'Disable voice' : 'Enable voice'}
-          >
-            {ttsEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
-          </Button>
-        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className={`rounded-xl shrink-0 ${isSpeaking ? 'text-primary animate-pulse' : ''}`}
+          onClick={() => {
+            if (isSpeaking) stopSpeaking();
+            setTtsEnabled(prev => !prev);
+          }}
+          title={ttsEnabled ? 'Disable voice' : 'Enable voice'}
+        >
+          {ttsEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+        </Button>
         <span className="text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 px-2 py-1 rounded-full font-medium">Online</span>
       </div>
 
