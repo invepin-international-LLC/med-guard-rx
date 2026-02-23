@@ -42,13 +42,23 @@ async function lookupViaDailyMed(name: string): Promise<ImageResult> {
       mediaItems = mediaData;
     }
 
+    // Only use actual image files with direct URLs
     const images = mediaItems
-      .filter((m: any) => m.mime_type?.startsWith('image/') || m.name?.match(/\.(jpg|jpeg|png|gif)$/i))
-      .map((m: any) => `https://dailymed.nlm.nih.gov/dailymed/image.cfm?setid=${setId}&name=${m.name}`);
+      .filter((m: any) => (m.mime_type?.startsWith('image/') || m.name?.match(/\.(jpg|jpeg|png|gif)$/i)) && m.url)
+      .map((m: any) => m.url);
 
-    if (images.length === 0) {
-      const directUrl = `https://dailymed.nlm.nih.gov/dailymed/image.cfm?setid=${setId}&type=img`;
-      return { imageUrl: directUrl, imageUrls: [directUrl], name: spls[0]?.title, source: 'dailymed' };
+    if (images.length === 0) return { imageUrl: null, imageUrls: [] };
+
+    // Verify the first image URL actually returns an image
+    try {
+      const testRes = await fetch(images[0], { method: 'HEAD' });
+      const contentType = testRes.headers.get('content-type') || '';
+      if (!contentType.startsWith('image/')) {
+        console.log(`DailyMed image URL returned non-image content-type: ${contentType}`);
+        return { imageUrl: null, imageUrls: [] };
+      }
+    } catch {
+      return { imageUrl: null, imageUrls: [] };
     }
 
     return {
@@ -71,11 +81,11 @@ async function generatePillImage(name: string, form?: string, color?: string, st
   }
 
   try {
-    const formDesc = form || 'pill';
+    const formDesc = form || 'tablet';
     const colorDesc = color || 'white';
-    const strengthDesc = strength ? ` labeled "${strength}"` : '';
+    const strengthDesc = strength ? ` with "${strength}" imprinted on it` : '';
     
-    const prompt = `A single photorealistic ${colorDesc} pharmaceutical ${formDesc} of ${name}${strengthDesc}, centered on a clean white background, studio lighting, high resolution product photo, no text overlays, no watermarks.`;
+    const prompt = `A single photorealistic ${colorDesc} pharmaceutical ${formDesc} of "${name}"${strengthDesc}. The pill is placed on a light gray surface with soft studio lighting and a subtle shadow. Close-up macro photography style. No text, no watermarks, no background clutter. The pill should be clearly visible and well-lit.`;
 
     console.log(`Generating AI pill image for: ${name}`);
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
