@@ -228,7 +228,33 @@ export function MedicationDetailSheet({ medication, open, onClose }: MedicationD
               </div>
             )}
             
-            <Button variant="accent" size="xl" className="w-full justify-start gap-4">
+            <Button 
+              variant="accent" 
+              size="xl" 
+              className="w-full justify-start gap-4"
+              onClick={async () => {
+                try {
+                  const { supabase } = await import('@/integrations/supabase/client');
+                  const { data } = await supabase
+                    .from('medications')
+                    .select('pharmacy_id, pharmacies(phone, name)')
+                    .eq('id', medication.id)
+                    .maybeSingle();
+                  
+                  const pharmacy = data?.pharmacies as { phone: string | null; name: string | null } | null;
+                  if (pharmacy?.phone) {
+                    window.location.href = `tel:${pharmacy.phone}`;
+                  } else {
+                    const { toast } = await import('sonner');
+                    toast.info('No pharmacy phone number on file', {
+                      description: 'Add a pharmacy in your medication settings.',
+                    });
+                  }
+                } catch {
+                  window.location.href = 'tel:';
+                }
+              }}
+            >
               <Phone className="w-7 h-7" />
               Call Your Pharmacist
             </Button>
