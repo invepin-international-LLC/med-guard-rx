@@ -89,11 +89,11 @@ export function ElderHeader({
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
           <button 
             onClick={onDrBombayClick}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-primary/10 hover:bg-primary/20 transition-all"
+            className="flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-primary/10 hover:bg-primary/20 active:bg-primary/30 transition-all border border-primary/20"
             title="Ask Dr. Bombay"
           >
-            <img src={drBombayAvatar} alt="Dr. Bombay" className="w-6 h-6 sm:w-7 sm:h-7 rounded-full" />
-            <span className="text-xs sm:text-sm font-bold text-primary hidden sm:inline">Dr. B</span>
+            <img src={drBombayAvatar} alt="Dr. Bombay" className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-primary shadow-sm" />
+            <span className="text-sm sm:text-base font-bold text-primary">Dr. B</span>
           </button>
           <button 
             onClick={onShopClick}
@@ -124,13 +124,13 @@ export function ElderHeader({
             variant="ghost" 
             size="icon" 
             onClick={onProfileClick}
-            className="w-12 h-12 sm:w-[52px] sm:h-[52px] rounded-xl bg-primary/10 text-2xl sm:text-3xl overflow-hidden"
+            className="w-12 h-12 sm:w-[52px] sm:h-[52px] rounded-xl overflow-hidden"
             title={equippedAvatar.name}
           >
             {equippedAvatar.imageUrl ? (
               <img src={equippedAvatar.imageUrl} alt={equippedAvatar.name} className="w-full h-full object-cover" />
             ) : (
-              equippedAvatar.icon
+              <img src={drBombayAvatar} alt="Profile" className="w-full h-full object-cover" />
             )}
           </Button>
         </div>

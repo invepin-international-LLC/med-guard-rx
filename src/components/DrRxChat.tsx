@@ -194,11 +194,11 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
         textBuffer += decoder.decode(value, { stream: true });
 
         let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf('\\\\n')) !== -1) {
+        while ((newlineIndex = textBuffer.indexOf('\n')) !== -1) {
           let line = textBuffer.slice(0, newlineIndex);
           textBuffer = textBuffer.slice(newlineIndex + 1);
 
-          if (line.endsWith('\\\\r')) line = line.slice(0, -1);
+          if (line.endsWith('\r')) line = line.slice(0, -1);
           if (line.startsWith(':') || line.trim() === '') continue;
           if (!line.startsWith('data: ')) continue;
 
@@ -222,7 +222,7 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
               });
             }
           } catch {
-            textBuffer = line + '\\\\n' + textBuffer;
+            textBuffer = line + '\n' + textBuffer;
             break;
           }
         }
@@ -230,9 +230,9 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
 
       // Final flush
       if (textBuffer.trim()) {
-        for (let raw of textBuffer.split('\\\\n')) {
+        for (let raw of textBuffer.split('\n')) {
           if (!raw) continue;
-          if (raw.endsWith('\\\\r')) raw = raw.slice(0, -1);
+          if (raw.endsWith('\r')) raw = raw.slice(0, -1);
           if (raw.startsWith(':') || raw.trim() === '') continue;
           if (!raw.startsWith('data: ')) continue;
           const jsonStr = raw.slice(6).trim();
