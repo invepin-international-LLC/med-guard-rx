@@ -214,13 +214,18 @@ export default function Landing() {
               className="flex flex-col items-center cursor-pointer group"
               onClick={() => navigate(screen.route)}
             >
-              <div className="rounded-2xl overflow-hidden shadow-lg border border-border/50 bg-card mb-3 group-hover:ring-2 group-hover:ring-accent transition-all">
+              <div className="rounded-2xl overflow-hidden shadow-lg border border-border/50 bg-card mb-3 group-hover:ring-2 group-hover:ring-accent transition-all relative">
                 <img
                   src={screen.image}
                   alt={screen.label}
                   className="w-full h-auto object-cover"
                   loading="lazy"
                 />
+                <div className="absolute inset-0 bg-accent/0 group-hover:bg-accent/20 transition-all duration-300 flex items-center justify-center">
+                  <span className="text-sm font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-accent/80 px-3 py-1.5 rounded-full backdrop-blur-sm shadow-md">
+                    Try it →
+                  </span>
+                </div>
               </div>
               <h3 className="font-bold text-sm text-foreground group-hover:text-accent transition-colors">{screen.label}</h3>
               <p className="text-xs text-muted-foreground text-center mt-0.5 leading-snug">{screen.description}</p>
