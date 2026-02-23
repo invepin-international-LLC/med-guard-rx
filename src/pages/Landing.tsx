@@ -151,11 +151,30 @@ export default function Landing() {
               How It Works
             </Button>
           </motion.div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.8 }}
+            className="flex gap-6 justify-center mt-6 text-sm text-muted-foreground"
+          >
+            <button
+              onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+              className="hover:text-accent transition-colors underline underline-offset-4 decoration-accent/40"
+            >
+              Explore Features ↓
+            </button>
+            <button
+              onClick={() => document.getElementById('showcase')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+              className="hover:text-accent transition-colors underline underline-offset-4 decoration-accent/40"
+            >
+              See It in Action ↓
+            </button>
+          </motion.div>
         </div>
       </section>
 
       {/* Features Grid */}
-      <section className="max-w-lg mx-auto px-6 py-12">
+      <section id="features" className="max-w-lg mx-auto px-6 py-12">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
