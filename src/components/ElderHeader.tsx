@@ -115,10 +115,14 @@ export function ElderHeader({
             variant="ghost" 
             size="icon" 
             onClick={onProfileClick}
-            className="w-14 h-14 rounded-xl bg-primary/10 text-3xl"
+            className="w-14 h-14 rounded-xl bg-primary/10 text-3xl overflow-hidden"
             title={equippedAvatar.name}
           >
-            {equippedAvatar.icon}
+            {equippedAvatar.imageUrl ? (
+              <img src={equippedAvatar.imageUrl} alt={equippedAvatar.name} className="w-full h-full object-cover" />
+            ) : (
+              equippedAvatar.icon
+            )}
           </Button>
         </div>
       </div>
