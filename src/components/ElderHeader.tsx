@@ -1,4 +1,4 @@
-import { Bell, Menu } from 'lucide-react';
+import { Bell, Menu, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEquippedAvatar } from '@/contexts/EquippedAvatarContext';
 
@@ -7,6 +7,7 @@ interface ElderHeaderProps {
   onMenuClick?: () => void;
   onNotificationsClick?: () => void;
   onProfileClick?: () => void;
+  onShopClick?: () => void;
   notificationCount?: number;
 }
 
@@ -15,6 +16,7 @@ export function ElderHeader({
   onMenuClick, 
   onNotificationsClick, 
   onProfileClick,
+  onShopClick,
   notificationCount = 0
 }: ElderHeaderProps) {
   const greeting = getGreeting();
@@ -47,6 +49,15 @@ export function ElderHeader({
         </div>
 
         <div className="flex items-center gap-3">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={onShopClick}
+            className="w-14 h-14 rounded-xl"
+            title="Coin Shop"
+          >
+            <ShoppingBag className="w-7 h-7 text-accent" />
+          </Button>
           <Button 
             variant="ghost" 
             size="icon" 

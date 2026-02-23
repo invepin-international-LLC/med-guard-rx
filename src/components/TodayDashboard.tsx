@@ -93,6 +93,7 @@ export function TodayDashboard() {
   const [showNavigationDrawer, setShowNavigationDrawer] = useState(false);
   const [showDictionary, setShowDictionary] = useState(false);
   const [showDrRx, setShowDrRx] = useState(false);
+  const [openShop, setOpenShop] = useState(false);
   
   const { isCaregiver, patientsICareFor } = useCaregiver();
 
@@ -571,6 +572,7 @@ export function TodayDashboard() {
         userName={userName}
         notificationCount={doses.filter(d => d.status === 'pending').length}
         onMenuClick={() => setShowNavigationDrawer(true)}
+        onShopClick={() => setOpenShop(true)}
       />
       
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-8">
@@ -625,6 +627,8 @@ export function TodayDashboard() {
             refetchRewards();
             refetchShop();
           }}
+          openToShop={openShop}
+          onOpenToShopHandled={() => setOpenShop(false)}
         />
 
         {/* Refill Alerts */}
