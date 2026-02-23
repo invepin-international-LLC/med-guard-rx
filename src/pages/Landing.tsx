@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, Pill, Bell, Users, Brain, Trophy, ChevronRight, ChevronLeft, ArrowRight } from 'lucide-react';
+import { Shield, Pill, Bell, Users, Brain, Trophy, ChevronRight, ChevronLeft, ArrowRight, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import demoDashboard from '@/assets/demo-dashboard.png';
@@ -95,6 +95,13 @@ export default function Landing() {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setShowBackToTop(window.scrollY > 400);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const nextSlide = () => setCurrentSlide((p) => Math.min(p + 1, TUTORIAL_SLIDES.length - 1));
   const prevSlide = () => setCurrentSlide((p) => Math.max(p - 1, 0));
@@ -381,6 +388,23 @@ export default function Landing() {
               </div>
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Back to Top */}
+      <AnimatePresence>
+        {showBackToTop && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="fixed bottom-6 right-6 z-50 w-11 h-11 rounded-full bg-accent text-accent-foreground shadow-lg flex items-center justify-center hover:bg-accent/90 transition-colors"
+            aria-label="Back to top"
+          >
+            <ChevronUp className="h-5 w-5" />
+          </motion.button>
         )}
       </AnimatePresence>
     </div>
