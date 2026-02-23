@@ -72,6 +72,8 @@ export function ElderMedicationCard({
     name: medication.name, 
     genericName: medication.genericName,
     existingImageUrl: medication.imageUrl,
+    form: medication.form,
+    strength: medication.strength,
   });
 
   return (

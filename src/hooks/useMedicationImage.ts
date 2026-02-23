@@ -8,9 +8,12 @@ interface UseMedicationImageProps {
   ndcCode?: string;
   rxcui?: string;
   existingImageUrl?: string;
+  form?: string;
+  color?: string;
+  strength?: string;
 }
 
-export function useMedicationImage({ medicationId, name, genericName, ndcCode, rxcui, existingImageUrl }: UseMedicationImageProps) {
+export function useMedicationImage({ medicationId, name, genericName, ndcCode, rxcui, existingImageUrl, form, color, strength }: UseMedicationImageProps) {
   const [imageUrl, setImageUrl] = useState<string | null>(existingImageUrl || null);
   const [loading, setLoading] = useState(false);
 
@@ -30,6 +33,9 @@ export function useMedicationImage({ medicationId, name, genericName, ndcCode, r
             ndc: ndcCode, 
             rxcui,
             name: genericName || name,
+            form,
+            color,
+            strength,
           },
         });
 
