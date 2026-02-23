@@ -63,29 +63,27 @@ export function ElderHeader({
   return (
     <header className="sticky top-0 z-50 bg-card/98 backdrop-blur-sm border-b-4 border-border px-4 py-4 shadow-elder">
       <div className="flex items-center justify-between max-w-2xl mx-auto">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 min-w-0">
           <Button 
             variant="ghost" 
             size="icon" 
             onClick={onMenuClick} 
-            className="w-14 h-14 rounded-xl"
+            className="w-12 h-12 rounded-xl shrink-0"
           >
-            <Menu className="w-8 h-8" />
+            <Menu className="w-7 h-7" />
           </Button>
-          <div className="flex items-center gap-4">
-            <img 
-              src="/favicon.png" 
-              alt="Med Guard Rx" 
-              className="w-14 h-14 rounded-xl shadow-md"
-            />
-            <div>
-              <p className="text-muted-foreground text-lg">{greeting}, {firstName} 👋</p>
-              <h1 className="text-elder-lg font-bold text-primary">Med Guard Rx</h1>
-            </div>
+          <img 
+            src="/favicon.png" 
+            alt="Med Guard Rx" 
+            className="w-11 h-11 rounded-xl shadow-md shrink-0"
+          />
+          <div className="min-w-0">
+            <p className="text-muted-foreground text-sm leading-tight truncate">{greeting}, {firstName} 👋</p>
+            <h1 className="text-base font-bold text-primary leading-tight">Med Guard Rx</h1>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 shrink-0">
           <button 
             onClick={onShopClick}
             className={cn(
