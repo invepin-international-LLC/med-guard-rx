@@ -61,50 +61,50 @@ export function ElderHeader({
   }, [targetBalance]);
 
   return (
-    <header className="sticky top-0 z-50 bg-background/70 backdrop-blur-md border-b border-border/50 px-3 sm:px-4 py-3 sm:py-4">
-      <div className="flex items-center justify-between max-w-2xl mx-auto gap-2">
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+    <header className="sticky top-0 z-50 bg-background/70 backdrop-blur-md border-b border-border/50 px-4 sm:px-5 py-4 sm:py-5">
+      <div className="flex items-center justify-between max-w-2xl mx-auto gap-3">
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
           <Button 
             variant="ghost" 
             size="icon" 
             onClick={onMenuClick} 
-            className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl shrink-0"
+            className="w-12 h-12 sm:w-[52px] sm:h-[52px] rounded-xl shrink-0"
           >
-            <Menu className="w-6 h-6 sm:w-7 sm:h-7" />
+            <Menu className="w-7 h-7 sm:w-8 sm:h-8" />
           </Button>
           <img 
             src="/favicon.png" 
             alt="Med Guard Rx" 
-            className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl shadow-md shrink-0"
+            className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl shadow-md shrink-0"
           />
           <div className="min-w-0">
-            <p className="text-muted-foreground text-sm leading-tight truncate">{greeting}, {firstName} 👋</p>
-            <h1 className="text-sm sm:text-base font-bold text-primary leading-tight">Med Guard Rx</h1>
+            <p className="text-muted-foreground text-sm sm:text-base leading-tight truncate">{greeting}, {firstName} 👋</p>
+            <h1 className="text-base sm:text-lg font-bold text-primary leading-tight">Med Guard Rx</h1>
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
           <button 
             onClick={onShopClick}
             className={cn(
-              "flex items-center gap-1 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-accent/10 hover:bg-accent/20 transition-all",
+              "flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-accent/10 hover:bg-accent/20 transition-all",
               isBouncing && "scale-110"
             )}
             style={{ transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
             title="Coin Shop"
           >
-            <Coins className={cn("w-4 h-4 sm:w-5 sm:h-5 text-accent transition-transform", isBouncing && "animate-spin")} style={isBouncing ? { animationDuration: '0.4s', animationIterationCount: '1' } : {}} />
-            <span className="text-xs sm:text-sm font-bold text-accent tabular-nums">{displayBalance}</span>
+            <Coins className={cn("w-5 h-5 sm:w-6 sm:h-6 text-accent transition-transform", isBouncing && "animate-spin")} style={isBouncing ? { animationDuration: '0.4s', animationIterationCount: '1' } : {}} />
+            <span className="text-sm sm:text-base font-bold text-accent tabular-nums">{displayBalance}</span>
           </button>
           <Button 
             variant="ghost" 
             size="icon" 
             onClick={onNotificationsClick}
-            className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl"
+            className="relative w-12 h-12 sm:w-[52px] sm:h-[52px] rounded-xl"
           >
-            <Bell className="w-6 h-6 sm:w-7 sm:h-7" />
+            <Bell className="w-7 h-7 sm:w-8 sm:h-8" />
             {notificationCount > 0 && (
-              <span className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 w-4 h-4 sm:w-5 sm:h-5 bg-accent rounded-full text-[10px] sm:text-xs font-bold text-accent-foreground flex items-center justify-center">
+              <span className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 w-5 h-5 sm:w-6 sm:h-6 bg-accent rounded-full text-[10px] sm:text-xs font-bold text-accent-foreground flex items-center justify-center">
                 {notificationCount > 9 ? '9+' : notificationCount}
               </span>
             )}
@@ -113,7 +113,7 @@ export function ElderHeader({
             variant="ghost" 
             size="icon" 
             onClick={onProfileClick}
-            className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-primary/10 text-2xl sm:text-3xl overflow-hidden"
+            className="w-12 h-12 sm:w-[52px] sm:h-[52px] rounded-xl bg-primary/10 text-2xl sm:text-3xl overflow-hidden"
             title={equippedAvatar.name}
           >
             {equippedAvatar.imageUrl ? (
