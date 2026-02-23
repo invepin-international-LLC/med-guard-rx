@@ -11,6 +11,7 @@ import { DoubleCoinsAnimation } from '@/components/DoubleCoinsAnimation';
 import { TripleSpinsAnimation } from '@/components/TripleSpinsAnimation';
 import { useSoundEffects } from '@/hooks/useSoundEffects';
 import { useEquippedAvatar } from '@/contexts/EquippedAvatarContext';
+import { characterAvatarImages } from '@/assets/avatars';
 
 interface CoinShopProps {
   coins: number;
@@ -105,10 +106,18 @@ export function CoinShop({
           <div className="flex items-start gap-3">
             {/* Icon */}
             <div className={cn(
-              "w-14 h-14 rounded-xl flex items-center justify-center text-2xl shrink-0",
+              "w-14 h-14 rounded-xl flex items-center justify-center text-2xl shrink-0 overflow-hidden",
               owned ? "bg-primary/10" : "bg-muted"
             )}>
-              {item.icon}
+              {characterAvatarImages[item.itemType] ? (
+                <img 
+                  src={characterAvatarImages[item.itemType]} 
+                  alt={item.name} 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                item.icon
+              )}
             </div>
 
             {/* Details */}

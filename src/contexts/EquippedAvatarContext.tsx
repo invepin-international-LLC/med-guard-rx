@@ -1,10 +1,12 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { characterAvatarImages } from '@/assets/avatars';
 
 interface AvatarData {
   icon: string;
   name: string;
   itemType: string;
+  imageUrl?: string;
 }
 
 interface EquippedAvatarContextType {
@@ -77,6 +79,7 @@ export function EquippedAvatarProvider({ children }: { children: ReactNode }) {
           icon: shopItem.icon || '👤',
           name: shopItem.name,
           itemType: shopItem.item_type,
+          imageUrl: characterAvatarImages[shopItem.item_type],
         });
       } else {
         setEquippedAvatar(defaultAvatar);
