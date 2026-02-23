@@ -5,98 +5,62 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface RxImageResult {
+interface ImageResult {
   imageUrl: string | null;
   imageUrls: string[];
   name?: string;
-  ndc?: string;
 }
 
-async function lookupByRxcui(rxcui: string): Promise<RxImageResult> {
+async function lookupViaDailyMed(name: string): Promise<ImageResult> {
   try {
-    const url = `https://rximage.nlm.nih.gov/api/rximage/1/rxbase?rxcui=${rxcui}&resolution=600`;
-    console.log(`RxImage lookup by rxcui: ${url}`);
-    const response = await fetch(url);
-    if (!response.ok) return { imageUrl: null, imageUrls: [] };
-    
-    const data = await response.json();
-    const results = data?.nlmRxImages || [];
-    
-    if (results.length === 0) return { imageUrl: null, imageUrls: [] };
-    
-    return {
-      imageUrl: results[0]?.imageUrl || null,
-      imageUrls: results.map((r: any) => r.imageUrl).filter(Boolean),
-      name: results[0]?.name,
-      ndc: results[0]?.ndc11,
-    };
-  } catch (error) {
-    console.error('RxImage rxcui lookup error:', error);
-    return { imageUrl: null, imageUrls: [] };
-  }
-}
+    // Step 1: Search for the drug by name to get SPL set ID
+    const searchUrl = `https://dailymed.nlm.nih.gov/dailymed/services/v2/spls.json?drug_name=${encodeURIComponent(name)}&pagesize=1`;
+    console.log(`DailyMed search: ${searchUrl}`);
+    const searchRes = await fetch(searchUrl);
+    if (!searchRes.ok) return { imageUrl: null, imageUrls: [] };
 
-async function lookupByNdc(ndc: string): Promise<RxImageResult> {
-  try {
-    const clean = ndc.replace(/\D/g, '');
-    const url = `https://rximage.nlm.nih.gov/api/rximage/1/rxbase?ndc=${clean}&resolution=600`;
-    console.log(`RxImage lookup by ndc: ${url}`);
-    const response = await fetch(url);
-    if (!response.ok) return { imageUrl: null, imageUrls: [] };
-    
-    const data = await response.json();
-    const results = data?.nlmRxImages || [];
-    
-    if (results.length === 0) return { imageUrl: null, imageUrls: [] };
-    
-    return {
-      imageUrl: results[0]?.imageUrl || null,
-      imageUrls: results.map((r: any) => r.imageUrl).filter(Boolean),
-      name: results[0]?.name,
-      ndc: results[0]?.ndc11,
-    };
-  } catch (error) {
-    console.error('RxImage ndc lookup error:', error);
-    return { imageUrl: null, imageUrls: [] };
-  }
-}
+    const searchData = await searchRes.json();
+    const spls = searchData?.data || [];
+    if (spls.length === 0) return { imageUrl: null, imageUrls: [] };
 
-async function lookupByName(name: string): Promise<RxImageResult> {
-  try {
-    // First get RxCUI from RxNorm
-    const rxnormUrl = `https://rxnav.nlm.nih.gov/REST/rxcui.json?name=${encodeURIComponent(name)}&search=1`;
-    console.log(`RxNorm lookup: ${rxnormUrl}`);
-    const rxnormResponse = await fetch(rxnormUrl);
+    const setId = spls[0]?.setid;
+    if (!setId) return { imageUrl: null, imageUrls: [] };
+
+    // Step 2: Get media (images) for that SPL
+    const mediaUrl = `https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/${setId}/media.json`;
+    console.log(`DailyMed media: ${mediaUrl}`);
+    const mediaRes = await fetch(mediaUrl);
+    if (!mediaRes.ok) return { imageUrl: null, imageUrls: [] };
+
+    const mediaData = await mediaRes.json();
+    console.log('DailyMed media response keys:', JSON.stringify(Object.keys(mediaData)));
     
-    if (rxnormResponse.ok) {
-      const rxnormData = await rxnormResponse.json();
-      const rxcui = rxnormData?.idGroup?.rxnormId?.[0];
-      
-      if (rxcui) {
-        const result = await lookupByRxcui(rxcui);
-        if (result.imageUrl) return result;
-      }
+    // The media endpoint may return data as an array or nested differently
+    let mediaItems: any[] = [];
+    if (Array.isArray(mediaData?.data)) {
+      mediaItems = mediaData.data;
+    } else if (Array.isArray(mediaData)) {
+      mediaItems = mediaData;
     }
 
-    // Try approximate match
-    const approxUrl = `https://rxnav.nlm.nih.gov/REST/approximateTerm.json?term=${encodeURIComponent(name)}&maxEntries=3`;
-    const approxResponse = await fetch(approxUrl);
-    
-    if (approxResponse.ok) {
-      const approxData = await approxResponse.json();
-      const candidates = approxData?.approximateGroup?.candidate || [];
-      
-      for (const candidate of candidates) {
-        if (candidate.rxcui) {
-          const result = await lookupByRxcui(candidate.rxcui);
-          if (result.imageUrl) return result;
-        }
-      }
+    // Filter for image files
+    const images = mediaItems
+      .filter((m: any) => m.mime_type?.startsWith('image/') || m.name?.match(/\.(jpg|jpeg|png|gif)$/i))
+      .map((m: any) => `https://dailymed.nlm.nih.gov/dailymed/image.cfm?setid=${setId}&name=${m.name}`);
+
+    if (images.length === 0) {
+      // Fallback: try direct image URL pattern
+      const directUrl = `https://dailymed.nlm.nih.gov/dailymed/image.cfm?setid=${setId}&type=img`;
+      return { imageUrl: directUrl, imageUrls: [directUrl], name: spls[0]?.title };
     }
 
-    return { imageUrl: null, imageUrls: [] };
+    return {
+      imageUrl: images[0],
+      imageUrls: images,
+      name: spls[0]?.title,
+    };
   } catch (error) {
-    console.error('RxImage name lookup error:', error);
+    console.error('DailyMed lookup error:', error);
     return { imageUrl: null, imageUrls: [] };
   }
 }
@@ -109,19 +73,12 @@ serve(async (req: Request) => {
   try {
     const { ndc, rxcui, name } = await req.json();
     
-    let result: RxImageResult = { imageUrl: null, imageUrls: [] };
+    // Use the drug name for DailyMed lookup
+    const searchName = name || '';
+    let result: ImageResult = { imageUrl: null, imageUrls: [] };
 
-    // Try NDC first, then RxCUI, then name
-    if (ndc) {
-      result = await lookupByNdc(ndc);
-    }
-    
-    if (!result.imageUrl && rxcui) {
-      result = await lookupByRxcui(rxcui);
-    }
-    
-    if (!result.imageUrl && name) {
-      result = await lookupByName(name);
+    if (searchName) {
+      result = await lookupViaDailyMed(searchName);
     }
 
     return new Response(
