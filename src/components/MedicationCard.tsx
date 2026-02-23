@@ -48,6 +48,9 @@ export function MedicationCard({
     name: medication.name,
     genericName: medication.genericName,
     existingImageUrl: medication.imageUrl,
+    form: medication.form,
+    color: medication.color,
+    strength: medication.strength,
   });
 
   return (
