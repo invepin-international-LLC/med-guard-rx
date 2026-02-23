@@ -18,31 +18,37 @@ const FEATURES = [
     icon: Pill,
     title: 'Smart Medication Tracking',
     description: 'Never miss a dose. Organize all your medications with scheduled reminders and dose logging.',
+    scrollTo: 'showcase',
   },
   {
     icon: Bell,
     title: 'Intelligent Reminders',
     description: 'Time-of-day reminders, snooze options, and missed-dose alerts keep you on track.',
+    scrollTo: 'showcase',
   },
   {
     icon: Brain,
     title: 'Dr. Rx AI Assistant',
     description: 'Ask our AI-powered pharmacist about side effects, interactions, and medication questions.',
+    scrollTo: 'showcase',
   },
   {
     icon: Users,
     title: 'Caregiver Support',
     description: 'Invite family members to monitor adherence and receive alerts when doses are missed.',
+    scrollTo: 'cta',
   },
   {
     icon: Trophy,
     title: 'Rewards & Gamification',
     description: 'Earn coins, spin the Lucky Dose slot machine, unlock avatars, themes, and badges.',
+    scrollTo: 'showcase',
   },
   {
     icon: Shield,
     title: 'HIPAA-Ready Health Vault',
     description: 'Store medical records, allergies, emergency contacts, and insurance info securely.',
+    scrollTo: 'cta',
   },
 ];
 
@@ -168,7 +174,8 @@ export default function Landing() {
               viewport={{ once: true, margin: '-30px' }}
               transition={{ duration: 0.4, delay: i * 0.08 }}
               whileHover={{ scale: 1.02, y: -2 }}
-              className="flex items-start gap-4 p-4 rounded-xl bg-card border border-border/50 shadow-sm"
+              onClick={() => document.getElementById(f.scrollTo)?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+              className="flex items-start gap-4 p-4 rounded-xl bg-card border border-border/50 shadow-sm cursor-pointer"
             >
               <div className="w-12 h-12 rounded-xl bg-accent/15 flex items-center justify-center shrink-0">
                 <f.icon className="h-6 w-6 text-accent" />
@@ -183,7 +190,7 @@ export default function Landing() {
       </section>
 
       {/* App Showcase */}
-      <section className="max-w-2xl mx-auto px-6 py-16 overflow-hidden">
+      <section id="showcase" className="max-w-2xl mx-auto px-6 py-16 overflow-hidden">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -235,7 +242,7 @@ export default function Landing() {
       </section>
 
       {/* Trust / CTA */}
-      <section className="max-w-lg mx-auto px-6 py-12 text-center">
+      <section id="cta" className="max-w-lg mx-auto px-6 py-12 text-center">
         <motion.div
           initial={{ opacity: 0, scale: 0.92 }}
           whileInView={{ opacity: 1, scale: 1 }}
