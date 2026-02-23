@@ -1,6 +1,8 @@
-import { Bell, Menu, ShoppingBag, Coins } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Bell, Menu, Coins } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEquippedAvatar } from '@/contexts/EquippedAvatarContext';
+import { cn } from '@/lib/utils';
 
 interface ElderHeaderProps {
   userName: string;
@@ -24,6 +26,39 @@ export function ElderHeader({
   const greeting = getGreeting();
   const firstName = userName.split(' ')[0];
   const { equippedAvatar } = useEquippedAvatar();
+  
+  const targetBalance = coinBalance ?? 0;
+  const [displayBalance, setDisplayBalance] = useState(targetBalance);
+  const [isBouncing, setIsBouncing] = useState(false);
+  const prevBalance = useRef(targetBalance);
+
+  useEffect(() => {
+    if (targetBalance === prevBalance.current) return;
+    const diff = targetBalance - prevBalance.current;
+    const start = prevBalance.current;
+    prevBalance.current = targetBalance;
+    
+    if (diff === 0) return;
+    
+    setIsBouncing(true);
+    const steps = Math.min(Math.abs(diff), 20);
+    const stepDuration = Math.max(30, 400 / steps);
+    let step = 0;
+
+    const interval = setInterval(() => {
+      step++;
+      const progress = step / steps;
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplayBalance(Math.round(start + diff * eased));
+      if (step >= steps) {
+        clearInterval(interval);
+        setDisplayBalance(targetBalance);
+        setTimeout(() => setIsBouncing(false), 300);
+      }
+    }, stepDuration);
+
+    return () => clearInterval(interval);
+  }, [targetBalance]);
 
   return (
     <header className="sticky top-0 z-50 bg-card/98 backdrop-blur-sm border-b-4 border-border px-4 py-4 shadow-elder">
@@ -53,11 +88,15 @@ export function ElderHeader({
         <div className="flex items-center gap-3">
           <button 
             onClick={onShopClick}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-accent/10 hover:bg-accent/20 transition-colors"
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-2 rounded-xl bg-accent/10 hover:bg-accent/20 transition-all",
+              isBouncing && "scale-110"
+            )}
+            style={{ transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
             title="Coin Shop"
           >
-            <Coins className="w-5 h-5 text-accent" />
-            <span className="text-sm font-bold text-accent">{coinBalance ?? 0}</span>
+            <Coins className={cn("w-5 h-5 text-accent transition-transform", isBouncing && "animate-spin")} style={isBouncing ? { animationDuration: '0.4s', animationIterationCount: '1' } : {}} />
+            <span className="text-sm font-bold text-accent tabular-nums">{displayBalance}</span>
           </button>
           <Button 
             variant="ghost" 
