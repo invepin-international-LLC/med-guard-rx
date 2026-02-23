@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { ArrowLeft, Send, Loader2, Sparkles, Mic, MicOff, Volume2, VolumeX, ChevronDown } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import drRxAvatar from '@/assets/dr-rx-avatar.png';
+import drRxAvatar from '@/assets/dr-bombay-avatar.png';
 
 type Message = { role: 'user' | 'assistant'; content: string };
 

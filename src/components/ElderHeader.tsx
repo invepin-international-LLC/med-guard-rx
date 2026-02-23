@@ -3,7 +3,7 @@ import { Bell, Menu, Coins, Stethoscope } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEquippedAvatar } from '@/contexts/EquippedAvatarContext';
 import { cn } from '@/lib/utils';
-import drBombayAvatar from '@/assets/dr-rx-avatar.png';
+import drBombayAvatar from '@/assets/dr-bombay-avatar.png';
 
 interface ElderHeaderProps {
   userName: string;

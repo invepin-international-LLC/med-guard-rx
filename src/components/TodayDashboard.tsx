@@ -935,14 +935,6 @@ export function TodayDashboard() {
         onDrBombayClick={() => setShowDrRx(true)}
       />
 
-      {/* Dr. Bombay Floating Button */}
-      <button
-        onClick={() => setShowDrRx(true)}
-        className="fixed bottom-24 right-4 z-40 w-14 h-14 rounded-full bg-primary shadow-lg shadow-primary/30 flex items-center justify-center hover:scale-105 transition-transform active:scale-95 border-2 border-primary-foreground/20"
-        aria-label="Ask Dr. Bombay"
-      >
-        <span className="text-2xl">💊</span>
-      </button>
     </div>
     </>
   );
