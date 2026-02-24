@@ -392,7 +392,6 @@ export function TodayDashboard() {
           userName={userName}
           notificationCount={0}
           onMenuClick={() => setShowNavigationDrawer(true)}
-          onDrBombayClick={() => setShowDrRx(true)}
         />
         
         <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
@@ -559,7 +558,6 @@ export function TodayDashboard() {
           onMenuClick={() => setShowNavigationDrawer(true)}
           onShopClick={() => setOpenShop(true)}
           coinBalance={rewards?.coins}
-          onDrBombayClick={() => setShowDrRx(true)}
         />
         <main className="max-w-2xl mx-auto px-4 py-6">
           <h2 className="text-2xl font-bold text-foreground mb-4">📊 Medication History</h2>
@@ -606,7 +604,6 @@ export function TodayDashboard() {
         onMenuClick={() => setShowNavigationDrawer(true)}
         onShopClick={() => setOpenShop(true)}
         coinBalance={rewards?.coins}
-        onDrBombayClick={() => setShowDrRx(true)}
       />
       
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-8">

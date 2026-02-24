@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Bell, Menu, Coins, Stethoscope } from 'lucide-react';
+import { Bell, Menu, Coins } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEquippedAvatar } from '@/contexts/EquippedAvatarContext';
 import { cn } from '@/lib/utils';
@@ -11,7 +11,6 @@ interface ElderHeaderProps {
   onNotificationsClick?: () => void;
   onProfileClick?: () => void;
   onShopClick?: () => void;
-  onDrBombayClick?: () => void;
   coinBalance?: number;
   notificationCount?: number;
 }
@@ -22,7 +21,6 @@ export function ElderHeader({
   onNotificationsClick, 
   onProfileClick,
   onShopClick,
-  onDrBombayClick,
   coinBalance,
   notificationCount = 0
 }: ElderHeaderProps) {
@@ -87,14 +85,6 @@ export function ElderHeader({
         </div>
 
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-          <button 
-            onClick={onDrBombayClick}
-            className="flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-primary/10 hover:bg-primary/20 active:bg-primary/30 transition-all border border-primary/20"
-            title="Ask Dr. Bombay"
-          >
-            <img src={drBombayAvatar} alt="Dr. Bombay" className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-primary shadow-sm" />
-            <span className="text-sm sm:text-base font-bold text-primary">Dr. B</span>
-          </button>
           <button 
             onClick={onShopClick}
             className={cn(
