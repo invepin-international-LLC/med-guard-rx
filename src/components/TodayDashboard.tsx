@@ -37,6 +37,7 @@ import { DrugInteractionWarnings } from '@/components/DrugInteractionWarnings';
 import { MedicationDictionary } from '@/components/MedicationDictionary';
 import { DrRxChat } from '@/components/DrRxChat';
 import { AdherenceHistory } from '@/components/AdherenceHistory';
+import { MissedDoseFlash } from '@/components/MissedDoseFlash';
 
 type NavItem = 'today' | 'medications' | 'scan' | 'stats' | 'profile';
 
@@ -165,7 +166,7 @@ export function TodayDashboard() {
     });
   }, [doses, medications]);
 
-  const { triggerReminder } = useMedicationReminders({ 
+  const { triggerReminder, missedDoseAlert, dismissFlash } = useMedicationReminders({ 
     doses: dosesWithNames, 
     enabled: true 
   });
@@ -591,6 +592,11 @@ export function TodayDashboard() {
 
   return (
     <>
+    <MissedDoseFlash
+      isActive={missedDoseAlert.active}
+      medicationName={missedDoseAlert.medicationName}
+      onDismiss={dismissFlash}
+    />
     <CoinEarnAnimation 
       amount={coinAnimation.amount}
       isVisible={coinAnimation.show}
