@@ -1,5 +1,6 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { MedicationDose } from '@/hooks/useMedications';
+import { getSoundEnabled } from '@/hooks/useSoundEffects';
 
 interface MedicationDoseWithName extends MedicationDose {
   medicationName?: string;
@@ -10,35 +11,42 @@ interface UseMedicationRemindersProps {
   enabled?: boolean;
 }
 
+// How many minutes past scheduled time before we consider it "missed"
+const MISSED_THRESHOLD_MINUTES = 15;
+// Re-alert interval for missed doses (minutes)
+const MISSED_RE_ALERT_MINUTES = 5;
+
 export function useMedicationReminders({ doses, enabled = true }: UseMedicationRemindersProps) {
   const alertedDosesRef = useRef<Set<string>>(new Set());
+  const missedAlertedRef = useRef<Map<string, number>>(new Map()); // doseKey -> last alert timestamp
   const checkIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [missedDoseAlert, setMissedDoseAlert] = useState<{
+    active: boolean;
+    medicationName?: string;
+  }>({ active: false });
 
-  // Play medication reminder alert (distinct chime)
+  // Play medication reminder chime (gentle — for on-time doses)
   const playReminderChime = useCallback(() => {
     try {
-      // Create a distinct medication reminder sound using Web Audio API
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      
-      // First tone (higher pitch)
+
       const osc1 = audioContext.createOscillator();
       const gain1 = audioContext.createGain();
       osc1.connect(gain1);
       gain1.connect(audioContext.destination);
-      osc1.frequency.setValueAtTime(880, audioContext.currentTime); // A5
+      osc1.frequency.setValueAtTime(880, audioContext.currentTime);
       osc1.type = 'sine';
       gain1.gain.setValueAtTime(0.3, audioContext.currentTime);
       gain1.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
       osc1.start(audioContext.currentTime);
       osc1.stop(audioContext.currentTime + 0.3);
 
-      // Second tone (lower pitch, slight delay)
       setTimeout(() => {
         const osc2 = audioContext.createOscillator();
         const gain2 = audioContext.createGain();
         osc2.connect(gain2);
         gain2.connect(audioContext.destination);
-        osc2.frequency.setValueAtTime(659.25, audioContext.currentTime); // E5
+        osc2.frequency.setValueAtTime(659.25, audioContext.currentTime);
         osc2.type = 'sine';
         gain2.gain.setValueAtTime(0.3, audioContext.currentTime);
         gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
@@ -46,13 +54,12 @@ export function useMedicationReminders({ doses, enabled = true }: UseMedicationR
         osc2.stop(audioContext.currentTime + 0.3);
       }, 150);
 
-      // Third tone (resolution)
       setTimeout(() => {
         const osc3 = audioContext.createOscillator();
         const gain3 = audioContext.createGain();
         osc3.connect(gain3);
         gain3.connect(audioContext.destination);
-        osc3.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+        osc3.frequency.setValueAtTime(523.25, audioContext.currentTime);
         osc3.type = 'sine';
         gain3.gain.setValueAtTime(0.25, audioContext.currentTime);
         gain3.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
@@ -64,64 +71,133 @@ export function useMedicationReminders({ doses, enabled = true }: UseMedicationR
     }
   }, []);
 
+  // Play URGENT missed-dose alarm — loud, repeating, attention-grabbing
+  const playMissedDoseAlarm = useCallback(() => {
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const t = ctx.currentTime;
+
+      // Three urgent alarm bursts
+      for (let burst = 0; burst < 3; burst++) {
+        const offset = burst * 0.6;
+
+        // High siren tone
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(880, t + offset);
+        osc.frequency.linearRampToValueAtTime(1200, t + offset + 0.15);
+        osc.frequency.linearRampToValueAtTime(880, t + offset + 0.3);
+        gain.gain.setValueAtTime(0.4, t + offset);
+        gain.gain.setValueAtTime(0.4, t + offset + 0.25);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + offset + 0.35);
+        osc.start(t + offset);
+        osc.stop(t + offset + 0.35);
+
+        // Sub-bass impact
+        const sub = ctx.createOscillator();
+        const subGain = ctx.createGain();
+        sub.connect(subGain);
+        subGain.connect(ctx.destination);
+        sub.type = 'sine';
+        sub.frequency.setValueAtTime(110, t + offset);
+        subGain.gain.setValueAtTime(0.35, t + offset);
+        subGain.gain.exponentialRampToValueAtTime(0.01, t + offset + 0.2);
+        sub.start(t + offset);
+        sub.stop(t + offset + 0.2);
+      }
+    } catch (error) {
+      console.error('Error playing missed dose alarm:', error);
+    }
+  }, []);
+
   // Trigger vibration pattern for medication reminder
   const triggerVibration = useCallback(() => {
     if ('vibrate' in navigator) {
-      // Distinctive pattern: short-short-long
       navigator.vibrate([100, 50, 100, 50, 300]);
     }
   }, []);
 
-  // Check if any dose is due now
+  // Trigger URGENT vibration for missed dose — long, aggressive pattern
+  const triggerUrgentVibration = useCallback(() => {
+    if ('vibrate' in navigator) {
+      // Long aggressive pattern: buzz-buzz-buzz-BUZZ-BUZZ-BUZZ
+      navigator.vibrate([
+        300, 100, 300, 100, 300, 200,
+        500, 150, 500, 150, 500,
+      ]);
+    }
+  }, []);
+
+  // Trigger screen flash for hearing impaired
+  const triggerScreenFlash = useCallback((medicationName?: string) => {
+    setMissedDoseAlert({ active: true, medicationName });
+  }, []);
+
+  const dismissFlash = useCallback(() => {
+    setMissedDoseAlert({ active: false });
+  }, []);
+
+  // Check if any dose is due now or MISSED
   const checkDoses = useCallback(() => {
     if (!enabled) return;
 
     const now = new Date();
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
+    const nowMs = now.getTime();
 
     doses.forEach(dose => {
-      // Only check pending doses
       if (dose.status !== 'pending') return;
 
-      // Parse dose time
       const [doseHour, doseMinute] = dose.time.split(':').map(Number);
-      
-      // Create a unique key for this dose + date
       const doseKey = `${dose.scheduledDoseId}-${now.toDateString()}`;
-      
-      // Check if this is within the reminder window (exact time to 5 minutes past)
-      const isExactTime = currentHour === doseHour && currentMinute === doseMinute;
-      const isWithinWindow = 
-        currentHour === doseHour && 
-        currentMinute >= doseMinute && 
-        currentMinute <= doseMinute + 5;
 
-      // Alert if it's time and we haven't alerted for this dose today
-      if ((isExactTime || (isWithinWindow && currentMinute === doseMinute)) && 
-          !alertedDosesRef.current.has(doseKey)) {
-        
-        // Mark as alerted
+      // Calculate minutes past scheduled time
+      const scheduledMinutes = doseHour * 60 + doseMinute;
+      const currentMinutes = currentHour * 60 + currentMinute;
+      const minutesPast = currentMinutes - scheduledMinutes;
+
+      // ON-TIME REMINDER: exact time to 5 minutes past
+      const isExactTime = currentHour === doseHour && currentMinute === doseMinute;
+      if (isExactTime && !alertedDosesRef.current.has(doseKey)) {
         alertedDosesRef.current.add(doseKey);
-        
-        // Play chime and vibrate
         playReminderChime();
         triggerVibration();
-        
         console.log(`🔔 Medication reminder: Time to take ${dose.medicationName}`);
       }
-    });
-  }, [doses, enabled, playReminderChime, triggerVibration]);
 
-  // Set up interval to check doses every 30 seconds
+      // MISSED DOSE ALERT: past the threshold, dose still pending
+      if (minutesPast >= MISSED_THRESHOLD_MINUTES && minutesPast > 0) {
+        const missedKey = `missed-${doseKey}`;
+        const lastAlerted = missedAlertedRef.current.get(missedKey) || 0;
+        const minutesSinceLastAlert = (nowMs - lastAlerted) / 60000;
+
+        // Alert initially, then re-alert every MISSED_RE_ALERT_MINUTES
+        if (lastAlerted === 0 || minutesSinceLastAlert >= MISSED_RE_ALERT_MINUTES) {
+          missedAlertedRef.current.set(missedKey, nowMs);
+
+          // Loud alarm sound
+          playMissedDoseAlarm();
+          // Aggressive vibration
+          triggerUrgentVibration();
+          // Screen flash for hearing impaired
+          triggerScreenFlash(dose.medicationName);
+
+          console.log(`🚨 MISSED DOSE ALERT: ${dose.medicationName} was due at ${dose.time}`);
+        }
+      }
+    });
+  }, [doses, enabled, playReminderChime, playMissedDoseAlarm, triggerVibration, triggerUrgentVibration, triggerScreenFlash]);
+
+  // Check every 15 seconds for faster missed-dose detection
   useEffect(() => {
     if (!enabled) return;
 
-    // Initial check
     checkDoses();
-
-    // Set up interval
-    checkIntervalRef.current = setInterval(checkDoses, 30000);
+    checkIntervalRef.current = setInterval(checkDoses, 15000);
 
     return () => {
       if (checkIntervalRef.current) {
@@ -130,19 +206,20 @@ export function useMedicationReminders({ doses, enabled = true }: UseMedicationR
     };
   }, [checkDoses, enabled]);
 
-  // Reset alerted doses at midnight
+  // Reset at midnight
   useEffect(() => {
     const resetAtMidnight = () => {
       const now = new Date();
       const tomorrow = new Date(now);
       tomorrow.setDate(tomorrow.getDate() + 1);
       tomorrow.setHours(0, 0, 0, 0);
-      
+
       const msUntilMidnight = tomorrow.getTime() - now.getTime();
-      
+
       setTimeout(() => {
         alertedDosesRef.current.clear();
-        resetAtMidnight(); // Schedule next reset
+        missedAlertedRef.current.clear();
+        resetAtMidnight();
       }, msUntilMidnight);
     };
 
@@ -155,7 +232,17 @@ export function useMedicationReminders({ doses, enabled = true }: UseMedicationR
     triggerVibration();
   }, [playReminderChime, triggerVibration]);
 
+  // Test missed dose alert
+  const triggerMissedDoseTest = useCallback(() => {
+    playMissedDoseAlarm();
+    triggerUrgentVibration();
+    triggerScreenFlash('Test Medication');
+  }, [playMissedDoseAlarm, triggerUrgentVibration, triggerScreenFlash]);
+
   return {
     triggerReminder,
+    triggerMissedDoseTest,
+    missedDoseAlert,
+    dismissFlash,
   };
 }
