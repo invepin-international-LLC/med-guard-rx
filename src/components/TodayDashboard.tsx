@@ -392,6 +392,8 @@ export function TodayDashboard() {
           userName={userName}
           notificationCount={0}
           onMenuClick={() => setShowNavigationDrawer(true)}
+          onNotificationsClick={() => setActiveNav('profile')}
+          onProfileClick={() => setShowDrRx(true)}
         />
         
         <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
@@ -530,7 +532,12 @@ export function TodayDashboard() {
     if (showDictionary) {
       return (
         <div className="min-h-screen bg-background pb-32">
-          <ElderHeader userName={userName} notificationCount={0} />
+          <ElderHeader
+            userName={userName}
+            notificationCount={0}
+            onNotificationsClick={() => setActiveNav('profile')}
+            onProfileClick={() => setShowDrRx(true)}
+          />
           <main className="max-w-2xl mx-auto px-4 py-6">
             <MedicationDictionary onBack={() => setShowDictionary(false)} onAddMedication={handleAddFromDictionary} />
           </main>
@@ -556,6 +563,8 @@ export function TodayDashboard() {
           userName={userName} 
           notificationCount={0}
           onMenuClick={() => setShowNavigationDrawer(true)}
+          onNotificationsClick={() => setActiveNav('profile')}
+          onProfileClick={() => setShowDrRx(true)}
           onShopClick={() => setOpenShop(true)}
           coinBalance={rewards?.coins}
         />
@@ -602,6 +611,8 @@ export function TodayDashboard() {
         userName={userName}
         notificationCount={doses.filter(d => d.status === 'pending').length}
         onMenuClick={() => setShowNavigationDrawer(true)}
+        onNotificationsClick={() => setActiveNav('profile')}
+        onProfileClick={() => setShowDrRx(true)}
         onShopClick={() => setOpenShop(true)}
         coinBalance={rewards?.coins}
       />
