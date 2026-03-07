@@ -202,7 +202,9 @@ export function useMedicationReminders({ doses, enabled = true }: UseMedicationR
           playMissedDoseAlarm();
           // Aggressive vibration
           triggerUrgentVibration();
-          // Screen flash for hearing impaired
+          // LED torch blink for hearing impaired (native only)
+          blinkTorch();
+          // Screen flash for hearing impaired (web fallback)
           triggerScreenFlash(dose.medicationName);
 
           console.log(`🚨 MISSED DOSE ALERT: ${dose.medicationName} was due at ${dose.time}`);
