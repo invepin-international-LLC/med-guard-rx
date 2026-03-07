@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { MedicationDose } from '@/hooks/useMedications';
 import { getSoundEnabled } from '@/hooks/useSoundEffects';
+import { getTorchEnabled } from '@/components/SoundSettings';
 import { Capacitor } from '@capacitor/core';
 
 interface MedicationDoseWithName extends MedicationDose {
@@ -134,6 +135,7 @@ export function useMedicationReminders({ doses, enabled = true }: UseMedicationR
   // Blink the phone's LED flashlight for hearing-impaired users (native only)
   const blinkTorch = useCallback(async () => {
     if (!Capacitor.isNativePlatform()) return;
+    if (!getTorchEnabled()) return;
     try {
       const { CapacitorFlash } = await import('@capgo/capacitor-flash');
       const { value: available } = await CapacitorFlash.isAvailable();
