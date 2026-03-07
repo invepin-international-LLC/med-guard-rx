@@ -135,14 +135,14 @@ export function useMedicationReminders({ doses, enabled = true }: UseMedicationR
   const blinkTorch = useCallback(async () => {
     if (!Capacitor.isNativePlatform()) return;
     try {
-      const { Flash } = await import('@capgo/capacitor-flash');
-      const { value: available } = await Flash.isAvailable();
+      const { CapacitorFlash } = await import('@capgo/capacitor-flash');
+      const { value: available } = await CapacitorFlash.isAvailable();
       if (!available) return;
 
       for (let i = 0; i < 5; i++) {
-        await Flash.switchOn({ intensity: 1 });
+        await CapacitorFlash.switchOn({ intensity: 1 });
         await new Promise(r => setTimeout(r, 250));
-        await Flash.switchOff();
+        await CapacitorFlash.switchOff();
         await new Promise(r => setTimeout(r, 150));
       }
     } catch (e) {
