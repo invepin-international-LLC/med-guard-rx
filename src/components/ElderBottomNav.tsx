@@ -1,7 +1,7 @@
-import { Home, Pill, Camera, BarChart3, User, Phone } from 'lucide-react';
+import { Home, Pill, Camera, BarChart3, User, ShieldAlert } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-type NavItem = 'today' | 'medications' | 'scan' | 'stats' | 'profile';
+type NavItem = 'today' | 'medications' | 'scan' | 'stats' | 'safety' | 'profile';
 
 interface ElderBottomNavProps {
   activeItem: NavItem;
@@ -12,6 +12,7 @@ const navItems: { id: NavItem; icon: typeof Home; label: string }[] = [
   { id: 'today', icon: Home, label: 'Today' },
   { id: 'medications', icon: Pill, label: 'Meds' },
   { id: 'scan', icon: Camera, label: 'Scan' },
+  { id: 'safety', icon: ShieldAlert, label: 'Safety' },
   { id: 'stats', icon: BarChart3, label: 'Stats' },
   { id: 'profile', icon: User, label: 'Profile' },
 ];

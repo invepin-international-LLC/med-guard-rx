@@ -38,8 +38,9 @@ import { MedicationDictionary } from '@/components/MedicationDictionary';
 import { DrRxChat } from '@/components/DrRxChat';
 import { AdherenceHistory } from '@/components/AdherenceHistory';
 import { MissedDoseFlash } from '@/components/MissedDoseFlash';
+import { FentanylSafetyGuide } from '@/components/FentanylSafetyGuide';
 
-type NavItem = 'today' | 'medications' | 'scan' | 'stats' | 'profile';
+type NavItem = 'today' | 'medications' | 'scan' | 'stats' | 'safety' | 'profile';
 
 const timeOrder: TimeOfDay[] = ['morning', 'afternoon', 'evening', 'bedtime'];
 
