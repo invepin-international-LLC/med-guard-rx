@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { MedicationDose } from '@/hooks/useMedications';
 import { getSoundEnabled } from '@/hooks/useSoundEffects';
+import { Capacitor } from '@capacitor/core';
 
 interface MedicationDoseWithName extends MedicationDose {
   medicationName?: string;
