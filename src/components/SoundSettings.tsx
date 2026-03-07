@@ -180,6 +180,25 @@ export function SoundSettings({ className }: SoundSettingsProps) {
           Test
         </Button>
       </div>
+
+      {/* LED Flash Toggle */}
+      <div className="flex items-center justify-between gap-4 pt-2 border-t border-border">
+        <div className="flex items-center gap-3">
+          <Flashlight className="w-5 h-5 text-yellow-500" />
+          <div>
+            <p className="font-medium">LED Flash Alert</p>
+            <p className="text-sm text-muted-foreground">Blink phone flashlight on missed dose</p>
+          </div>
+        </div>
+        <Switch
+          checked={torchEnabled}
+          onCheckedChange={(checked) => {
+            setTorchEnabledState(checked);
+            setTorchEnabled(checked);
+          }}
+          className="scale-125"
+        />
+      </div>
     </div>
   );
 }
