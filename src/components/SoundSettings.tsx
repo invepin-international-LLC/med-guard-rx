@@ -1,9 +1,19 @@
 import { useState, useCallback } from 'react';
-import { Volume2, VolumeX, Bell, AlertTriangle } from 'lucide-react';
+import { Volume2, VolumeX, Bell, AlertTriangle, Flashlight } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { getSoundEnabled, setSoundEnabled } from '@/hooks/useSoundEffects';
+
+const TORCH_ENABLED_KEY = 'medguard-torch-enabled';
+
+export function getTorchEnabled(): boolean {
+  return localStorage.getItem(TORCH_ENABLED_KEY) !== 'false';
+}
+
+export function setTorchEnabled(val: boolean) {
+  localStorage.setItem(TORCH_ENABLED_KEY, String(val));
+}
 
 interface SoundSettingsProps {
   className?: string;
@@ -11,6 +21,7 @@ interface SoundSettingsProps {
 
 export function SoundSettings({ className }: SoundSettingsProps) {
   const [enabled, setEnabled] = useState(getSoundEnabled);
+  const [torchEnabled, setTorchEnabledState] = useState(getTorchEnabled);
 
   const handleToggle = (checked: boolean) => {
     setEnabled(checked);
