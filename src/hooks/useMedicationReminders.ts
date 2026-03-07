@@ -124,11 +124,29 @@ export function useMedicationReminders({ doses, enabled = true }: UseMedicationR
   // Trigger URGENT vibration for missed dose — long, aggressive pattern
   const triggerUrgentVibration = useCallback(() => {
     if ('vibrate' in navigator) {
-      // Long aggressive pattern: buzz-buzz-buzz-BUZZ-BUZZ-BUZZ
       navigator.vibrate([
         300, 100, 300, 100, 300, 200,
         500, 150, 500, 150, 500,
       ]);
+    }
+  }, []);
+
+  // Blink the phone's LED flashlight for hearing-impaired users (native only)
+  const blinkTorch = useCallback(async () => {
+    if (!Capacitor.isNativePlatform()) return;
+    try {
+      const { Flash } = await import('@capgo/capacitor-flash');
+      const { value: available } = await Flash.isAvailable();
+      if (!available) return;
+
+      for (let i = 0; i < 5; i++) {
+        await Flash.switchOn({ intensity: 1 });
+        await new Promise(r => setTimeout(r, 250));
+        await Flash.switchOff();
+        await new Promise(r => setTimeout(r, 150));
+      }
+    } catch (e) {
+      console.warn('Torch blink unavailable:', e);
     }
   }, []);
 
