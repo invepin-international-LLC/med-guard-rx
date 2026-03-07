@@ -211,7 +211,7 @@ export function useMedicationReminders({ doses, enabled = true }: UseMedicationR
         }
       }
     });
-  }, [doses, enabled, playReminderChime, playMissedDoseAlarm, triggerVibration, triggerUrgentVibration, triggerScreenFlash]);
+  }, [doses, enabled, playReminderChime, playMissedDoseAlarm, triggerVibration, triggerUrgentVibration, blinkTorch, triggerScreenFlash]);
 
   // Check every 15 seconds for faster missed-dose detection
   useEffect(() => {
@@ -257,8 +257,9 @@ export function useMedicationReminders({ doses, enabled = true }: UseMedicationR
   const triggerMissedDoseTest = useCallback(() => {
     playMissedDoseAlarm();
     triggerUrgentVibration();
+    blinkTorch();
     triggerScreenFlash('Test Medication');
-  }, [playMissedDoseAlarm, triggerUrgentVibration, triggerScreenFlash]);
+  }, [playMissedDoseAlarm, triggerUrgentVibration, blinkTorch, triggerScreenFlash]);
 
   return {
     triggerReminder,
