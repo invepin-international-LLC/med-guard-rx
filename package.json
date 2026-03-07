@@ -18,6 +18,7 @@
     "@capacitor/core": "^8.0.1",
     "@capacitor/ios": "^8.0.1",
     "@capacitor/push-notifications": "^8.0.0",
+    "@capgo/capacitor-flash": "^8.0.20",
     "@capgo/capacitor-health": "^8.2.11",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "^1.2.11",

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { MedicationDose } from '@/hooks/useMedications';
 import { getSoundEnabled } from '@/hooks/useSoundEffects';
+import { Capacitor } from '@capacitor/core';
 
 interface MedicationDoseWithName extends MedicationDose {
   medicationName?: string;
@@ -123,11 +124,29 @@ export function useMedicationReminders({ doses, enabled = true }: UseMedicationR
   // Trigger URGENT vibration for missed dose — long, aggressive pattern
   const triggerUrgentVibration = useCallback(() => {
     if ('vibrate' in navigator) {
-      // Long aggressive pattern: buzz-buzz-buzz-BUZZ-BUZZ-BUZZ
       navigator.vibrate([
         300, 100, 300, 100, 300, 200,
         500, 150, 500, 150, 500,
       ]);
+    }
+  }, []);
+
+  // Blink the phone's LED flashlight for hearing-impaired users (native only)
+  const blinkTorch = useCallback(async () => {
+    if (!Capacitor.isNativePlatform()) return;
+    try {
+      const { CapacitorFlash } = await import('@capgo/capacitor-flash');
+      const { value: available } = await CapacitorFlash.isAvailable();
+      if (!available) return;
+
+      for (let i = 0; i < 5; i++) {
+        await CapacitorFlash.switchOn({ intensity: 1 });
+        await new Promise(r => setTimeout(r, 250));
+        await CapacitorFlash.switchOff();
+        await new Promise(r => setTimeout(r, 150));
+      }
+    } catch (e) {
+      console.warn('Torch blink unavailable:', e);
     }
   }, []);
 
@@ -183,14 +202,16 @@ export function useMedicationReminders({ doses, enabled = true }: UseMedicationR
           playMissedDoseAlarm();
           // Aggressive vibration
           triggerUrgentVibration();
-          // Screen flash for hearing impaired
+          // LED torch blink for hearing impaired (native only)
+          blinkTorch();
+          // Screen flash for hearing impaired (web fallback)
           triggerScreenFlash(dose.medicationName);
 
           console.log(`🚨 MISSED DOSE ALERT: ${dose.medicationName} was due at ${dose.time}`);
         }
       }
     });
-  }, [doses, enabled, playReminderChime, playMissedDoseAlarm, triggerVibration, triggerUrgentVibration, triggerScreenFlash]);
+  }, [doses, enabled, playReminderChime, playMissedDoseAlarm, triggerVibration, triggerUrgentVibration, blinkTorch, triggerScreenFlash]);
 
   // Check every 15 seconds for faster missed-dose detection
   useEffect(() => {
@@ -236,8 +257,9 @@ export function useMedicationReminders({ doses, enabled = true }: UseMedicationR
   const triggerMissedDoseTest = useCallback(() => {
     playMissedDoseAlarm();
     triggerUrgentVibration();
+    blinkTorch();
     triggerScreenFlash('Test Medication');
-  }, [playMissedDoseAlarm, triggerUrgentVibration, triggerScreenFlash]);
+  }, [playMissedDoseAlarm, triggerUrgentVibration, blinkTorch, triggerScreenFlash]);
 
   return {
     triggerReminder,
