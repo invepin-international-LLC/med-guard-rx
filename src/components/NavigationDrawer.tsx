@@ -22,7 +22,7 @@
  interface NavigationDrawerProps {
    open: boolean;
    onClose: () => void;
-   onNavigate: (item: 'today' | 'medications' | 'scan' | 'stats' | 'profile') => void;
+   onNavigate: (item: 'today' | 'medications' | 'scan' | 'stats' | 'safety' | 'profile') => void;
    activeItem: string;
    isCaregiver?: boolean;
    onCaregiverDashboard?: () => void;
@@ -39,7 +39,7 @@
     onDrBombayClick
   }: NavigationDrawerProps) {
    
-   const handleNavigation = (item: 'today' | 'medications' | 'scan' | 'stats' | 'profile') => {
+   const handleNavigation = (item: 'today' | 'medications' | 'scan' | 'stats' | 'safety' | 'profile') => {
      onNavigate(item);
      onClose();
    };
