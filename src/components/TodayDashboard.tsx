@@ -588,6 +588,40 @@ export function TodayDashboard() {
     );
   }
 
+  // Show safety guide
+  if (activeNav === 'safety') {
+    return (
+      <div className="min-h-screen bg-background pb-32">
+        <ElderHeader 
+          userName={userName} 
+          notificationCount={0}
+          onMenuClick={() => setShowNavigationDrawer(true)}
+          onNotificationsClick={() => setActiveNav('profile')}
+          onProfileClick={() => setShowDrRx(true)}
+          onShopClick={() => setOpenShop(true)}
+          coinBalance={rewards?.coins}
+        />
+        <main className="max-w-2xl mx-auto px-4 py-6">
+          <h2 className="text-2xl font-bold text-foreground mb-4">🛡️ Fentanyl Safety Guide</h2>
+          <p className="text-muted-foreground mb-4 text-sm">
+            Learn to spot counterfeit pills and protect yourself and loved ones.
+          </p>
+          <FentanylSafetyGuide />
+        </main>
+        <ElderBottomNav activeItem={activeNav} onNavigate={setActiveNav} />
+        <NavigationDrawer
+          open={showNavigationDrawer}
+          onClose={() => setShowNavigationDrawer(false)}
+          onNavigate={setActiveNav}
+          activeItem={activeNav}
+          isCaregiver={isCaregiver}
+          onCaregiverDashboard={() => navigate('/caregiver')}
+          onDrBombayClick={() => setShowDrRx(true)}
+        />
+      </div>
+    );
+  }
+
   const hasMedications = medications.length > 0;
   const hasDoses = doses.length > 0;
 
