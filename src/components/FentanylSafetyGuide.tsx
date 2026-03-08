@@ -108,7 +108,11 @@ export function FentanylSafetyGuide() {
         open={openSection === 'compare'}
         onToggle={() => toggle('compare')}
       >
-        <PillComparisonTool />
+        <PillComparisonTool
+          key={`${comparePhoto}-${compareDrugName}`}
+          initialPhoto={openSection === 'compare' ? comparePhoto : null}
+          initialDrugName={openSection === 'compare' ? compareDrugName : null}
+        />
       </AccordionItem>
 
       {/* Visual ID Guide */}

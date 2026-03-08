@@ -13,13 +13,13 @@ interface PillComparisonToolProps {
   initialDrugName?: string | null;
 }
 
-export function PillComparisonTool({ onClose }: PillComparisonToolProps) {
-  const [userPhoto, setUserPhoto] = useState<string | null>(null);
+export function PillComparisonTool({ onClose, initialPhoto, initialDrugName }: PillComparisonToolProps) {
+  const [userPhoto, setUserPhoto] = useState<string | null>(initialPhoto || null);
   const [referenceImage, setReferenceImage] = useState<string | null>(null);
   const [referenceSource, setReferenceSource] = useState<'dailymed' | 'ai-generated' | null>(null);
-  const [drugName, setDrugName] = useState('');
+  const [drugName, setDrugName] = useState(initialDrugName || '');
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState<'capture' | 'search' | 'compare'>('capture');
+  const [step, setStep] = useState<'capture' | 'search' | 'compare'>(initialPhoto ? 'search' : 'capture');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleCapture = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {

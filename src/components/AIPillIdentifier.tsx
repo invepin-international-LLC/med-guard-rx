@@ -240,7 +240,7 @@ export function AIPillIdentifier({ onClose, onCompare }: AIPillIdentifierProps) 
               <p className="font-bold text-sm text-foreground">Possible Matches</p>
               <div className="space-y-3">
                 {result.matches.map((match, i) => (
-                  <div key={i} className="bg-muted/50 rounded-xl p-3 space-y-1">
+                  <div key={i} className="bg-muted/50 rounded-xl p-3 space-y-2">
                     <div className="flex items-center justify-between">
                       <p className="font-bold text-foreground">{match.name}</p>
                       <Badge variant="outline" className={confidenceColors[match.confidence]}>
@@ -252,6 +252,17 @@ export function AIPillIdentifier({ onClose, onCompare }: AIPillIdentifierProps) 
                       <p className="text-xs text-muted-foreground">Mfr: {match.manufacturer}</p>
                     )}
                     <p className="text-xs text-muted-foreground italic">{match.reason}</p>
+                    {onCompare && photo && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full gap-2 mt-1"
+                        onClick={() => onCompare(photo, match.name)}
+                      >
+                        <ScanSearch className="w-4 h-4" />
+                        Compare with Verified Image
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>
