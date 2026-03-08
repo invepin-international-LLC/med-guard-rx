@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { Camera, Loader2, RotateCcw, AlertTriangle, Sparkles, ShieldAlert, X } from 'lucide-react';
+import { Camera, Loader2, RotateCcw, AlertTriangle, Sparkles, ShieldAlert, X, ScanSearch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
