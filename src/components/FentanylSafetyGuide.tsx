@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { 
   Shield, Eye, Wind, TestTube, Phone, AlertTriangle, 
-  ChevronDown, ChevronUp, ExternalLink, Heart, ScanSearch
+  ChevronDown, ChevronUp, ExternalLink, Heart, ScanSearch, Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { PillComparisonTool } from './PillComparisonTool';
+import { AIPillIdentifier } from './AIPillIdentifier';
 
-type Section = 'visual' | 'smell' | 'teststrip' | 'emergency' | 'compare';
+type Section = 'visual' | 'smell' | 'teststrip' | 'emergency' | 'compare' | 'ai-identify';
 
 interface AccordionItemProps {
   title: string;
