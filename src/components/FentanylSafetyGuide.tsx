@@ -80,6 +80,17 @@ export function FentanylSafetyGuide() {
         </div>
       </div>
 
+      {/* Pill Photo Comparison */}
+      <AccordionItem
+        title="Pill Photo Compare"
+        icon={ScanSearch}
+        iconColor="bg-emerald-500"
+        open={openSection === 'compare'}
+        onToggle={() => toggle('compare')}
+      >
+        <PillComparisonTool />
+      </AccordionItem>
+
       {/* Visual ID Guide */}
       <AccordionItem
         title="Visual Warning Signs"
