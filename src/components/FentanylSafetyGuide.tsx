@@ -63,8 +63,16 @@ function Tip({ emoji, text }: { emoji: string; text: string }) {
 
 export function FentanylSafetyGuide() {
   const [openSection, setOpenSection] = useState<Section | null>('visual');
+  const [comparePhoto, setComparePhoto] = useState<string | null>(null);
+  const [compareDrugName, setCompareDrugName] = useState<string | null>(null);
 
   const toggle = (s: Section) => setOpenSection(prev => prev === s ? null : s);
+
+  const handleCompareFromAI = (photo: string, drugName: string) => {
+    setComparePhoto(photo);
+    setCompareDrugName(drugName);
+    setOpenSection('compare');
+  };
 
   return (
     <div className="space-y-4">
@@ -89,7 +97,7 @@ export function FentanylSafetyGuide() {
         open={openSection === 'ai-identify'}
         onToggle={() => toggle('ai-identify')}
       >
-        <AIPillIdentifier />
+        <AIPillIdentifier onCompare={handleCompareFromAI} />
       </AccordionItem>
 
       {/* Pill Photo Comparison */}
@@ -100,7 +108,11 @@ export function FentanylSafetyGuide() {
         open={openSection === 'compare'}
         onToggle={() => toggle('compare')}
       >
-        <PillComparisonTool />
+        <PillComparisonTool
+          key={`${comparePhoto}-${compareDrugName}`}
+          initialPhoto={openSection === 'compare' ? comparePhoto : null}
+          initialDrugName={openSection === 'compare' ? compareDrugName : null}
+        />
       </AccordionItem>
 
       {/* Visual ID Guide */}

@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { Camera, Loader2, RotateCcw, AlertTriangle, Sparkles, ShieldAlert, X } from 'lucide-react';
+import { Camera, Loader2, RotateCcw, AlertTriangle, Sparkles, ShieldAlert, X, ScanSearch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -33,6 +33,7 @@ interface IdentifyResult {
 
 interface AIPillIdentifierProps {
   onClose?: () => void;
+  onCompare?: (photo: string, drugName: string) => void;
 }
 
 const confidenceColors: Record<string, string> = {
@@ -41,7 +42,7 @@ const confidenceColors: Record<string, string> = {
   low: 'bg-muted text-muted-foreground border-border',
 };
 
-export function AIPillIdentifier({ onClose }: AIPillIdentifierProps) {
+export function AIPillIdentifier({ onClose, onCompare }: AIPillIdentifierProps) {
   const [photo, setPhoto] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<IdentifyResult | null>(null);
@@ -239,7 +240,7 @@ export function AIPillIdentifier({ onClose }: AIPillIdentifierProps) {
               <p className="font-bold text-sm text-foreground">Possible Matches</p>
               <div className="space-y-3">
                 {result.matches.map((match, i) => (
-                  <div key={i} className="bg-muted/50 rounded-xl p-3 space-y-1">
+                  <div key={i} className="bg-muted/50 rounded-xl p-3 space-y-2">
                     <div className="flex items-center justify-between">
                       <p className="font-bold text-foreground">{match.name}</p>
                       <Badge variant="outline" className={confidenceColors[match.confidence]}>
@@ -251,6 +252,17 @@ export function AIPillIdentifier({ onClose }: AIPillIdentifierProps) {
                       <p className="text-xs text-muted-foreground">Mfr: {match.manufacturer}</p>
                     )}
                     <p className="text-xs text-muted-foreground italic">{match.reason}</p>
+                    {onCompare && photo && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full gap-2 mt-1"
+                        onClick={() => onCompare(photo, match.name)}
+                      >
+                        <ScanSearch className="w-4 h-4" />
+                        Compare with Verified Image
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>
