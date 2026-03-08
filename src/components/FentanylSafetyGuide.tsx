@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { 
   Shield, Eye, Wind, TestTube, Phone, AlertTriangle, 
-  ChevronDown, ChevronUp, ExternalLink, Heart
+  ChevronDown, ChevronUp, ExternalLink, Heart, ScanSearch
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { PillComparisonTool } from './PillComparisonTool';
 
-type Section = 'visual' | 'smell' | 'teststrip' | 'emergency';
+type Section = 'visual' | 'smell' | 'teststrip' | 'emergency' | 'compare';
 
 interface AccordionItemProps {
   title: string;
