@@ -81,6 +81,17 @@ export function FentanylSafetyGuide() {
         </div>
       </div>
 
+      {/* AI Pill Identifier */}
+      <AccordionItem
+        title="AI Pill Identifier"
+        icon={Sparkles}
+        iconColor="bg-violet-500"
+        open={openSection === 'ai-identify'}
+        onToggle={() => toggle('ai-identify')}
+      >
+        <AIPillIdentifier />
+      </AccordionItem>
+
       {/* Pill Photo Comparison */}
       <AccordionItem
         title="Pill Photo Compare"
