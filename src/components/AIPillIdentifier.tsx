@@ -42,7 +42,7 @@ const confidenceColors: Record<string, string> = {
   low: 'bg-muted text-muted-foreground border-border',
 };
 
-export function AIPillIdentifier({ onClose }: AIPillIdentifierProps) {
+export function AIPillIdentifier({ onClose, onCompare }: AIPillIdentifierProps) {
   const [photo, setPhoto] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<IdentifyResult | null>(null);
