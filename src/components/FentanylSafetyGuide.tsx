@@ -63,8 +63,16 @@ function Tip({ emoji, text }: { emoji: string; text: string }) {
 
 export function FentanylSafetyGuide() {
   const [openSection, setOpenSection] = useState<Section | null>('visual');
+  const [comparePhoto, setComparePhoto] = useState<string | null>(null);
+  const [compareDrugName, setCompareDrugName] = useState<string | null>(null);
 
   const toggle = (s: Section) => setOpenSection(prev => prev === s ? null : s);
+
+  const handleCompareFromAI = (photo: string, drugName: string) => {
+    setComparePhoto(photo);
+    setCompareDrugName(drugName);
+    setOpenSection('compare');
+  };
 
   return (
     <div className="space-y-4">
