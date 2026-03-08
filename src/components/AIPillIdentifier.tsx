@@ -33,6 +33,7 @@ interface IdentifyResult {
 
 interface AIPillIdentifierProps {
   onClose?: () => void;
+  onCompare?: (photo: string, drugName: string) => void;
 }
 
 const confidenceColors: Record<string, string> = {
