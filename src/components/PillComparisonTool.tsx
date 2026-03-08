@@ -9,6 +9,8 @@ import { toast } from 'sonner';
 
 interface PillComparisonToolProps {
   onClose?: () => void;
+  initialPhoto?: string | null;
+  initialDrugName?: string | null;
 }
 
 export function PillComparisonTool({ onClose }: PillComparisonToolProps) {
