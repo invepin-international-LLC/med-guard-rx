@@ -97,7 +97,7 @@ export function FentanylSafetyGuide() {
         open={openSection === 'ai-identify'}
         onToggle={() => toggle('ai-identify')}
       >
-        <AIPillIdentifier />
+        <AIPillIdentifier onCompare={handleCompareFromAI} />
       </AccordionItem>
 
       {/* Pill Photo Comparison */}
