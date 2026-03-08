@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.medication-dictionary]
 verify_jwt = false
+
+[functions.identify-pill]
+verify_jwt = false
