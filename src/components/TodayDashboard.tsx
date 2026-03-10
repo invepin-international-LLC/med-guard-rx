@@ -486,7 +486,7 @@ export function TodayDashboard() {
               icon={Settings}
               label="App Settings"
               description="Notifications, display, voice"
-              onClick={() => toast.info('Settings coming soon!')}
+              onClick={() => setShowSettings(true)}
             />
           </div>
 
