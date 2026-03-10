@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import { MedicationDose } from '@/hooks/useMedications';
 import { getSoundEnabled } from '@/hooks/useSoundEffects';
 import { getTorchEnabled } from '@/components/SoundSettings';
-import { getVoiceEnabled } from '@/components/DisplaySettings';
+import { getVoiceEnabled, getSelectedVoiceName } from '@/components/DisplaySettings';
 import { Capacitor } from '@capacitor/core';
 
 interface MedicationDoseWithName extends MedicationDose {
@@ -161,6 +161,11 @@ export function useMedicationReminders({ doses, enabled = true }: UseMedicationR
       ? `Attention. You missed your dose of ${medicationName || 'medication'}. Please take it now.`
       : `Time to take your ${medicationName || 'medication'}.`;
     const utterance = new SpeechSynthesisUtterance(message);
+    const voiceName = getSelectedVoiceName();
+    if (voiceName) {
+      const voice = window.speechSynthesis.getVoices().find(v => v.name === voiceName);
+      if (voice) utterance.voice = voice;
+    }
     utterance.rate = 0.9;
     utterance.pitch = 1;
     utterance.volume = 1;
