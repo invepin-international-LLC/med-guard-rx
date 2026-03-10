@@ -224,6 +224,7 @@ export function useMedicationReminders({ doses, enabled = true }: UseMedicationR
           blinkTorch();
           // Screen flash for hearing impaired (web fallback)
           triggerScreenFlash(dose.medicationName);
+          speakReminder(dose.medicationName, true);
 
           console.log(`🚨 MISSED DOSE ALERT: ${dose.medicationName} was due at ${dose.time}`);
         }
