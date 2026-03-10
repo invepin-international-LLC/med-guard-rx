@@ -202,6 +202,7 @@ export function useMedicationReminders({ doses, enabled = true }: UseMedicationR
         alertedDosesRef.current.add(doseKey);
         playReminderChime();
         triggerVibration();
+        speakReminder(dose.medicationName);
         console.log(`🔔 Medication reminder: Time to take ${dose.medicationName}`);
       }
 
