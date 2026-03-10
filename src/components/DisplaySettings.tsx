@@ -157,6 +157,22 @@ export function DisplaySettings({ className }: DisplaySettingsProps) {
           className="scale-125"
         />
       </div>
+
+      {/* Voice Assistant */}
+      <div className="flex items-center justify-between gap-4 pt-2">
+        <div className="flex items-center gap-3">
+          <Volume2 className="w-5 h-5 text-muted-foreground" />
+          <div>
+            <p className="text-base font-medium text-foreground">Voice Reminders</p>
+            <p className="text-sm text-muted-foreground">Speak medication names aloud at dose time</p>
+          </div>
+        </div>
+        <Switch
+          checked={voiceEnabled}
+          onCheckedChange={handleVoiceEnabled}
+          className="scale-125"
+        />
+      </div>
     </div>
   );
 }
