@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Type, Sun, Monitor, Volume2, Play } from 'lucide-react';
+import { Type, Sun, Monitor, Volume2, Play, ChevronDown } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 const FONT_SIZE_KEY = 'medguard-font-size';
 const HIGH_CONTRAST_KEY = 'medguard-high-contrast';
 const VOICE_ENABLED_KEY = 'medguard-voice-enabled';
+const VOICE_NAME_KEY = 'medguard-voice-name';
 
 type FontSize = 'normal' | 'large' | 'extra-large';
 
@@ -38,6 +39,10 @@ export function getVoiceEnabled(): boolean {
   return getStoredVoiceEnabled();
 }
 
+export function getSelectedVoiceName(): string | null {
+  return localStorage.getItem(VOICE_NAME_KEY);
+}
+
 function applyFontSize(size: FontSize) {
   document.documentElement.style.fontSize = fontSizeScale[size];
   localStorage.setItem(FONT_SIZE_KEY, size);
@@ -52,6 +57,27 @@ function applyHighContrast(enabled: boolean) {
   localStorage.setItem(HIGH_CONTRAST_KEY, String(enabled));
 }
 
+function getEnglishVoices(): SpeechSynthesisVoice[] {
+  if (!('speechSynthesis' in window)) return [];
+  return window.speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
+}
+
+function speakSample(voiceName?: string | null) {
+  if (!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(
+    'Time to take your Lisinopril 10 milligrams.'
+  );
+  if (voiceName) {
+    const voice = getEnglishVoices().find(v => v.name === voiceName);
+    if (voice) utterance.voice = voice;
+  }
+  utterance.rate = 0.9;
+  utterance.pitch = 1;
+  utterance.volume = 1;
+  window.speechSynthesis.speak(utterance);
+}
+
 interface DisplaySettingsProps {
   className?: string;
 }
@@ -60,16 +86,32 @@ export function DisplaySettings({ className }: DisplaySettingsProps) {
   const [fontSize, setFontSize] = useState<FontSize>(getStoredFontSize);
   const [highContrast, setHighContrast] = useState(getStoredHighContrast);
   const [voiceEnabled, setVoiceEnabled] = useState(getStoredVoiceEnabled);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [selectedVoice, setSelectedVoice] = useState<string>(
+    localStorage.getItem(VOICE_NAME_KEY) || ''
+  );
 
   useEffect(() => {
     applyFontSize(fontSize);
     applyHighContrast(highContrast);
   }, []);
 
+  useEffect(() => {
+    const load = () => setVoices(getEnglishVoices());
+    load();
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.onvoiceschanged = load;
+    }
+    return () => {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = null;
+      }
+    };
+  }, []);
+
   const handleFontSize = (size: FontSize) => {
     setFontSize(size);
     applyFontSize(size);
-    // Persist to profile if logged in
     saveToProfile({ font_size: size });
   };
 
@@ -85,6 +127,12 @@ export function DisplaySettings({ className }: DisplaySettingsProps) {
     saveToProfile({ voice_enabled: checked });
   };
 
+  const handleVoiceChange = (name: string) => {
+    setSelectedVoice(name);
+    localStorage.setItem(VOICE_NAME_KEY, name);
+    speakSample(name);
+  };
+
   const saveToProfile = async (updates: { font_size?: string; high_contrast_mode?: boolean; voice_enabled?: boolean }) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -94,7 +142,7 @@ export function DisplaySettings({ className }: DisplaySettingsProps) {
         .update(updates)
         .eq('user_id', user.id);
     } catch {
-      // Silent fail for settings persistence
+      // Silent fail
     }
   };
 
@@ -174,19 +222,35 @@ export function DisplaySettings({ className }: DisplaySettingsProps) {
             className="scale-125"
           />
         </div>
+
+        {/* Voice Selection Dropdown */}
+        {voices.length > 0 && (
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-muted-foreground">Voice</label>
+            <div className="relative">
+              <select
+                value={selectedVoice}
+                onChange={(e) => handleVoiceChange(e.target.value)}
+                className={cn(
+                  "w-full appearance-none rounded-xl py-3 px-4 pr-10 text-sm font-medium border-2 transition-all",
+                  "bg-card text-foreground border-border focus:border-primary focus:outline-none"
+                )}
+              >
+                <option value="">System Default</option>
+                {voices.map((v) => (
+                  <option key={v.name} value={v.name}>
+                    {v.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            </div>
+          </div>
+        )}
+
         <button
           type="button"
-          onClick={() => {
-            if (!('speechSynthesis' in window)) return;
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(
-              'Time to take your Lisinopril 10 milligrams.'
-            );
-            utterance.rate = 0.9;
-            utterance.pitch = 1;
-            utterance.volume = 1;
-            window.speechSynthesis.speak(utterance);
-          }}
+          onClick={() => speakSample(selectedVoice || null)}
           className={cn(
             "w-full flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium border-2 transition-all",
             "bg-card text-foreground border-border hover:border-primary/50 hover:bg-primary/5"
