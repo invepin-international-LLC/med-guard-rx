@@ -85,7 +85,7 @@ export function DisplaySettings({ className }: DisplaySettingsProps) {
     saveToProfile({ voice_enabled: checked });
   };
 
-  const saveToProfile = async (updates: { font_size?: string; high_contrast_mode?: boolean }) => {
+  const saveToProfile = async (updates: { font_size?: string; high_contrast_mode?: boolean; voice_enabled?: boolean }) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
