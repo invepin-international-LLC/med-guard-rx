@@ -527,6 +527,7 @@ export function TodayDashboard() {
               </SheetTitle>
             </SheetHeader>
             <div className="space-y-6 pb-8">
+              <DisplaySettings />
               <NotificationSettings />
               <SoundSettings />
               <AppleHealthSettings />
