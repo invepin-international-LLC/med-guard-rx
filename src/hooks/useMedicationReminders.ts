@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import { MedicationDose } from '@/hooks/useMedications';
 import { getSoundEnabled } from '@/hooks/useSoundEffects';
 import { getTorchEnabled } from '@/components/SoundSettings';
-import { getVoiceEnabled } from '@/components/DisplaySettings';
+import { getVoiceEnabled, getSelectedVoiceName } from '@/components/DisplaySettings';
 import { Capacitor } from '@capacitor/core';
 
 interface MedicationDoseWithName extends MedicationDose {
