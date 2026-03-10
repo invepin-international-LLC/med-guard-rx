@@ -153,6 +153,20 @@ export function useMedicationReminders({ doses, enabled = true }: UseMedicationR
     }
   }, []);
 
+  // Speak medication name aloud using browser TTS
+  const speakReminder = useCallback((medicationName?: string, isMissed = false) => {
+    if (!getVoiceEnabled() || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const message = isMissed
+      ? `Attention. You missed your dose of ${medicationName || 'medication'}. Please take it now.`
+      : `Time to take your ${medicationName || 'medication'}.`;
+    const utterance = new SpeechSynthesisUtterance(message);
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+    window.speechSynthesis.speak(utterance);
+  }, []);
+
   // Trigger screen flash for hearing impaired
   const triggerScreenFlash = useCallback((medicationName?: string) => {
     setMissedDoseAlert({ active: true, medicationName });
