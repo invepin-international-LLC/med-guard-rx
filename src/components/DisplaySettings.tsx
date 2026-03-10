@@ -30,6 +30,14 @@ function getStoredHighContrast(): boolean {
   return localStorage.getItem(HIGH_CONTRAST_KEY) === 'true';
 }
 
+function getStoredVoiceEnabled(): boolean {
+  return localStorage.getItem(VOICE_ENABLED_KEY) === 'true';
+}
+
+export function getVoiceEnabled(): boolean {
+  return getStoredVoiceEnabled();
+}
+
 function applyFontSize(size: FontSize) {
   document.documentElement.style.fontSize = fontSizeScale[size];
   localStorage.setItem(FONT_SIZE_KEY, size);
