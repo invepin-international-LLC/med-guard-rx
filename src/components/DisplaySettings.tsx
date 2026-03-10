@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Type, Sun, Monitor } from 'lucide-react';
+import { Type, Sun, Monitor, Volume2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
