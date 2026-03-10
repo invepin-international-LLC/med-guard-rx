@@ -97,6 +97,7 @@ export function TodayDashboard() {
   const [showDictionary, setShowDictionary] = useState(false);
   const [showDrRx, setShowDrRx] = useState(false);
   const [openShop, setOpenShop] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   
   const { isCaregiver, patientsICareFor } = useCaregiver();
 
@@ -485,7 +486,7 @@ export function TodayDashboard() {
               icon={Settings}
               label="App Settings"
               description="Notifications, display, voice"
-              onClick={() => toast.info('Settings coming soon!')}
+              onClick={() => setShowSettings(true)}
             />
           </div>
 
@@ -512,6 +513,23 @@ export function TodayDashboard() {
               </SheetTitle>
             </SheetHeader>
             <HipaaSection onClose={() => setShowHipaaSection(false)} />
+          </SheetContent>
+        </Sheet>
+
+        {/* App Settings Sheet */}
+        <Sheet open={showSettings} onOpenChange={setShowSettings}>
+          <SheetContent side="bottom" className="h-[90vh] overflow-y-auto rounded-t-3xl">
+            <SheetHeader className="pb-4">
+              <SheetTitle className="flex items-center gap-2 text-2xl">
+                <Settings className="w-6 h-6 text-primary" />
+                App Settings
+              </SheetTitle>
+            </SheetHeader>
+            <div className="space-y-6 pb-8">
+              <NotificationSettings />
+              <SoundSettings />
+              <AppleHealthSettings />
+            </div>
           </SheetContent>
         </Sheet>
 

@@ -108,7 +108,7 @@
 
     "@capacitor/push-notifications": ["@capacitor/push-notifications@8.0.0", "", { "peerDependencies": { "@capacitor/core": ">=8.0.0" } }, "sha512-xJWQLqAfC8b2ETqAPmwDnkKB4t/lVrbYc2D8VpA2fSu10JFSL/R722Vk0Lfl9Lo9WusmyIiQbVfILNQ3iFNGKw=="],
 
-    "@capgo/capacitor-flash": ["@capgo/capacitor-flash@8.0.20", "", { "peerDependencies": { "@capacitor/core": ">=8.0.0" } }, "sha512-qot70VZEAK/AvNKoBE2z/4DbOTtmF1BuekHe2j09Di+4XXVMTrp4DJNABNy8NF63/0T4fv90McTD1ay4YDAWtg=="],
+    "@capgo/capacitor-flash": ["@capgo/capacitor-flash@8.0.21", "", { "peerDependencies": { "@capacitor/core": ">=8.0.0" } }, "sha512-sodgAoD0OvfF6Kt+aZBr50oIIORkt3MV+WP9p/4uXlTlVb2KYNI72MilyyPZD/Tkwge4MGO0Pp9/I8loD7mQRw=="],
 
     "@capgo/capacitor-health": ["@capgo/capacitor-health@8.2.11", "", { "peerDependencies": { "@capacitor/core": ">=8.0.0" } }, "sha512-t+w5qTvZTu5ygl6HiPIfCi0LsRKWDgSQ4jgRXngi6VaMFPi42sd5o60whFvIt9g46Jgw0eLxxumimo71ndefsw=="],
 
