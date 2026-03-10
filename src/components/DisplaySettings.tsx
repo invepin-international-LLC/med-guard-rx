@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Type, Sun, Monitor } from 'lucide-react';
+import { Type, Sun, Monitor, Volume2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 
 const FONT_SIZE_KEY = 'medguard-font-size';
 const HIGH_CONTRAST_KEY = 'medguard-high-contrast';
+const VOICE_ENABLED_KEY = 'medguard-voice-enabled';
 
 type FontSize = 'normal' | 'large' | 'extra-large';
 
@@ -29,6 +30,14 @@ function getStoredHighContrast(): boolean {
   return localStorage.getItem(HIGH_CONTRAST_KEY) === 'true';
 }
 
+function getStoredVoiceEnabled(): boolean {
+  return localStorage.getItem(VOICE_ENABLED_KEY) === 'true';
+}
+
+export function getVoiceEnabled(): boolean {
+  return getStoredVoiceEnabled();
+}
+
 function applyFontSize(size: FontSize) {
   document.documentElement.style.fontSize = fontSizeScale[size];
   localStorage.setItem(FONT_SIZE_KEY, size);
@@ -50,6 +59,7 @@ interface DisplaySettingsProps {
 export function DisplaySettings({ className }: DisplaySettingsProps) {
   const [fontSize, setFontSize] = useState<FontSize>(getStoredFontSize);
   const [highContrast, setHighContrast] = useState(getStoredHighContrast);
+  const [voiceEnabled, setVoiceEnabled] = useState(getStoredVoiceEnabled);
 
   useEffect(() => {
     applyFontSize(fontSize);
@@ -69,7 +79,13 @@ export function DisplaySettings({ className }: DisplaySettingsProps) {
     saveToProfile({ high_contrast_mode: checked });
   };
 
-  const saveToProfile = async (updates: { font_size?: string; high_contrast_mode?: boolean }) => {
+  const handleVoiceEnabled = (checked: boolean) => {
+    setVoiceEnabled(checked);
+    localStorage.setItem(VOICE_ENABLED_KEY, String(checked));
+    saveToProfile({ voice_enabled: checked });
+  };
+
+  const saveToProfile = async (updates: { font_size?: string; high_contrast_mode?: boolean; voice_enabled?: boolean }) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -138,6 +154,22 @@ export function DisplaySettings({ className }: DisplaySettingsProps) {
         <Switch
           checked={highContrast}
           onCheckedChange={handleHighContrast}
+          className="scale-125"
+        />
+      </div>
+
+      {/* Voice Assistant */}
+      <div className="flex items-center justify-between gap-4 pt-2">
+        <div className="flex items-center gap-3">
+          <Volume2 className="w-5 h-5 text-muted-foreground" />
+          <div>
+            <p className="text-base font-medium text-foreground">Voice Reminders</p>
+            <p className="text-sm text-muted-foreground">Speak medication names aloud at dose time</p>
+          </div>
+        </div>
+        <Switch
+          checked={voiceEnabled}
+          onCheckedChange={handleVoiceEnabled}
           className="scale-125"
         />
       </div>

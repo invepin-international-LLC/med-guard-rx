@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import { MedicationDose } from '@/hooks/useMedications';
 import { getSoundEnabled } from '@/hooks/useSoundEffects';
 import { getTorchEnabled } from '@/components/SoundSettings';
+import { getVoiceEnabled } from '@/components/DisplaySettings';
 import { Capacitor } from '@capacitor/core';
 
 interface MedicationDoseWithName extends MedicationDose {
@@ -152,6 +153,20 @@ export function useMedicationReminders({ doses, enabled = true }: UseMedicationR
     }
   }, []);
 
+  // Speak medication name aloud using browser TTS
+  const speakReminder = useCallback((medicationName?: string, isMissed = false) => {
+    if (!getVoiceEnabled() || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const message = isMissed
+      ? `Attention. You missed your dose of ${medicationName || 'medication'}. Please take it now.`
+      : `Time to take your ${medicationName || 'medication'}.`;
+    const utterance = new SpeechSynthesisUtterance(message);
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+    window.speechSynthesis.speak(utterance);
+  }, []);
+
   // Trigger screen flash for hearing impaired
   const triggerScreenFlash = useCallback((medicationName?: string) => {
     setMissedDoseAlert({ active: true, medicationName });
@@ -187,6 +202,7 @@ export function useMedicationReminders({ doses, enabled = true }: UseMedicationR
         alertedDosesRef.current.add(doseKey);
         playReminderChime();
         triggerVibration();
+        speakReminder(dose.medicationName);
         console.log(`🔔 Medication reminder: Time to take ${dose.medicationName}`);
       }
 
@@ -208,12 +224,13 @@ export function useMedicationReminders({ doses, enabled = true }: UseMedicationR
           blinkTorch();
           // Screen flash for hearing impaired (web fallback)
           triggerScreenFlash(dose.medicationName);
+          speakReminder(dose.medicationName, true);
 
           console.log(`🚨 MISSED DOSE ALERT: ${dose.medicationName} was due at ${dose.time}`);
         }
       }
     });
-  }, [doses, enabled, playReminderChime, playMissedDoseAlarm, triggerVibration, triggerUrgentVibration, blinkTorch, triggerScreenFlash]);
+  }, [doses, enabled, playReminderChime, playMissedDoseAlarm, triggerVibration, triggerUrgentVibration, blinkTorch, triggerScreenFlash, speakReminder]);
 
   // Check every 15 seconds for faster missed-dose detection
   useEffect(() => {
