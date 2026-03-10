@@ -79,6 +79,12 @@ export function DisplaySettings({ className }: DisplaySettingsProps) {
     saveToProfile({ high_contrast_mode: checked });
   };
 
+  const handleVoiceEnabled = (checked: boolean) => {
+    setVoiceEnabled(checked);
+    localStorage.setItem(VOICE_ENABLED_KEY, String(checked));
+    saveToProfile({ voice_enabled: checked });
+  };
+
   const saveToProfile = async (updates: { font_size?: string; high_contrast_mode?: boolean }) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
