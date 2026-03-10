@@ -9,6 +9,7 @@ import { EmergencyContactsManager } from '@/components/EmergencyContactsManager'
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { SoundSettings } from '@/components/SoundSettings';
 import { AppleHealthSettings } from '@/components/AppleHealthSettings';
+import { DisplaySettings } from '@/components/DisplaySettings';
 import { QuickActionsElder } from '@/components/QuickActionsElder';
 import { InteractiveDoseClock } from '@/components/InteractiveDoseClock';
 import { PrescriptionScanner } from '@/components/PrescriptionScanner';
@@ -526,6 +527,7 @@ export function TodayDashboard() {
               </SheetTitle>
             </SheetHeader>
             <div className="space-y-6 pb-8">
+              <DisplaySettings />
               <NotificationSettings />
               <SoundSettings />
               <AppleHealthSettings />

@@ -128,6 +128,26 @@
     --sidebar-border: 222 40% 18%;
     --sidebar-ring: 25 95% 55%;
   }
+
+  /* High Contrast Mode */
+  .high-contrast {
+    --foreground: 0 0% 0%;
+    --card-foreground: 0 0% 0%;
+    --popover-foreground: 0 0% 0%;
+    --muted-foreground: 220 15% 25%;
+    --border: 220 20% 60%;
+    --primary: 222 60% 15%;
+    font-weight: 500;
+  }
+
+  .high-contrast.dark {
+    --foreground: 0 0% 100%;
+    --card-foreground: 0 0% 100%;
+    --popover-foreground: 0 0% 100%;
+    --muted-foreground: 220 15% 75%;
+    --border: 220 20% 45%;
+    --primary: 25 100% 60%;
+  }
 }
 
 @layer base {
