@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 const FONT_SIZE_KEY = 'medguard-font-size';
 const HIGH_CONTRAST_KEY = 'medguard-high-contrast';
+const VOICE_ENABLED_KEY = 'medguard-voice-enabled';
 
 type FontSize = 'normal' | 'large' | 'extra-large';
 
