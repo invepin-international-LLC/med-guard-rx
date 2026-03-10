@@ -159,19 +159,42 @@ export function DisplaySettings({ className }: DisplaySettingsProps) {
       </div>
 
       {/* Voice Assistant */}
-      <div className="flex items-center justify-between gap-4 pt-2">
-        <div className="flex items-center gap-3">
-          <Volume2 className="w-5 h-5 text-muted-foreground" />
-          <div>
-            <p className="text-base font-medium text-foreground">Voice Reminders</p>
-            <p className="text-sm text-muted-foreground">Speak medication names aloud at dose time</p>
+      <div className="space-y-3 pt-2">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Volume2 className="w-5 h-5 text-muted-foreground" />
+            <div>
+              <p className="text-base font-medium text-foreground">Voice Reminders</p>
+              <p className="text-sm text-muted-foreground">Speak medication names aloud at dose time</p>
+            </div>
           </div>
+          <Switch
+            checked={voiceEnabled}
+            onCheckedChange={handleVoiceEnabled}
+            className="scale-125"
+          />
         </div>
-        <Switch
-          checked={voiceEnabled}
-          onCheckedChange={handleVoiceEnabled}
-          className="scale-125"
-        />
+        <button
+          type="button"
+          onClick={() => {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(
+              'Time to take your Lisinopril 10 milligrams.'
+            );
+            utterance.rate = 0.9;
+            utterance.pitch = 1;
+            utterance.volume = 1;
+            window.speechSynthesis.speak(utterance);
+          }}
+          className={cn(
+            "w-full flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium border-2 transition-all",
+            "bg-card text-foreground border-border hover:border-primary/50 hover:bg-primary/5"
+          )}
+        >
+          <Play className="w-4 h-4" />
+          Preview Voice Sample
+        </button>
       </div>
     </div>
   );
