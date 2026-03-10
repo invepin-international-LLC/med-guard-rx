@@ -59,6 +59,7 @@ interface DisplaySettingsProps {
 export function DisplaySettings({ className }: DisplaySettingsProps) {
   const [fontSize, setFontSize] = useState<FontSize>(getStoredFontSize);
   const [highContrast, setHighContrast] = useState(getStoredHighContrast);
+  const [voiceEnabled, setVoiceEnabled] = useState(getStoredVoiceEnabled);
 
   useEffect(() => {
     applyFontSize(fontSize);
