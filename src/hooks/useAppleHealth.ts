@@ -33,17 +33,11 @@ const isNativeiOS = () => {
 };
 
 // Dynamic import of Health plugin
-const getHealthPlugin = async () => {
+const getHealthPlugin = async (): Promise<any> => {
   if (!isNativeiOS()) return null;
   try {
     const mod = await import('@capgo/capacitor-health');
-    // The plugin may export as Health or as default
-    const Health = mod.Health || mod.default;
-    if (!Health) {
-      console.log('HealthKit plugin loaded but no Health export found');
-      return null;
-    }
-    return Health;
+    return mod.Health || mod.default || null;
   } catch (e) {
     console.log('HealthKit not available:', e);
     return null;
