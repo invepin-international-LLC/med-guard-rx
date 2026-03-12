@@ -301,10 +301,8 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   const handleRetry = useCallback(() => {
     setScannedResult(null);
     setError(null);
-    if (mode === 'camera') {
-      startScanner();
-    }
-  }, [startScanner, mode]);
+    setScannerStarted(false);
+  }, []);
 
   const switchToManualMode = useCallback(async () => {
     await stopScanner();
