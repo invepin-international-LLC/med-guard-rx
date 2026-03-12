@@ -103,10 +103,11 @@ export function useAppleHealth() {
     }
 
     try {
-      await Health.requestAuthorization({
+      const authResult = await Health.requestAuthorization({
         read: ['steps', 'heartRate', 'weight'],
         write: [],
       });
+      console.log('HealthKit authorization result:', JSON.stringify(authResult));
 
       setIsAuthorized(true);
       localStorage.setItem('healthkit_authorized', 'true');

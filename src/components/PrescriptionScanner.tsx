@@ -129,8 +129,8 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
 
     const nativeScanner = await getNativeScanner();
     if (!nativeScanner) {
-      // Fallback to web scanner
-      startWebScanner();
+      // Do NOT fallback to web scanner on native iOS - getUserMedia won't work in WKWebView
+      setError('Barcode scanner is not available. Please enter the NDC code manually.');
       return;
     }
 
