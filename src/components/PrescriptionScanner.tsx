@@ -531,25 +531,6 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
               </Button>
             </div>
 
-            {/* Example NDC codes for demo */}
-            <div className="pt-4 border-t border-border">
-              <p className="text-sm text-muted-foreground text-center mb-3">
-                Try these demo codes (real FDA data):
-              </p>
-              <div className="flex flex-wrap gap-2 justify-center">
-                {demoNdcCodes.map((ndc) => (
-                  <Button
-                    key={ndc}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setManualNdc(ndc)}
-                    className="font-mono text-sm"
-                  >
-                    {ndc}
-                  </Button>
-                ))}
-              </div>
-            </div>
           </Card>
         )}
 
