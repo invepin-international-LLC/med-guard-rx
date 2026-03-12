@@ -4,10 +4,6 @@ const config: CapacitorConfig = {
   appId: 'com.medguardrx.app',
   appName: 'Med Guard Rx',
   webDir: 'dist',
-  server: {
-    url: 'https://45501de0-0fa2-4819-8669-d3873eb1bd90.lovableproject.com?forceHideBadge=true',
-    cleartext: true
-  },
   ios: {
     contentInset: 'automatic',
     allowsLinkPreview: false,
