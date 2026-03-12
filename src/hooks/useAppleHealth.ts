@@ -75,7 +75,8 @@ export function useAppleHealth() {
 
       try {
         const result = await Health.isAvailable();
-        const available = result?.available ?? false;
+        const available = result?.available === true;
+        console.log('HealthKit availability:', JSON.stringify(result));
         setIsAvailable(available);
         
         if (available) {
