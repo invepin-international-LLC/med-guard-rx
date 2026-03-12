@@ -35,12 +35,6 @@ interface PrescriptionScannerProps {
   onClose: () => void;
 }
 
-// Demo NDC codes for testing (verified working with OpenFDA)
-const demoNdcCodes = [
-  '0777-3105-02', // Prozac 20mg
-  '16714-613-01', // Sertraline 100mg
-  '59762-3304-1', // Nitroglycerin 0.4mg
-];
 
 type ScannerMode = 'camera' | 'manual';
 
@@ -307,10 +301,8 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   const handleRetry = useCallback(() => {
     setScannedResult(null);
     setError(null);
-    if (mode === 'camera') {
-      startScanner();
-    }
-  }, [startScanner, mode]);
+    setScannerStarted(false);
+  }, []);
 
   const switchToManualMode = useCallback(async () => {
     await stopScanner();
@@ -324,8 +316,8 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     setError(null);
     setScannedResult(null);
     setManualNdc('');
-    startScanner();
-  }, [startScanner]);
+    setScannerStarted(false);
+  }, []);
 
   const formatNdcInput = (value: string): string => {
     const numbers = value.replace(/\D/g, '');
@@ -380,12 +372,14 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     };
   }, [stopScanner]);
 
-  // Auto-start scanner when component mounts (only in camera mode)
-  useEffect(() => {
-    if (mode === 'camera') {
-      startScanner();
-    }
-  }, []);
+  // Track if scanner has been started by user gesture
+  const [scannerStarted, setScannerStarted] = useState(false);
+
+  // Start scanner only via explicit user tap (iOS requires user gesture for camera)
+  const handleUserStartScanner = useCallback(async () => {
+    setScannerStarted(true);
+    await startScanner();
+  }, [startScanner]);
 
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
@@ -414,8 +408,32 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         {/* Camera Mode */}
         {mode === 'camera' && !scannedResult && !error && (
           <>
-            {/* For native scanner, the scan() UI is provided by the plugin */}
-            {!usingNativeScanner && (
+            {/* Show start button if scanner hasn't been started by user gesture */}
+            {!scannerStarted && !isScanning && !usingNativeScanner && (
+              <div className="text-center space-y-6">
+                <div className="w-24 h-24 bg-primary/20 rounded-3xl flex items-center justify-center mx-auto">
+                  <Camera className="w-14 h-14 text-primary" />
+                </div>
+                <div className="space-y-2">
+                  <h2 className="text-elder-xl font-bold text-foreground">Scan Prescription Barcode</h2>
+                  <p className="text-muted-foreground text-lg">
+                    Point your camera at the barcode on your prescription label to look up medication details.
+                  </p>
+                </div>
+                <Button 
+                  variant="default" 
+                  size="xl" 
+                  onClick={handleUserStartScanner}
+                  className="w-full max-w-xs mx-auto gap-3"
+                >
+                  <Camera className="w-6 h-6" />
+                  Open Camera
+                </Button>
+              </div>
+            )}
+
+            {/* Scanner viewport - only shown after user taps to start */}
+            {scannerStarted && !usingNativeScanner && (
               <div className="relative w-full max-w-md aspect-[4/3] bg-black rounded-3xl overflow-hidden shadow-elder-lg">
                 <div id={scannerContainerId} className="w-full h-full" />
                 
@@ -448,7 +466,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
             )}
 
             {/* Instructions */}
-            {!usingNativeScanner && (
+            {scannerStarted && !usingNativeScanner && (
               <div className="mt-8 text-center space-y-4">
                 <div className="flex items-center justify-center gap-3 text-foreground">
                   <ScanLine className="w-8 h-8 text-primary" />
@@ -535,25 +553,6 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
               </Button>
             </div>
 
-            {/* Example NDC codes for demo */}
-            <div className="pt-4 border-t border-border">
-              <p className="text-sm text-muted-foreground text-center mb-3">
-                Try these demo codes (real FDA data):
-              </p>
-              <div className="flex flex-wrap gap-2 justify-center">
-                {demoNdcCodes.map((ndc) => (
-                  <Button
-                    key={ndc}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setManualNdc(ndc)}
-                    className="font-mono text-sm"
-                  >
-                    {ndc}
-                  </Button>
-                ))}
-              </div>
-            </div>
           </Card>
         )}
 

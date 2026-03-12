@@ -155,25 +155,23 @@ export function useAppleHealth() {
       const healthData: Record<string, HealthDataPoint[]> = {};
 
       try {
-        const steps = await Health.queryAggregated({
+        const steps = await Health.readSamples({
           dataType: 'steps',
           startDate: startDate.toISOString(),
           endDate: endDate.toISOString(),
-          bucket: 'day',
         });
-        healthData.steps = (steps as any).aggregatedData || [];
+        healthData.steps = steps?.samples || [];
       } catch (e) {
         console.log('Steps data not available:', e);
       }
 
       try {
-        const heartRate = await (Health as any).queryRaw({
+        const heartRate = await Health.readSamples({
           dataType: 'heartRate',
           startDate: startDate.toISOString(),
           endDate: endDate.toISOString(),
-          limit: 50,
         });
-        healthData.heartRate = heartRate?.data || [];
+        healthData.heartRate = heartRate?.samples || [];
       } catch (e) {
         console.log('Heart rate data not available:', e);
       }

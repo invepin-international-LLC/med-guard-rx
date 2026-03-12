@@ -23,26 +23,9 @@ export function AppleHealthSettings() {
     availableShortcuts,
   } = useSiriShortcuts();
 
-  // Show different UI based on platform
+  // Hide entirely on non-iOS platforms to avoid appearing as incomplete feature
   if (!healthAvailable && !siriAvailable) {
-    return (
-      <Card className="bg-muted/30 border-muted">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Smartphone className="h-5 w-5" />
-            Apple Integration
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground text-sm">
-            Apple Health and Siri Shortcuts are only available when running as a native iOS app.
-          </p>
-          <p className="text-muted-foreground text-sm mt-2">
-            To enable these features, build and install the app on an iPhone.
-          </p>
-        </CardContent>
-      </Card>
-    );
+    return null;
   }
 
   return (
