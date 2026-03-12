@@ -35,12 +35,6 @@ interface PrescriptionScannerProps {
   onClose: () => void;
 }
 
-// Demo NDC codes for testing (verified working with OpenFDA)
-const demoNdcCodes = [
-  '0777-3105-02', // Prozac 20mg
-  '16714-613-01', // Sertraline 100mg
-  '59762-3304-1', // Nitroglycerin 0.4mg
-];
 
 type ScannerMode = 'camera' | 'manual';
 
