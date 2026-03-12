@@ -26,15 +26,23 @@ interface AdherenceData {
 
 // Check if we're running in Capacitor on iOS
 const isNativeiOS = () => {
-  return typeof window !== 'undefined' && 
-         window.Capacitor?.getPlatform() === 'ios';
+  if (typeof window === 'undefined') return false;
+  const cap = (window as any).Capacitor;
+  // Use isNativePlatform to ensure we're truly in a native context
+  return cap?.isNativePlatform?.() && cap?.getPlatform?.() === 'ios';
 };
 
 // Dynamic import of Health plugin
 const getHealthPlugin = async () => {
   if (!isNativeiOS()) return null;
   try {
-    const { Health } = await import('@capgo/capacitor-health');
+    const mod = await import('@capgo/capacitor-health');
+    // The plugin may export as Health or as default
+    const Health = mod.Health || mod.default;
+    if (!Health) {
+      console.log('HealthKit plugin loaded but no Health export found');
+      return null;
+    }
     return Health;
   } catch (e) {
     console.log('HealthKit not available:', e);
@@ -51,6 +59,12 @@ export function useAppleHealth() {
   // Check if HealthKit is available
   useEffect(() => {
     const checkAvailability = async () => {
+      // Early exit if not native iOS
+      if (!isNativeiOS()) {
+        setIsAvailable(false);
+        return;
+      }
+
       const Health = await getHealthPlugin();
       if (!Health) {
         setIsAvailable(false);
@@ -58,11 +72,11 @@ export function useAppleHealth() {
       }
 
       try {
-        const { available } = await Health.isAvailable();
+        const result = await Health.isAvailable();
+        const available = result?.available ?? false;
         setIsAvailable(available);
         
         if (available) {
-          // Check if already authorized
           const stored = localStorage.getItem('healthkit_authorized');
           if (stored === 'true') {
             setIsAuthorized(true);
@@ -86,13 +100,8 @@ export function useAppleHealth() {
     }
 
     try {
-      // Request read/write access for relevant data types
       await Health.requestAuthorization({
-        read: [
-          'steps',
-          'heartRate',
-          'weight',
-        ],
+        read: ['steps', 'heartRate', 'weight'],
         write: [],
       });
 
@@ -100,22 +109,26 @@ export function useAppleHealth() {
       localStorage.setItem('healthkit_authorized', 'true');
       toast.success('Apple Health connected! 🍎');
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('HealthKit authorization error:', error);
-      toast.error('Failed to connect to Apple Health');
+      // On iOS, if the user denies, it's not necessarily an error from the plugin
+      // but the data simply won't be accessible
+      if (error?.message?.includes('denied') || error?.message?.includes('cancelled')) {
+        toast.error('Apple Health access was denied. You can enable it in Settings > Privacy > Health.');
+      } else {
+        toast.error('Failed to connect to Apple Health. Please try again.');
+      }
       return false;
     }
   }, []);
 
-  // Sync medications to HealthKit (write medication records)
+  // Sync medications to HealthKit
   const syncMedicationsToHealth = useCallback(async (medications: MedicationRecord[]) => {
     if (!isAuthorized) {
       console.log('Not authorized to sync to HealthKit');
       return false;
     }
 
-    // Note: HealthKit medication data is read-only in most plugins
-    // We'll store a reference locally and sync adherence data instead
     try {
       const syncData = {
         lastSync: new Date().toISOString(),
@@ -135,7 +148,7 @@ export function useAppleHealth() {
     }
   }, [isAuthorized]);
 
-  // Read health data that might be relevant for medication interactions
+  // Read health data
   const readHealthData = useCallback(async () => {
     const Health = await getHealthPlugin();
     if (!Health || !isAuthorized) return null;
@@ -143,11 +156,10 @@ export function useAppleHealth() {
     try {
       const endDate = new Date();
       const startDate = new Date();
-      startDate.setDate(startDate.getDate() - 7); // Last 7 days
+      startDate.setDate(startDate.getDate() - 7);
 
       const healthData: Record<string, HealthDataPoint[]> = {};
 
-      // Read steps (general health indicator)
       try {
         const steps = await Health.queryAggregated({
           dataType: 'steps',
@@ -157,10 +169,9 @@ export function useAppleHealth() {
         });
         healthData.steps = (steps as any).aggregatedData || [];
       } catch (e) {
-        console.log('Steps data not available');
+        console.log('Steps data not available:', e);
       }
 
-      // Read heart rate (important for many medications)
       try {
         const heartRate = await (Health as any).queryRaw({
           dataType: 'heartRate',
@@ -170,7 +181,7 @@ export function useAppleHealth() {
         });
         healthData.heartRate = heartRate?.data || [];
       } catch (e) {
-        console.log('Heart rate data not available');
+        console.log('Heart rate data not available:', e);
       }
 
       return healthData;
@@ -180,7 +191,7 @@ export function useAppleHealth() {
     }
   }, [isAuthorized]);
 
-  // Sync adherence data to local storage (for health report export)
+  // Sync adherence data
   const syncAdherenceData = useCallback(async () => {
     if (!isAuthorized) return;
 
@@ -189,7 +200,6 @@ export function useAppleHealth() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Get last 30 days of dose logs
       const endDate = new Date();
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - 30);
@@ -203,7 +213,6 @@ export function useAppleHealth() {
 
       if (error) throw error;
 
-      // Calculate daily adherence
       const dailyStats: Record<string, { taken: number; missed: number }> = {};
       
       doseLogs?.forEach(log => {
@@ -225,7 +234,6 @@ export function useAppleHealth() {
         adherenceRate: stats.taken / (stats.taken + stats.missed) * 100 || 0,
       }));
 
-      // Store for health export
       localStorage.setItem('healthkit_adherence_sync', JSON.stringify({
         lastSync: new Date().toISOString(),
         data: adherenceData,
@@ -268,6 +276,7 @@ declare global {
   interface Window {
     Capacitor?: {
       getPlatform: () => string;
+      isNativePlatform: () => boolean;
     };
   }
 }

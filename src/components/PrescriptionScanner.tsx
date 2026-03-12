@@ -44,6 +44,23 @@ const demoNdcCodes = [
 
 type ScannerMode = 'camera' | 'manual';
 
+// Check if running in native Capacitor
+const isNativeApp = () => {
+  return typeof window !== 'undefined' && !!(window as any).Capacitor?.isNativePlatform?.();
+};
+
+// Dynamic import of ML Kit barcode scanner
+const getNativeScanner = async () => {
+  if (!isNativeApp()) return null;
+  try {
+    const { BarcodeScanner, BarcodeFormat } = await import('@capacitor-mlkit/barcode-scanning');
+    return { BarcodeScanner, BarcodeFormat };
+  } catch (e) {
+    console.log('Native barcode scanner not available:', e);
+    return null;
+  }
+};
+
 export function PrescriptionScanner({ onMedicationScanned, onClose }: PrescriptionScannerProps) {
   const [mode, setMode] = useState<ScannerMode>('camera');
   const [isScanning, setIsScanning] = useState(false);
@@ -53,6 +70,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [torchOn, setTorchOn] = useState(false);
   const [manualNdc, setManualNdc] = useState('');
+  const [usingNativeScanner, setUsingNativeScanner] = useState(false);
   
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const scannerContainerId = 'ndc-scanner';
@@ -75,7 +93,6 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         return data.medication as ScannedMedication;
       }
       
-      // Not found in FDA database
       console.log('Medication not found in FDA database');
       return null;
     } catch (err) {
@@ -84,20 +101,10 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     }
   }, []);
 
-  const handleScanSuccess = useCallback(async (decodedText: string) => {
-    // Stop scanning immediately to prevent duplicate scans
-    if (scannerRef.current) {
-      try {
-        await scannerRef.current.stop();
-      } catch (e) {
-        // Scanner may already be stopped
-      }
-    }
-    
+  const processBarcode = useCallback(async (decodedText: string) => {
     setIsScanning(false);
     setIsLoading(true);
     
-    // Haptic feedback
     if (navigator.vibrate) {
       navigator.vibrate([100, 50, 100]);
     }
@@ -121,19 +128,76 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     }
   }, [lookupNdc]);
 
-  const startScanner = useCallback(async () => {
+  // Native scanner using ML Kit
+  const startNativeScanner = useCallback(async () => {
+    setError(null);
+    setScannedResult(null);
+
+    const nativeScanner = await getNativeScanner();
+    if (!nativeScanner) {
+      // Fallback to web scanner
+      startWebScanner();
+      return;
+    }
+
+    const { BarcodeScanner, BarcodeFormat } = nativeScanner;
+
+    try {
+      // Check/request permissions
+      const permResult = await BarcodeScanner.checkPermissions();
+      if (permResult.camera !== 'granted') {
+        const requestResult = await BarcodeScanner.requestPermissions();
+        if (requestResult.camera !== 'granted') {
+          setHasPermission(false);
+          setError('Camera permission denied. Please allow camera access in Settings.');
+          return;
+        }
+      }
+      setHasPermission(true);
+      setUsingNativeScanner(true);
+      setIsScanning(true);
+
+      // Use the scan() method which provides a ready-to-use UI
+      const result = await BarcodeScanner.scan({
+        formats: [BarcodeFormat.Code128, BarcodeFormat.Code39, BarcodeFormat.Ean13, BarcodeFormat.Ean8, BarcodeFormat.UpcA, BarcodeFormat.UpcE, BarcodeFormat.Itf, BarcodeFormat.DataMatrix],
+      });
+
+      setIsScanning(false);
+      setUsingNativeScanner(false);
+
+      if (result.barcodes.length > 0) {
+        const barcodeValue = result.barcodes[0].rawValue;
+        if (barcodeValue) {
+          await processBarcode(barcodeValue);
+        }
+      } else {
+        setError('No barcode detected. Try again or enter the code manually.');
+      }
+    } catch (err: any) {
+      console.error('Native scanner error:', err);
+      setIsScanning(false);
+      setUsingNativeScanner(false);
+      
+      if (err?.message?.includes('canceled') || err?.message?.includes('cancelled')) {
+        // User cancelled - no error
+        return;
+      }
+      setError('Could not start camera. Please try again or enter the code manually.');
+    }
+  }, [processBarcode]);
+
+  // Web scanner fallback using html5-qrcode
+  const startWebScanner = useCallback(async () => {
     setError(null);
     setScannedResult(null);
     
     try {
-      // Request camera permission
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { facingMode: 'environment' } 
       });
       stream.getTracks().forEach(track => track.stop());
       setHasPermission(true);
       
-      // Initialize scanner
       scannerRef.current = new Html5Qrcode(scannerContainerId);
       
       setIsScanning(true);
@@ -145,8 +209,14 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
           qrbox: { width: 280, height: 120 },
           aspectRatio: 1.5,
         },
-        handleScanSuccess,
-        () => {} // Ignore scan errors (no QR found)
+        async (decodedText) => {
+          // Stop scanning immediately
+          if (scannerRef.current) {
+            try { await scannerRef.current.stop(); } catch (e) {}
+          }
+          await processBarcode(decodedText);
+        },
+        () => {} // Ignore scan errors
       );
     } catch (err: any) {
       console.error('Scanner error:', err);
@@ -158,9 +228,29 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       );
       setIsScanning(false);
     }
-  }, [handleScanSuccess]);
+  }, [processBarcode]);
+
+  // Start scanner - picks native or web
+  const startScanner = useCallback(async () => {
+    if (isNativeApp()) {
+      await startNativeScanner();
+    } else {
+      await startWebScanner();
+    }
+  }, [startNativeScanner, startWebScanner]);
 
   const stopScanner = useCallback(async () => {
+    if (usingNativeScanner) {
+      try {
+        const nativeScanner = await getNativeScanner();
+        if (nativeScanner) {
+          await nativeScanner.BarcodeScanner.stopScan();
+        }
+      } catch (e) {
+        console.error('Error stopping native scanner:', e);
+      }
+      setUsingNativeScanner(false);
+    }
     if (scannerRef.current && isScanning) {
       try {
         await scannerRef.current.stop();
@@ -170,12 +260,28 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       }
     }
     setIsScanning(false);
-  }, [isScanning]);
+  }, [isScanning, usingNativeScanner]);
 
   const toggleTorch = useCallback(async () => {
+    if (usingNativeScanner) {
+      try {
+        const nativeScanner = await getNativeScanner();
+        if (nativeScanner) {
+          if (torchOn) {
+            await nativeScanner.BarcodeScanner.disableTorch();
+          } else {
+            await nativeScanner.BarcodeScanner.enableTorch();
+          }
+          setTorchOn(!torchOn);
+        }
+      } catch (e) {
+        toast.info('Flashlight not available');
+      }
+      return;
+    }
+
     if (scannerRef.current) {
       try {
-        // Note: Torch may not be supported on all devices
         const capabilities = scannerRef.current.getRunningTrackCapabilities?.() as MediaTrackCapabilities & { torch?: boolean };
         if (capabilities?.torch) {
           await scannerRef.current.applyVideoConstraints({
@@ -189,7 +295,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         toast.info('Flashlight not available');
       }
     }
-  }, [torchOn]);
+  }, [torchOn, usingNativeScanner]);
 
   const handleConfirmMedication = useCallback(() => {
     if (scannedResult) {
@@ -222,10 +328,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   }, [startScanner]);
 
   const formatNdcInput = (value: string): string => {
-    // Remove all non-numeric characters
     const numbers = value.replace(/\D/g, '');
-    
-    // Format as 5-4-2 (FDA standard NDC format)
     if (numbers.length <= 5) {
       return numbers;
     } else if (numbers.length <= 9) {
@@ -249,7 +352,6 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     setIsLoading(true);
     setError(null);
 
-    // Haptic feedback
     if (navigator.vibrate) {
       navigator.vibrate(50);
     }
@@ -304,7 +406,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         <h1 className="text-elder-xl font-bold">
           {mode === 'camera' ? 'Scan Prescription' : 'Enter NDC Code'}
         </h1>
-        <div className="w-24" /> {/* Spacer for centering */}
+        <div className="w-24" />
       </header>
 
       {/* Scanner Area */}
@@ -312,46 +414,54 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         {/* Camera Mode */}
         {mode === 'camera' && !scannedResult && !error && (
           <>
-            {/* Camera viewfinder */}
-            <div className="relative w-full max-w-md aspect-[4/3] bg-black rounded-3xl overflow-hidden shadow-elder-lg">
-              <div id={scannerContainerId} className="w-full h-full" />
-              
-              {/* Scanning overlay */}
-              {isScanning && (
-                <div className="absolute inset-0 pointer-events-none">
-                  {/* Corner brackets */}
-                  <div className="absolute top-8 left-8 w-12 h-12 border-t-4 border-l-4 border-primary rounded-tl-lg" />
-                  <div className="absolute top-8 right-8 w-12 h-12 border-t-4 border-r-4 border-primary rounded-tr-lg" />
-                  <div className="absolute bottom-8 left-8 w-12 h-12 border-b-4 border-l-4 border-primary rounded-bl-lg" />
-                  <div className="absolute bottom-8 right-8 w-12 h-12 border-b-4 border-r-4 border-primary rounded-br-lg" />
-                  
-                  {/* Scanning line animation */}
-                  <div className="absolute top-1/2 left-8 right-8 h-1 bg-primary/50 animate-pulse" />
-                </div>
-              )}
-              
-              {/* Loading overlay */}
-              {isLoading && (
-                <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-4">
-                  <Loader2 className="w-16 h-16 text-primary animate-spin" />
-                  <p className="text-white text-elder-lg">Looking up medication...</p>
-                </div>
-              )}
-            </div>
+            {/* For native scanner, the scan() UI is provided by the plugin */}
+            {!usingNativeScanner && (
+              <div className="relative w-full max-w-md aspect-[4/3] bg-black rounded-3xl overflow-hidden shadow-elder-lg">
+                <div id={scannerContainerId} className="w-full h-full" />
+                
+                {isScanning && (
+                  <div className="absolute inset-0 pointer-events-none">
+                    <div className="absolute top-8 left-8 w-12 h-12 border-t-4 border-l-4 border-primary rounded-tl-lg" />
+                    <div className="absolute top-8 right-8 w-12 h-12 border-t-4 border-r-4 border-primary rounded-tr-lg" />
+                    <div className="absolute bottom-8 left-8 w-12 h-12 border-b-4 border-l-4 border-primary rounded-bl-lg" />
+                    <div className="absolute bottom-8 right-8 w-12 h-12 border-b-4 border-r-4 border-primary rounded-br-lg" />
+                    <div className="absolute top-1/2 left-8 right-8 h-1 bg-primary/50 animate-pulse" />
+                  </div>
+                )}
+                
+                {isLoading && (
+                  <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-4">
+                    <Loader2 className="w-16 h-16 text-primary animate-spin" />
+                    <p className="text-white text-elder-lg">Looking up medication...</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Native scanner shows its own UI, show a loading state */}
+            {usingNativeScanner && isScanning && (
+              <div className="text-center space-y-4">
+                <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto" />
+                <p className="text-elder-lg text-foreground">Scanner is open...</p>
+                <p className="text-muted-foreground">Point your camera at the barcode</p>
+              </div>
+            )}
 
             {/* Instructions */}
-            <div className="mt-8 text-center space-y-4">
-              <div className="flex items-center justify-center gap-3 text-foreground">
-                <ScanLine className="w-8 h-8 text-primary" />
-                <p className="text-elder-lg">Point camera at barcode on prescription label</p>
+            {!usingNativeScanner && (
+              <div className="mt-8 text-center space-y-4">
+                <div className="flex items-center justify-center gap-3 text-foreground">
+                  <ScanLine className="w-8 h-8 text-primary" />
+                  <p className="text-elder-lg">Point camera at barcode on prescription label</p>
+                </div>
+                <p className="text-muted-foreground text-lg">
+                  The barcode contains the NDC number for your medication
+                </p>
               </div>
-              <p className="text-muted-foreground text-lg">
-                The barcode contains the NDC number for your medication
-              </p>
-            </div>
+            )}
 
             {/* Controls */}
-            {isScanning && (
+            {isScanning && !usingNativeScanner && (
               <div className="mt-8 flex gap-4">
                 <Button 
                   variant="outline" 
