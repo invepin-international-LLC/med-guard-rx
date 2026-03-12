@@ -410,8 +410,32 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         {/* Camera Mode */}
         {mode === 'camera' && !scannedResult && !error && (
           <>
-            {/* For native scanner, the scan() UI is provided by the plugin */}
-            {!usingNativeScanner && (
+            {/* Show start button if scanner hasn't been started by user gesture */}
+            {!scannerStarted && !isScanning && !usingNativeScanner && (
+              <div className="text-center space-y-6">
+                <div className="w-24 h-24 bg-primary/20 rounded-3xl flex items-center justify-center mx-auto">
+                  <Camera className="w-14 h-14 text-primary" />
+                </div>
+                <div className="space-y-2">
+                  <h2 className="text-elder-xl font-bold text-foreground">Scan Prescription Barcode</h2>
+                  <p className="text-muted-foreground text-lg">
+                    Point your camera at the barcode on your prescription label to look up medication details.
+                  </p>
+                </div>
+                <Button 
+                  variant="default" 
+                  size="xl" 
+                  onClick={handleUserStartScanner}
+                  className="w-full max-w-xs mx-auto gap-3"
+                >
+                  <Camera className="w-6 h-6" />
+                  Open Camera
+                </Button>
+              </div>
+            )}
+
+            {/* Scanner viewport - only shown after user taps to start */}
+            {scannerStarted && !usingNativeScanner && (
               <div className="relative w-full max-w-md aspect-[4/3] bg-black rounded-3xl overflow-hidden shadow-elder-lg">
                 <div id={scannerContainerId} className="w-full h-full" />
                 
@@ -444,7 +468,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
             )}
 
             {/* Instructions */}
-            {!usingNativeScanner && (
+            {scannerStarted && !usingNativeScanner && (
               <div className="mt-8 text-center space-y-4">
                 <div className="flex items-center justify-center gap-3 text-foreground">
                   <ScanLine className="w-8 h-8 text-primary" />
