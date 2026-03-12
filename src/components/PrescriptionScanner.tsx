@@ -380,12 +380,14 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     };
   }, [stopScanner]);
 
-  // Auto-start scanner when component mounts (only in camera mode)
-  useEffect(() => {
-    if (mode === 'camera') {
-      startScanner();
-    }
-  }, []);
+  // Track if scanner has been started by user gesture
+  const [scannerStarted, setScannerStarted] = useState(false);
+
+  // Start scanner only via explicit user tap (iOS requires user gesture for camera)
+  const handleUserStartScanner = useCallback(async () => {
+    setScannerStarted(true);
+    await startScanner();
+  }, [startScanner]);
 
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
