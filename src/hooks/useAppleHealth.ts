@@ -32,14 +32,22 @@ const isNativeiOS = () => {
   return cap?.isNativePlatform?.() && cap?.getPlatform?.() === 'ios';
 };
 
+// Cached reference to avoid repeated dynamic imports
+let cachedHealthPlugin: any = null;
+
 // Dynamic import of Health plugin
 const getHealthPlugin = async (): Promise<any> => {
   if (!isNativeiOS()) return null;
+  if (cachedHealthPlugin) return cachedHealthPlugin;
   try {
     const mod = await import('@capgo/capacitor-health');
-    return mod.Health || mod.default || null;
+    cachedHealthPlugin = mod.Health || mod.default || null;
+    if (!cachedHealthPlugin) {
+      console.warn('HealthKit plugin loaded but no Health export found. Module keys:', Object.keys(mod));
+    }
+    return cachedHealthPlugin;
   } catch (e) {
-    console.log('HealthKit not available:', e);
+    console.error('Failed to load HealthKit plugin:', e);
     return null;
   }
 };
