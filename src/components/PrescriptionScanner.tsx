@@ -129,8 +129,8 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
 
     const nativeScanner = await getNativeScanner();
     if (!nativeScanner) {
-      // Fallback to web scanner
-      startWebScanner();
+      // Do NOT fallback to web scanner on native iOS - getUserMedia won't work in WKWebView
+      setError('Barcode scanner is not available. Please enter the NDC code manually.');
       return;
     }
 
@@ -180,8 +180,15 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     }
   }, [processBarcode]);
 
-  // Web scanner fallback using html5-qrcode
+  // Web scanner fallback using html5-qrcode (only works in browser, NOT in native WKWebView)
   const startWebScanner = useCallback(async () => {
+    // getUserMedia does NOT work reliably in WKWebView on iOS
+    // Only use web scanner in actual browser contexts
+    if (isNativeApp()) {
+      setError('Camera scanner requires the native barcode plugin. Please reinstall the app or enter the NDC code manually.');
+      return;
+    }
+
     setError(null);
     setScannedResult(null);
     
@@ -217,8 +224,8 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       setHasPermission(false);
       setError(
         err.name === 'NotAllowedError' 
-          ? 'Camera permission denied. Please allow camera access to scan medications.'
-          : 'Could not start camera. Please try again.'
+          ? 'Camera permission denied. Please go to Settings > Privacy > Camera to allow access.'
+          : 'Could not start camera. Please try entering the NDC code manually.'
       );
       setIsScanning(false);
     }

@@ -32,14 +32,22 @@ const isNativeiOS = () => {
   return cap?.isNativePlatform?.() && cap?.getPlatform?.() === 'ios';
 };
 
+// Cached reference to avoid repeated dynamic imports
+let cachedHealthPlugin: any = null;
+
 // Dynamic import of Health plugin
 const getHealthPlugin = async (): Promise<any> => {
   if (!isNativeiOS()) return null;
+  if (cachedHealthPlugin) return cachedHealthPlugin;
   try {
     const mod = await import('@capgo/capacitor-health');
-    return mod.Health || mod.default || null;
+    cachedHealthPlugin = mod.Health || mod.default || null;
+    if (!cachedHealthPlugin) {
+      console.warn('HealthKit plugin loaded but no Health export found. Module keys:', Object.keys(mod));
+    }
+    return cachedHealthPlugin;
   } catch (e) {
-    console.log('HealthKit not available:', e);
+    console.error('Failed to load HealthKit plugin:', e);
     return null;
   }
 };
@@ -67,7 +75,8 @@ export function useAppleHealth() {
 
       try {
         const result = await Health.isAvailable();
-        const available = result?.available ?? false;
+        const available = result?.available === true;
+        console.log('HealthKit availability:', JSON.stringify(result));
         setIsAvailable(available);
         
         if (available) {
@@ -94,10 +103,11 @@ export function useAppleHealth() {
     }
 
     try {
-      await Health.requestAuthorization({
+      const authResult = await Health.requestAuthorization({
         read: ['steps', 'heartRate', 'weight'],
         write: [],
       });
+      console.log('HealthKit authorization result:', JSON.stringify(authResult));
 
       setIsAuthorized(true);
       localStorage.setItem('healthkit_authorized', 'true');
