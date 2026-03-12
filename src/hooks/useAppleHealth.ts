@@ -265,12 +265,3 @@ export function useAppleHealth() {
   };
 }
 
-// Extend Window interface for Capacitor
-declare global {
-  interface Window {
-    Capacitor?: {
-      getPlatform: () => string;
-      isNativePlatform: () => boolean;
-    };
-  }
-}
