@@ -318,8 +318,8 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     setError(null);
     setScannedResult(null);
     setManualNdc('');
-    startScanner();
-  }, [startScanner]);
+    setScannerStarted(false);
+  }, []);
 
   const formatNdcInput = (value: string): string => {
     const numbers = value.replace(/\D/g, '');
