@@ -40,7 +40,11 @@ import { MedicationDictionary } from '@/components/MedicationDictionary';
 import { DrRxChat } from '@/components/DrRxChat';
 import { AdherenceHistory } from '@/components/AdherenceHistory';
 import { MissedDoseFlash } from '@/components/MissedDoseFlash';
+import { PersistentAlarm } from '@/components/PersistentAlarm';
 import { FentanylSafetyGuide } from '@/components/FentanylSafetyGuide';
+import { AdherenceReportPDF } from '@/components/AdherenceReportPDF';
+import { SymptomJournal } from '@/components/SymptomJournal';
+import { LanguageSelector } from '@/components/LanguageSelector';
 
 type NavItem = 'today' | 'medications' | 'scan' | 'stats' | 'safety' | 'profile';
 
@@ -174,6 +178,38 @@ export function TodayDashboard() {
     doses: dosesWithNames, 
     enabled: true 
   });
+
+  // Persistent alarm state
+  const [persistentAlarmDose, setPersistentAlarmDose] = useState<{
+    active: boolean;
+    medicationName?: string;
+    doseTime?: string;
+    doseId?: string;
+  }>({ active: false });
+
+  // Check for doses that are 15+ min overdue and trigger persistent alarm
+  useEffect(() => {
+    if (persistentAlarmDose.active) return; // Don't override active alarm
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    
+    for (const dose of dosesWithNames) {
+      if (dose.status !== 'pending') continue;
+      const [h, m] = dose.time.split(':').map(Number);
+      const scheduledMinutes = h * 60 + m;
+      const minutesPast = currentMinutes - scheduledMinutes;
+      
+      if (minutesPast >= 15 && minutesPast > 0) {
+        setPersistentAlarmDose({
+          active: true,
+          medicationName: dose.medicationName,
+          doseTime: dose.time,
+          doseId: dose.id,
+        });
+        break; // Only show one alarm at a time
+      }
+    }
+  }, [dosesWithNames, persistentAlarmDose.active]);
   const groupedDoses = useMemo(() => {
     const groups: Record<TimeOfDay, { medication: Medication; dose: MedicationDose }[]> = {
       morning: [],
@@ -532,6 +568,10 @@ export function TodayDashboard() {
               <NotificationSettings />
               <SoundSettings />
               <AppleHealthSettings />
+              <div className="bg-card rounded-2xl p-4 border-2 border-border">
+                <h3 className="text-lg font-semibold text-foreground mb-3">Language / Idioma</h3>
+                <LanguageSelector />
+              </div>
             </div>
           </SheetContent>
         </Sheet>
@@ -591,9 +631,11 @@ export function TodayDashboard() {
           onShopClick={() => setOpenShop(true)}
           coinBalance={rewards?.coins}
         />
-        <main className="max-w-2xl mx-auto px-4 py-6">
+        <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
           <h2 className="text-2xl font-bold text-foreground mb-4">📊 Medication History</h2>
+          <AdherenceReportPDF className="w-full" />
           <AdherenceHistory />
+          <SymptomJournal />
         </main>
         <ElderBottomNav activeItem={activeNav} onNavigate={setActiveNav} />
         <NavigationDrawer
@@ -652,6 +694,32 @@ export function TodayDashboard() {
       isActive={missedDoseAlert.active}
       medicationName={missedDoseAlert.medicationName}
       onDismiss={dismissFlash}
+    />
+    <PersistentAlarm
+      isActive={persistentAlarmDose.active}
+      medicationName={persistentAlarmDose.medicationName}
+      doseTime={persistentAlarmDose.doseTime}
+      onTakeNow={async () => {
+        if (persistentAlarmDose.doseId) {
+          const dose = doses.find(d => d.id === persistentAlarmDose.doseId);
+          if (dose) await handleTake(dose);
+        }
+        setPersistentAlarmDose({ active: false });
+      }}
+      onSnooze={async () => {
+        if (persistentAlarmDose.doseId) {
+          const dose = doses.find(d => d.id === persistentAlarmDose.doseId);
+          if (dose) await handleSnooze(dose);
+        }
+        setPersistentAlarmDose({ active: false });
+      }}
+      onSkip={async () => {
+        if (persistentAlarmDose.doseId) {
+          const dose = doses.find(d => d.id === persistentAlarmDose.doseId);
+          if (dose) await handleSkip(dose);
+        }
+        setPersistentAlarmDose({ active: false });
+      }}
     />
     <CoinEarnAnimation 
       amount={coinAnimation.amount}
