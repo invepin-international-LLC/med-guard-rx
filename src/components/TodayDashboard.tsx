@@ -40,7 +40,11 @@ import { MedicationDictionary } from '@/components/MedicationDictionary';
 import { DrRxChat } from '@/components/DrRxChat';
 import { AdherenceHistory } from '@/components/AdherenceHistory';
 import { MissedDoseFlash } from '@/components/MissedDoseFlash';
+import { PersistentAlarm } from '@/components/PersistentAlarm';
 import { FentanylSafetyGuide } from '@/components/FentanylSafetyGuide';
+import { AdherenceReportPDF } from '@/components/AdherenceReportPDF';
+import { SymptomJournal } from '@/components/SymptomJournal';
+import { LanguageSelector } from '@/components/LanguageSelector';
 
 type NavItem = 'today' | 'medications' | 'scan' | 'stats' | 'safety' | 'profile';
 
