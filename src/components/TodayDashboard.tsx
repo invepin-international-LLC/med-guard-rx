@@ -695,6 +695,32 @@ export function TodayDashboard() {
       medicationName={missedDoseAlert.medicationName}
       onDismiss={dismissFlash}
     />
+    <PersistentAlarm
+      isActive={persistentAlarmDose.active}
+      medicationName={persistentAlarmDose.medicationName}
+      doseTime={persistentAlarmDose.doseTime}
+      onTakeNow={async () => {
+        if (persistentAlarmDose.doseId) {
+          const dose = doses.find(d => d.id === persistentAlarmDose.doseId);
+          if (dose) await handleTake(dose);
+        }
+        setPersistentAlarmDose({ active: false });
+      }}
+      onSnooze={async () => {
+        if (persistentAlarmDose.doseId) {
+          const dose = doses.find(d => d.id === persistentAlarmDose.doseId);
+          if (dose) await handleSnooze(dose);
+        }
+        setPersistentAlarmDose({ active: false });
+      }}
+      onSkip={async () => {
+        if (persistentAlarmDose.doseId) {
+          const dose = doses.find(d => d.id === persistentAlarmDose.doseId);
+          if (dose) await handleSkip(dose);
+        }
+        setPersistentAlarmDose({ active: false });
+      }}
+    />
     <CoinEarnAnimation 
       amount={coinAnimation.amount}
       isVisible={coinAnimation.show}
