@@ -176,6 +176,12 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         // User cancelled - no error
         return;
       }
+      // Catch permission-related errors that may come from scan() itself
+      if (err?.message?.includes('permission') || err?.message?.includes('denied') || err?.message?.includes('not authorized')) {
+        setHasPermission(false);
+        setError('Camera permission denied.');
+        return;
+      }
       setError('Could not start camera. Please try again or enter the code manually.');
     }
   }, [processBarcode]);
