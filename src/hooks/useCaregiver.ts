@@ -63,10 +63,10 @@ export function useCaregiver() {
     if (data && data.length > 0) {
       setIsCaregiver(true);
       
-      // Fetch patient profiles
+      // Fetch patient profiles using secure view (excludes pin_hash)
       const patientIds = data.map(r => r.patient_id);
       const { data: profiles } = await supabase
-        .from('profiles')
+        .from('caregiver_patient_profiles')
         .select('user_id, name')
         .in('user_id', patientIds);
 
