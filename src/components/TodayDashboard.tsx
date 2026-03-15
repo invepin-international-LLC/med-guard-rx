@@ -178,6 +178,38 @@ export function TodayDashboard() {
     doses: dosesWithNames, 
     enabled: true 
   });
+
+  // Persistent alarm state
+  const [persistentAlarmDose, setPersistentAlarmDose] = useState<{
+    active: boolean;
+    medicationName?: string;
+    doseTime?: string;
+    doseId?: string;
+  }>({ active: false });
+
+  // Check for doses that are 15+ min overdue and trigger persistent alarm
+  useEffect(() => {
+    if (persistentAlarmDose.active) return; // Don't override active alarm
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    
+    for (const dose of dosesWithNames) {
+      if (dose.status !== 'pending') continue;
+      const [h, m] = dose.time.split(':').map(Number);
+      const scheduledMinutes = h * 60 + m;
+      const minutesPast = currentMinutes - scheduledMinutes;
+      
+      if (minutesPast >= 15 && minutesPast > 0) {
+        setPersistentAlarmDose({
+          active: true,
+          medicationName: dose.medicationName,
+          doseTime: dose.time,
+          doseId: dose.id,
+        });
+        break; // Only show one alarm at a time
+      }
+    }
+  }, [dosesWithNames, persistentAlarmDose.active]);
   const groupedDoses = useMemo(() => {
     const groups: Record<TimeOfDay, { medication: Medication; dose: MedicationDose }[]> = {
       morning: [],
