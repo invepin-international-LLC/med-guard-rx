@@ -55,6 +55,7 @@ const getHealthPlugin = async (): Promise<any> => {
 export function useAppleHealth() {
   const [isAvailable, setIsAvailable] = useState(false);
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isDenied, setIsDenied] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncDate, setLastSyncDate] = useState<Date | null>(null);
 
