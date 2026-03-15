@@ -57,14 +57,14 @@ export function SymptomJournal() {
       if (!user) return;
 
       const { data, error } = await supabase
-        .from('symptom_logs')
+        .from('symptom_logs' as any)
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(30);
 
       if (error) throw error;
-      setEntries((data || []) as SymptomEntry[]);
+      setEntries((data || []) as unknown as SymptomEntry[]);
     } catch (e) {
       console.error('Error fetching symptom logs:', e);
     } finally {
