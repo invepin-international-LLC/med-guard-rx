@@ -726,6 +726,36 @@ export type Database = {
         }
         Relationships: []
       }
+      symptom_logs: {
+        Row: {
+          created_at: string
+          id: string
+          mood: string
+          notes: string | null
+          severity: string
+          symptoms: string[]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mood?: string
+          notes?: string | null
+          severity?: string
+          symptoms?: string[]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mood?: string
+          notes?: string | null
+          severity?: string
+          symptoms?: string[]
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_badges: {
         Row: {
           badge_description: string | null
