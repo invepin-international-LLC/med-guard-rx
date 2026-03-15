@@ -263,6 +263,7 @@ export function useAppleHealth() {
   return {
     isAvailable,
     isAuthorized,
+    isDenied,
     isSyncing,
     lastSyncDate,
     requestAuthorization,
