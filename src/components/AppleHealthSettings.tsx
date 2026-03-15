@@ -1,4 +1,4 @@
-import { Heart, RefreshCw, Unlink, Activity, Smartphone } from 'lucide-react';
+import { Heart, RefreshCw, Unlink, Activity, Smartphone, Settings, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,7 @@ export function AppleHealthSettings() {
   const {
     isAvailable: healthAvailable,
     isAuthorized: healthAuthorized,
+    isDenied: healthDenied,
     isSyncing,
     lastSyncDate,
     requestAuthorization,
