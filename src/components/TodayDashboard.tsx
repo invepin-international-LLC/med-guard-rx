@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { ElderHeader } from '@/components/ElderHeader';
 import { ElderBottomNav } from '@/components/ElderBottomNav';
 import { TimeOfDayHeader } from '@/components/TimeOfDayHeader';
