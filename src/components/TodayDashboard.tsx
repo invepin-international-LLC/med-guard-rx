@@ -753,8 +753,26 @@ export function TodayDashboard() {
             const med = medications.find(m => m.id === id);
             if (med) handleViewDetails(med);
           }}
-          onCallPharmacy={() => {
-            window.location.href = 'tel:+15551234567';
+          onCallPharmacy={async () => {
+            try {
+              const { data: { user } } = await supabase.auth.getUser();
+              if (user) {
+                const { data: pharmacies } = await supabase
+                  .from('pharmacies')
+                  .select('phone, name')
+                  .eq('user_id', user.id)
+                  .eq('is_primary', true)
+                  .limit(1);
+                const pharmacy = pharmacies?.[0];
+                if (pharmacy?.phone) {
+                  window.location.href = `tel:${pharmacy.phone}`;
+                } else {
+                  toast.info('No pharmacy phone number saved. Add one in your medication details.');
+                }
+              }
+            } catch {
+              toast.info('No pharmacy phone number saved. Add one in your medication details.');
+            }
           }}
         />
 
