@@ -116,9 +116,8 @@ export function useAppleHealth() {
       return true;
     } catch (error: any) {
       console.error('HealthKit authorization error:', error);
-      // On iOS, if the user denies, it's not necessarily an error from the plugin
-      // but the data simply won't be accessible
       if (error?.message?.includes('denied') || error?.message?.includes('cancelled')) {
+        setIsDenied(true);
         toast.error('Apple Health access was denied. You can enable it in Settings > Privacy > Health.');
       } else {
         toast.error('Failed to connect to Apple Health. Please try again.');
