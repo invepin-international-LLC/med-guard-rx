@@ -942,7 +942,51 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      caregiver_patient_profiles: {
+        Row: {
+          allergies: string[] | null
+          biometric_enabled: boolean | null
+          conditions: string[] | null
+          created_at: string | null
+          date_of_birth: string | null
+          font_size: string | null
+          high_contrast_mode: boolean | null
+          id: string | null
+          name: string | null
+          updated_at: string | null
+          user_id: string | null
+          voice_enabled: boolean | null
+        }
+        Insert: {
+          allergies?: string[] | null
+          biometric_enabled?: boolean | null
+          conditions?: string[] | null
+          created_at?: string | null
+          date_of_birth?: string | null
+          font_size?: string | null
+          high_contrast_mode?: boolean | null
+          id?: string | null
+          name?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          voice_enabled?: boolean | null
+        }
+        Update: {
+          allergies?: string[] | null
+          biometric_enabled?: boolean | null
+          conditions?: string[] | null
+          created_at?: string | null
+          date_of_birth?: string | null
+          font_size?: string | null
+          high_contrast_mode?: boolean | null
+          id?: string | null
+          name?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          voice_enabled?: boolean | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       is_caregiver_for: { Args: { patient_user_id: string }; Returns: boolean }
