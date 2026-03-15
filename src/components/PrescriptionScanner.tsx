@@ -563,8 +563,42 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
           </Card>
         )}
 
-        {/* Error State */}
-        {error && mode === 'camera' && (
+        {/* Permission Denied State */}
+        {hasPermission === false && mode === 'camera' && (
+          <Card className="w-full max-w-md p-8 text-center space-y-6 bg-card border-2 border-border shadow-elder-lg">
+            <div className="w-24 h-24 bg-destructive/10 rounded-3xl flex items-center justify-center mx-auto">
+              <Camera className="w-14 h-14 text-destructive" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-elder-xl font-bold text-foreground">Camera Access Needed</h2>
+              <p className="text-muted-foreground text-lg">
+                Med Guard Rx needs camera access to scan prescription barcodes.
+              </p>
+            </div>
+            <div className="bg-muted rounded-2xl p-5 text-left space-y-3">
+              <p className="text-foreground font-semibold text-lg">To enable camera access:</p>
+              <ol className="space-y-2 text-muted-foreground text-base list-decimal list-inside">
+                <li>Open your iPhone <span className="font-semibold text-foreground">Settings</span></li>
+                <li>Scroll down and tap <span className="font-semibold text-foreground">Privacy & Security</span></li>
+                <li>Tap <span className="font-semibold text-foreground">Camera</span></li>
+                <li>Find <span className="font-semibold text-foreground">Med Guard Rx</span> and turn it on</li>
+              </ol>
+            </div>
+            <div className="flex flex-col gap-3">
+              <Button variant="default" size="xl" onClick={handleRetry} className="w-full gap-3">
+                <RotateCcw className="w-6 h-6" />
+                Try Again
+              </Button>
+              <Button variant="outline" size="xl" onClick={switchToManualMode} className="w-full gap-3">
+                <Keyboard className="w-6 h-6" />
+                Enter Code Manually
+              </Button>
+            </div>
+          </Card>
+        )}
+
+        {/* General Error State (not permission-related) */}
+        {error && mode === 'camera' && hasPermission !== false && (
           <Card className="w-full max-w-md p-8 text-center space-y-6 bg-destructive/10 border-2 border-destructive/30">
             <AlertTriangle className="w-16 h-16 text-destructive mx-auto" />
             <div>
