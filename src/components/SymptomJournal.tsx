@@ -80,7 +80,7 @@ export function SymptomJournal() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { error } = await supabase.from('symptom_logs').insert({
+      const { error } = await supabase.from('symptom_logs' as any).insert({
         user_id: user.id,
         mood,
         symptoms: selectedSymptoms,
