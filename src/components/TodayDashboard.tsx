@@ -568,6 +568,10 @@ export function TodayDashboard() {
               <NotificationSettings />
               <SoundSettings />
               <AppleHealthSettings />
+              <div className="bg-card rounded-2xl p-4 border-2 border-border">
+                <h3 className="text-lg font-semibold text-foreground mb-3">Language / Idioma</h3>
+                <LanguageSelector />
+              </div>
             </div>
           </SheetContent>
         </Sheet>
