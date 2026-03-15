@@ -176,6 +176,12 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         // User cancelled - no error
         return;
       }
+      // Catch permission-related errors that may come from scan() itself
+      if (err?.message?.includes('permission') || err?.message?.includes('denied') || err?.message?.includes('not authorized')) {
+        setHasPermission(false);
+        setError('Camera permission denied.');
+        return;
+      }
       setError('Could not start camera. Please try again or enter the code manually.');
     }
   }, [processBarcode]);
@@ -221,12 +227,12 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       );
     } catch (err: any) {
       console.error('Scanner error:', err);
-      setHasPermission(false);
-      setError(
-        err.name === 'NotAllowedError' 
-          ? 'Camera permission denied. Please go to Settings > Privacy > Camera to allow access.'
-          : 'Could not start camera. Please try entering the NDC code manually.'
-      );
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        setHasPermission(false);
+        setError('Camera permission denied.');
+      } else {
+        setError('Could not start camera. Please try entering the NDC code manually.');
+      }
       setIsScanning(false);
     }
   }, [processBarcode]);
@@ -308,6 +314,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   const handleRetry = useCallback(() => {
     setScannedResult(null);
     setError(null);
+    setHasPermission(null);
     setScannerStarted(false);
   }, []);
 
