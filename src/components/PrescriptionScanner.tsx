@@ -227,12 +227,12 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       );
     } catch (err: any) {
       console.error('Scanner error:', err);
-      setHasPermission(false);
-      setError(
-        err.name === 'NotAllowedError' 
-          ? 'Camera permission denied. Please go to Settings > Privacy > Camera to allow access.'
-          : 'Could not start camera. Please try entering the NDC code manually.'
-      );
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        setHasPermission(false);
+        setError('Camera permission denied.');
+      } else {
+        setError('Could not start camera. Please try entering the NDC code manually.');
+      }
       setIsScanning(false);
     }
   }, [processBarcode]);
