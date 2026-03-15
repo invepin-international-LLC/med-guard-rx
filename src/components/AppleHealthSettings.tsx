@@ -1,4 +1,4 @@
-import { Heart, RefreshCw, Unlink, Activity, Smartphone } from 'lucide-react';
+import { Heart, RefreshCw, Unlink, Activity, Smartphone, Settings, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,7 @@ export function AppleHealthSettings() {
   const {
     isAvailable: healthAvailable,
     isAuthorized: healthAuthorized,
+    isDenied: healthDenied,
     isSyncing,
     lastSyncDate,
     requestAuthorization,
@@ -102,6 +103,32 @@ export function AppleHealthSettings() {
                       <Unlink className="h-4 w-4" />
                     </Button>
                   </div>
+                </div>
+              ) : healthDenied ? (
+                <div className="space-y-4">
+                  <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-4 space-y-3">
+                    <p className="text-sm font-semibold text-destructive">Access Denied</p>
+                    <p className="text-sm text-muted-foreground">
+                      Med Guard Rx needs permission to read your health data. Please enable it in your device settings.
+                    </p>
+                    <div className="bg-muted rounded-lg p-3 text-left space-y-1.5">
+                      <p className="text-xs font-semibold text-foreground">To enable Health access:</p>
+                      <ol className="space-y-1 text-xs text-muted-foreground list-decimal list-inside">
+                        <li>Open <span className="font-semibold text-foreground">Settings</span></li>
+                        <li>Tap <span className="font-semibold text-foreground">Privacy & Security</span></li>
+                        <li>Tap <span className="font-semibold text-foreground">Health</span></li>
+                        <li>Find <span className="font-semibold text-foreground">Med Guard Rx</span> and enable access</li>
+                      </ol>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={requestAuthorization}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    Try Again
+                  </Button>
                 </div>
               ) : (
                 <Button
