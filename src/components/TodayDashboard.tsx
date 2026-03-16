@@ -983,7 +983,7 @@ export function TodayDashboard() {
                     </p>
                     <Button variant="link" className="mt-2 p-0 h-auto text-info text-lg">
                       <BookOpen className="w-5 h-5 mr-2" />
-                      Learn More
+                      {t('medications.learnMore')}
                     </Button>
                   </section>
                 )}
