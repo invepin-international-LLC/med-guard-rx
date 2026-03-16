@@ -865,9 +865,9 @@ export function TodayDashboard() {
             <div className="w-24 h-24 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-6">
               <img src="/favicon.png" alt="Med Guard Rx" className="w-16 h-16" />
             </div>
-            <h2 className="text-elder-xl text-foreground mb-4">No Medications Yet</h2>
+            <h2 className="text-elder-xl text-foreground mb-4">{t('dashboard.noMedicationsYet')}</h2>
             <p className="text-elder text-muted-foreground mb-6">
-              Scan a prescription label or add your first medication to get started.
+              {t('dashboard.noMedicationsDesc')}
             </p>
             <Button 
               variant="accent" 
@@ -875,7 +875,7 @@ export function TodayDashboard() {
               className="w-full"
               onClick={handleOpenScanner}
             >
-              Scan Prescription
+              {t('dashboard.scanPrescription')}
             </Button>
           </div>
         )}
