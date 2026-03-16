@@ -552,7 +552,7 @@ export function TodayDashboard() {
             <SheetHeader className="pb-4">
               <SheetTitle className="flex items-center gap-2 text-2xl">
                 <Shield className="w-6 h-6 text-success" />
-                Health Records Vault
+                {t('profile.healthRecordsVault')}
               </SheetTitle>
             </SheetHeader>
             <HipaaSection onClose={() => setShowHipaaSection(false)} />
