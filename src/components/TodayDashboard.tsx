@@ -1004,7 +1004,7 @@ export function TodayDashboard() {
                   <section className="bg-destructive/10 rounded-2xl p-6 border-3 border-destructive/40">
                     <div className="flex items-center gap-3 mb-3">
                       <AlertTriangle className="w-8 h-8 text-destructive" />
-                      <h3 className="text-elder-xl text-destructive">Important Warnings</h3>
+                      <h3 className="text-elder-xl text-destructive">{t('medications.warnings')}</h3>
                     </div>
                     <ul className="space-y-3">
                       {selectedMedication.importantWarnings.map((warning, index) => (
