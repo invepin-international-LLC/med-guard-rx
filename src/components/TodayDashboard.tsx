@@ -1067,7 +1067,7 @@ export function TodayDashboard() {
                 {selectedMedication.prescriber && (
                   <section className="bg-muted/50 rounded-2xl p-5 border-2 border-border">
                     <p className="text-muted-foreground">
-                      <span className="font-semibold">Prescribed by:</span> {selectedMedication.prescriber}
+                      <span className="font-semibold">{t('medications.prescribedBy')}</span> {selectedMedication.prescriber}
                     </p>
                   </section>
                 )}
