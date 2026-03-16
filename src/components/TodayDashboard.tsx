@@ -496,9 +496,12 @@ export function TodayDashboard() {
                   <Users className="h-6 w-6 text-primary" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-lg">Caregiver Dashboard</h3>
+                  <h3 className="font-semibold text-lg">{t('profile.caregiverDashboard')}</h3>
                   <p className="text-sm text-muted-foreground">
-                    View {patientsICareFor.length} {patientsICareFor.length === 1 ? 'person' : 'people'} you care for
+                    {patientsICareFor.length === 1 
+                      ? t('profile.viewPeopleYouCareFor', { count: patientsICareFor.length })
+                      : t('profile.viewPeopleYouCareFor_plural', { count: patientsICareFor.length })
+                    }
                   </p>
                 </div>
                 <ChevronRight className="h-6 w-6 text-muted-foreground" />
