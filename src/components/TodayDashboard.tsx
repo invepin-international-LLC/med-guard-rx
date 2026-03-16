@@ -90,6 +90,7 @@ function ProfileMenuItem({
 
 export function TodayDashboard() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [activeNav, setActiveNav] = useState<NavItem>('today');
   const [selectedMedication, setSelectedMedication] = useState<Medication | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
