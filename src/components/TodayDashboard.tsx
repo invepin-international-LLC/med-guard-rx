@@ -463,12 +463,12 @@ export function TodayDashboard() {
             {/* Quick Stats */}
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-success/10 rounded-xl p-4 text-center">
-                <p className="text-3xl font-bold text-success">{stats.currentStreak}</p>
-                <p className="text-muted-foreground">Day Streak</p>
+               <p className="text-3xl font-bold text-success">{stats.currentStreak}</p>
+                <p className="text-muted-foreground">{t('adherence.dayStreak')}</p>
               </div>
               <div className="bg-primary/10 rounded-xl p-4 text-center">
                 <p className="text-3xl font-bold text-primary">{stats.weeklyAdherence}%</p>
-                <p className="text-muted-foreground">Weekly</p>
+                <p className="text-muted-foreground">{t('profile.weekly')}</p>
               </div>
             </div>
           </div>
