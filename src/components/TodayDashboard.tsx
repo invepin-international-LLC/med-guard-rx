@@ -1022,7 +1022,7 @@ export function TodayDashboard() {
                   <section className="bg-warning/10 rounded-2xl p-6 border-2 border-warning/30">
                     <div className="flex items-center gap-3 mb-3">
                       <Info className="w-8 h-8 text-warning" />
-                      <h3 className="text-elder-xl text-foreground">Possible Side Effects</h3>
+                      <h3 className="text-elder-xl text-foreground">{t('medications.possibleSideEffects')}</h3>
                     </div>
                     <div className="flex flex-wrap gap-3">
                       {selectedMedication.sideEffects.map((effect, index) => (
