@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Check, Clock, X, ChevronRight, Volume2 } from 'lucide-react';
 import { useMedicationImage } from '@/hooks/useMedicationImage';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 type TimeOfDay = 'morning' | 'afternoon' | 'evening' | 'bedtime';
 type DoseStatus = 'pending' | 'taken' | 'skipped' | 'snoozed' | 'missed';
@@ -63,6 +64,7 @@ export function ElderMedicationCard({
   onViewDetails,
   onVoiceRead 
 }: ElderMedicationCardProps) {
+  const { t } = useTranslation();
   const isPending = dose.status === 'pending' || dose.status === 'snoozed';
   const isTaken = dose.status === 'taken';
   const isSkipped = dose.status === 'skipped';
@@ -113,9 +115,9 @@ export function ElderMedicationCard({
           <button
             onClick={onViewDetails}
             className="flex items-center gap-1 p-3 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-            aria-label={`View details for ${medication.name}`}
+            aria-label={`${t('common.details')} ${medication.name}`}
           >
-            <span className="text-lg font-semibold hidden sm:inline">Details</span>
+            <span className="text-lg font-semibold hidden sm:inline">{t('common.details')}</span>
             <ChevronRight className="w-7 h-7" />
           </button>
         </div>
@@ -127,7 +129,7 @@ export function ElderMedicationCard({
         <span className="text-elder-lg">{dose.time}</span>
         {dose.snoozeUntil && (
           <span className="text-warning font-bold ml-auto">
-            ⏰ Snoozed until {dose.snoozeUntil}
+            ⏰ {t('dashboard.snoozedUntil')} {dose.snoozeUntil}
           </span>
         )}
       </div>
@@ -139,8 +141,8 @@ export function ElderMedicationCard({
             <Check className="w-8 h-8 text-success-foreground" />
           </div>
           <div>
-            <p className="text-success font-bold text-elder-lg">Taken ✓</p>
-            {dose.takenAt && <p className="text-muted-foreground text-lg">at {dose.takenAt}</p>}
+            <p className="text-success font-bold text-elder-lg">{t('dashboard.taken')} ✓</p>
+            {dose.takenAt && <p className="text-muted-foreground text-lg">{t('dashboard.at')} {dose.takenAt}</p>}
           </div>
         </div>
       ) : isSkipped ? (
@@ -148,14 +150,14 @@ export function ElderMedicationCard({
           <div className="w-14 h-14 rounded-full bg-muted-foreground/20 flex items-center justify-center">
             <X className="w-8 h-8 text-muted-foreground" />
           </div>
-          <p className="text-muted-foreground font-bold text-elder-lg">Skipped</p>
+          <p className="text-muted-foreground font-bold text-elder-lg">{t('dashboard.skipped')}</p>
         </div>
       ) : isMissed ? (
         <div className="flex items-center gap-4 bg-destructive/15 rounded-2xl p-5 border-2 border-destructive/30">
           <div className="w-14 h-14 rounded-full bg-destructive flex items-center justify-center">
             <X className="w-8 h-8 text-destructive-foreground" />
           </div>
-          <p className="text-destructive font-bold text-elder-lg">Missed</p>
+          <p className="text-destructive font-bold text-elder-lg">{t('dashboard.missed')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-4">
@@ -165,7 +167,7 @@ export function ElderMedicationCard({
             className="flex-1 flex-col py-6 h-auto"
           >
             <Check className="w-10 h-10 mb-1" />
-            <span>Take</span>
+            <span>{t('common.take')}</span>
           </Button>
           <Button 
             variant="snooze" 
@@ -181,7 +183,7 @@ export function ElderMedicationCard({
             className="flex-1 flex-col py-6 h-auto"
           >
             <X className="w-10 h-10 mb-1" />
-            <span>Skip</span>
+            <span>{t('common.skip')}</span>
           </Button>
         </div>
       )}

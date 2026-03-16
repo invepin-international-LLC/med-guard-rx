@@ -1,5 +1,6 @@
 import { Home, Pill, Camera, User, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 type NavItem = 'today' | 'medications' | 'scan' | 'calendar' | 'profile';
 
@@ -8,19 +9,21 @@ interface BottomNavProps {
   onNavigate: (item: NavItem) => void;
 }
 
-const navItems: { id: NavItem; icon: typeof Home; label: string }[] = [
-  { id: 'today', icon: Home, label: 'Today' },
-  { id: 'medications', icon: Pill, label: 'Meds' },
-  { id: 'scan', icon: Camera, label: 'Scan' },
-  { id: 'calendar', icon: Calendar, label: 'Calendar' },
-  { id: 'profile', icon: User, label: 'Profile' },
+const navItems: { id: NavItem; icon: typeof Home; labelKey: string }[] = [
+  { id: 'today', icon: Home, labelKey: 'nav.today' },
+  { id: 'medications', icon: Pill, labelKey: 'nav.medications' },
+  { id: 'scan', icon: Camera, labelKey: 'nav.scan' },
+  { id: 'calendar', icon: Calendar, labelKey: 'nav.calendar' },
+  { id: 'profile', icon: User, labelKey: 'nav.profile' },
 ];
 
 export function BottomNav({ activeItem, onNavigate }: BottomNavProps) {
+  const { t } = useTranslation();
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border px-4 py-2 pb-safe z-50">
       <div className="flex items-center justify-around max-w-2xl mx-auto">
-        {navItems.map(({ id, icon: Icon, label }) => {
+        {navItems.map(({ id, icon: Icon, labelKey }) => {
           const isActive = activeItem === id;
           const isScan = id === 'scan';
 
@@ -55,7 +58,7 @@ export function BottomNav({ activeItem, onNavigate }: BottomNavProps) {
                     "text-xs font-medium",
                     isActive && "font-semibold"
                   )}>
-                    {label}
+                    {t(labelKey)}
                   </span>
                 </>
               )}

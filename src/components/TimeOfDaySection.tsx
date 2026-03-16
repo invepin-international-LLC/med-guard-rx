@@ -2,6 +2,7 @@ import { Medication, Dose, TimeOfDay } from '@/types/medication';
 import { MedicationCard } from './MedicationCard';
 import { Sun, CloudSun, Sunset, Moon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 interface TimeOfDaySectionProps {
   timeOfDay: TimeOfDay;
@@ -15,32 +16,32 @@ interface TimeOfDaySectionProps {
 const timeConfig = {
   morning: {
     icon: Sun,
-    label: 'Morning',
-    timeRange: '6 AM - 12 PM',
+    labelKey: 'timeOfDay.morning',
+    rangeKey: 'timeOfDay.morningRange',
     bgClass: 'bg-morning/10',
     textClass: 'text-morning',
     borderClass: 'border-morning/30',
   },
   afternoon: {
     icon: CloudSun,
-    label: 'Afternoon',
-    timeRange: '12 PM - 5 PM',
+    labelKey: 'timeOfDay.afternoon',
+    rangeKey: 'timeOfDay.afternoonRange',
     bgClass: 'bg-afternoon/10',
     textClass: 'text-afternoon',
     borderClass: 'border-afternoon/30',
   },
   evening: {
     icon: Sunset,
-    label: 'Evening',
-    timeRange: '5 PM - 9 PM',
+    labelKey: 'timeOfDay.evening',
+    rangeKey: 'timeOfDay.eveningRange',
     bgClass: 'bg-evening/10',
     textClass: 'text-evening',
     borderClass: 'border-evening/30',
   },
   bedtime: {
     icon: Moon,
-    label: 'Bedtime',
-    timeRange: '9 PM - 12 AM',
+    labelKey: 'timeOfDay.bedtime',
+    rangeKey: 'timeOfDay.bedtimeRange',
     bgClass: 'bg-bedtime/10',
     textClass: 'text-bedtime',
     borderClass: 'border-bedtime/30',
@@ -55,6 +56,7 @@ export function TimeOfDaySection({
   onSnooze,
   onViewDetails 
 }: TimeOfDaySectionProps) {
+  const { t } = useTranslation();
   const config = timeConfig[timeOfDay];
   const Icon = config.icon;
 
@@ -80,12 +82,12 @@ export function TimeOfDaySection({
           <Icon className={cn("w-7 h-7", config.textClass)} />
         </div>
         <div>
-          <h2 className="text-elder-lg text-foreground">{config.label}</h2>
-          <p className="text-muted-foreground">{config.timeRange}</p>
+          <h2 className="text-elder-lg text-foreground">{t(config.labelKey)}</h2>
+          <p className="text-muted-foreground">{t(config.rangeKey)}</p>
         </div>
         {allTaken && (
           <div className="ml-auto bg-success/20 text-success px-4 py-2 rounded-full font-semibold">
-            ✓ Complete
+            ✓ {t('common.complete')}
           </div>
         )}
       </div>

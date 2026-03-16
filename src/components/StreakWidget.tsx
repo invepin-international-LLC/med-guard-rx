@@ -1,27 +1,20 @@
 import { AdherenceStreak } from '@/types/medication';
 import { Flame, Trophy, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 interface StreakWidgetProps {
   streak: AdherenceStreak;
 }
 
-const encouragements = [
-  "You're doing amazing! 🌟",
-  "Keep up the great work! 💪",
-  "Your health thanks you! ❤️",
-  "Fantastic consistency! 🎉",
-  "You're on fire! 🔥",
-];
-
 export function StreakWidget({ streak }: StreakWidgetProps) {
-  const encouragement = encouragements[streak.currentStreak % encouragements.length];
+  const { t } = useTranslation();
   const isNewRecord = streak.currentStreak >= streak.longestStreak && streak.currentStreak > 0;
 
   return (
     <div className="bg-card rounded-2xl p-6 shadow-soft border border-border">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-elder-lg text-foreground">Your Progress</h2>
+        <h2 className="text-elder-lg text-foreground">{t('adherence.yourProgress')}</h2>
         <div className="text-2xl">💪</div>
       </div>
 
@@ -44,7 +37,7 @@ export function StreakWidget({ streak }: StreakWidgetProps) {
           )}>
             {streak.currentStreak}
           </div>
-          <div className="text-muted-foreground text-sm">Day Streak</div>
+          <div className="text-muted-foreground text-sm">{t('adherence.dayStreak')}</div>
         </div>
 
         {/* Weekly Adherence */}
@@ -55,15 +48,14 @@ export function StreakWidget({ streak }: StreakWidgetProps) {
           <div className="text-4xl font-bold text-success">
             {streak.weeklyAdherence}%
           </div>
-          <div className="text-muted-foreground text-sm">This Week</div>
+          <div className="text-muted-foreground text-sm">{t('adherence.thisWeek')}</div>
         </div>
       </div>
 
       {/* Encouragement */}
       <div className="bg-primary/5 rounded-xl p-4 text-center">
-        <p className="text-elder text-primary font-medium">{encouragement}</p>
         {isNewRecord && (
-          <p className="text-warning font-semibold mt-2">🏆 New personal record!</p>
+          <p className="text-warning font-semibold mt-2">{t('adherence.newRecord')}</p>
         )}
       </div>
     </div>

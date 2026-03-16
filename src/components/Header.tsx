@@ -2,6 +2,7 @@ import { UserProfile } from '@/types/medication';
 import { Bell, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEquippedAvatar } from '@/contexts/EquippedAvatarContext';
+import { useTranslation } from 'react-i18next';
 
 interface HeaderProps {
   user: UserProfile;
@@ -10,7 +11,8 @@ interface HeaderProps {
 }
 
 export function Header({ user, onMenuClick, onProfileClick }: HeaderProps) {
-  const greeting = getGreeting();
+  const { t } = useTranslation();
+  const greeting = getGreeting(t);
   const firstName = user.name.split(' ')[0];
   const { equippedAvatar } = useEquippedAvatar();
 
@@ -52,9 +54,9 @@ export function Header({ user, onMenuClick, onProfileClick }: HeaderProps) {
   );
 }
 
-function getGreeting(): string {
+function getGreeting(t: (key: string) => string): string {
   const hour = new Date().getHours();
-  if (hour < 12) return 'Good morning';
-  if (hour < 17) return 'Good afternoon';
-  return 'Good evening';
+  if (hour < 12) return t('dashboard.goodMorning');
+  if (hour < 17) return t('dashboard.goodAfternoon');
+  return t('dashboard.goodEvening');
 }

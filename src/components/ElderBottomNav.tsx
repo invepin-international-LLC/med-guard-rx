@@ -1,5 +1,6 @@
 import { Home, Pill, Camera, BarChart3, User, ShieldAlert } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 type NavItem = 'today' | 'medications' | 'scan' | 'stats' | 'safety' | 'profile';
 
@@ -8,20 +9,22 @@ interface ElderBottomNavProps {
   onNavigate: (item: NavItem) => void;
 }
 
-const navItems: { id: NavItem; icon: typeof Home; label: string }[] = [
-  { id: 'today', icon: Home, label: 'Today' },
-  { id: 'medications', icon: Pill, label: 'Meds' },
-  { id: 'scan', icon: Camera, label: 'Scan' },
-  { id: 'safety', icon: ShieldAlert, label: 'Safety' },
-  { id: 'stats', icon: BarChart3, label: 'Stats' },
-  { id: 'profile', icon: User, label: 'Profile' },
+const navItems: { id: NavItem; icon: typeof Home; labelKey: string }[] = [
+  { id: 'today', icon: Home, labelKey: 'nav.today' },
+  { id: 'medications', icon: Pill, labelKey: 'nav.medications' },
+  { id: 'scan', icon: Camera, labelKey: 'nav.scan' },
+  { id: 'safety', icon: ShieldAlert, labelKey: 'nav.safety' },
+  { id: 'stats', icon: BarChart3, labelKey: 'nav.stats' },
+  { id: 'profile', icon: User, labelKey: 'nav.profile' },
 ];
 
 export function ElderBottomNav({ activeItem, onNavigate }: ElderBottomNavProps) {
+  const { t } = useTranslation();
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-card border-t-4 border-border px-2 py-3 pb-safe z-50 shadow-elder-lg">
       <div className="flex items-center justify-around max-w-2xl mx-auto">
-        {navItems.map(({ id, icon: Icon, label }) => {
+        {navItems.map(({ id, icon: Icon, labelKey }) => {
           const isActive = activeItem === id;
           const isScan = id === 'scan';
 
@@ -56,11 +59,11 @@ export function ElderBottomNav({ activeItem, onNavigate }: ElderBottomNavProps) 
                     "text-sm font-bold",
                     isActive ? "text-primary" : ""
                   )}>
-                    {label}
+                    {t(labelKey)}
                   </span>
                 </>
               )}
-              {isScan && <span className="text-sm font-bold text-foreground mt-1">{label}</span>}
+              {isScan && <span className="text-sm font-bold text-foreground mt-1">{t(labelKey)}</span>}
             </button>
           );
         })}

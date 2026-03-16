@@ -1,5 +1,6 @@
-import { Plus, Camera, Phone, Bell } from 'lucide-react';
+import { Plus, Camera, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from 'react-i18next';
 
 interface QuickActionsElderProps {
   onAddMedication?: () => void;
@@ -14,6 +15,8 @@ export function QuickActionsElder({
   onCallPharmacy,
   pharmacyPhone 
 }: QuickActionsElderProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="grid grid-cols-3 gap-3">
       <Button 
@@ -23,7 +26,7 @@ export function QuickActionsElder({
         onClick={onAddMedication}
       >
         <Plus className="w-8 h-8" />
-        <span className="text-lg font-semibold">Add Med</span>
+        <span className="text-lg font-semibold">{t('medications.addMed')}</span>
       </Button>
       
       <Button 
@@ -33,7 +36,7 @@ export function QuickActionsElder({
         onClick={onScan}
       >
         <Camera className="w-8 h-8" />
-        <span className="text-lg font-semibold">Scan</span>
+        <span className="text-lg font-semibold">{t('nav.scan')}</span>
       </Button>
       
       <Button 
@@ -49,7 +52,7 @@ export function QuickActionsElder({
         }}
       >
         <Phone className="w-8 h-8" />
-        <span className="text-lg font-semibold">Pharmacy</span>
+        <span className="text-lg font-semibold">{t('medications.pharmacy')}</span>
       </Button>
     </div>
   );
