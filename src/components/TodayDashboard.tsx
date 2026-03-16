@@ -312,9 +312,9 @@ export function TodayDashboard() {
       utterance.rate = 0.9;
       utterance.pitch = 1;
       speechSynthesis.speak(utterance);
-      toast.info('Reading aloud...', { duration: 2000 });
+      toast.info(t('dashboard.readingAloud'), { duration: 2000 });
     } else {
-      toast.error('Voice not available on this device');
+      toast.error(t('dashboard.voiceNotAvailable'));
     }
   };
 
