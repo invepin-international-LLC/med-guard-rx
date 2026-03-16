@@ -1,5 +1,6 @@
 import { Sun, CloudSun, Sunset, Moon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 type TimeOfDay = 'morning' | 'afternoon' | 'evening' | 'bedtime';
 
@@ -12,32 +13,32 @@ interface TimeOfDayHeaderProps {
 const timeConfig = {
   morning: {
     icon: Sun,
-    label: 'Morning',
-    timeRange: '6 AM - 12 PM',
+    labelKey: 'timeOfDay.morning',
+    rangeKey: 'timeOfDay.morningRange',
     bgClass: 'bg-morning-gradient',
     borderClass: 'border-morning',
     iconClass: 'text-morning',
   },
   afternoon: {
     icon: CloudSun,
-    label: 'Afternoon',
-    timeRange: '12 PM - 5 PM',
+    labelKey: 'timeOfDay.afternoon',
+    rangeKey: 'timeOfDay.afternoonRange',
     bgClass: 'bg-afternoon-gradient',
     borderClass: 'border-afternoon',
     iconClass: 'text-afternoon',
   },
   evening: {
     icon: Sunset,
-    label: 'Evening',
-    timeRange: '5 PM - 9 PM',
+    labelKey: 'timeOfDay.evening',
+    rangeKey: 'timeOfDay.eveningRange',
     bgClass: 'bg-evening-gradient',
     borderClass: 'border-evening',
     iconClass: 'text-evening',
   },
   bedtime: {
     icon: Moon,
-    label: 'Bedtime',
-    timeRange: '9 PM - 12 AM',
+    labelKey: 'timeOfDay.bedtime',
+    rangeKey: 'timeOfDay.bedtimeRange',
     bgClass: 'bg-bedtime-gradient',
     borderClass: 'border-bedtime',
     iconClass: 'text-bedtime',
@@ -45,6 +46,7 @@ const timeConfig = {
 };
 
 export function TimeOfDayHeader({ timeOfDay, medicationCount, completedCount }: TimeOfDayHeaderProps) {
+  const { t } = useTranslation();
   const config = timeConfig[timeOfDay];
   const Icon = config.icon;
   const allComplete = completedCount >= medicationCount;
@@ -64,8 +66,8 @@ export function TimeOfDayHeader({ timeOfDay, medicationCount, completedCount }: 
       </div>
       
       <div className="flex-1">
-        <h2 className="text-elder-xl text-foreground">{config.label}</h2>
-        <p className="text-muted-foreground text-lg">{config.timeRange}</p>
+        <h2 className="text-elder-xl text-foreground">{t(config.labelKey)}</h2>
+        <p className="text-muted-foreground text-lg">{t(config.rangeKey)}</p>
       </div>
 
       {medicationCount > 0 && (
@@ -75,7 +77,7 @@ export function TimeOfDayHeader({ timeOfDay, medicationCount, completedCount }: 
             ? "bg-success/20 text-success" 
             : "bg-card text-foreground"
         )}>
-          {allComplete ? '✓ Done' : `${completedCount}/${medicationCount}`}
+          {allComplete ? `✓ ${t('common.done')}` : `${completedCount}/${medicationCount}`}
         </div>
       )}
     </div>
