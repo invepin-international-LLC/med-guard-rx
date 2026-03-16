@@ -1059,7 +1059,7 @@ export function TodayDashboard() {
                   
                   <Button variant="accent" size="xl" className="w-full justify-start gap-4">
                     <Phone className="w-8 h-8" />
-                    Call Your Pharmacist
+                    {t('medications.callPharmacist')}
                   </Button>
                 </div>
 
