@@ -965,7 +965,7 @@ export function TodayDashboard() {
                   <section className="bg-primary/10 rounded-2xl p-6 border-2 border-primary/20">
                     <div className="flex items-center gap-3 mb-3">
                       <Heart className="w-8 h-8 text-primary" />
-                      <h3 className="text-elder-xl text-foreground">What It's For</h3>
+                      <h3 className="text-elder-xl text-foreground">{t('medications.whatItsFor')}</h3>
                     </div>
                     <p className="text-elder text-foreground">{selectedMedication.purpose}</p>
                   </section>
