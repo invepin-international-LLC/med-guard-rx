@@ -1043,7 +1043,7 @@ export function TodayDashboard() {
                     <div className="flex items-center gap-3">
                       <RefreshCw className="w-7 h-7 text-muted-foreground" />
                       <div>
-                        <p className="text-lg font-semibold">Next Refill</p>
+                        <p className="text-lg font-semibold">{t('medications.nextRefill')}</p>
                         <p className="text-muted-foreground">{selectedMedication.refillDate}</p>
                       </div>
                     </div>
