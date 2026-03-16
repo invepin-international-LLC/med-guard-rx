@@ -891,7 +891,7 @@ export function TodayDashboard() {
         {/* Timeline by Time of Day */}
         {hasDoses && (
           <div>
-            <h2 className="text-elder-2xl text-foreground mb-6">Medications</h2>
+            <h2 className="text-elder-2xl text-foreground mb-6">{t('common.medications')}</h2>
             
             {timeOrder.map(timeOfDay => {
               const items = groupedDoses[timeOfDay];
