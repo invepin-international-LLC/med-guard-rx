@@ -993,7 +993,7 @@ export function TodayDashboard() {
                   <section className="bg-secondary rounded-2xl p-6 border-2 border-border">
                     <div className="flex items-center gap-3 mb-3">
                       <Clock className="w-8 h-8 text-secondary-foreground" />
-                      <h3 className="text-elder-xl text-foreground">How to Take</h3>
+                      <h3 className="text-elder-xl text-foreground">{t('medications.howToTake')}</h3>
                     </div>
                     <p className="text-elder text-foreground">{selectedMedication.instructions}</p>
                   </section>
