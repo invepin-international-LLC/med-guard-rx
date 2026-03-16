@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Check, Clock, X, ChevronRight, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useMedicationImage } from '@/hooks/useMedicationImage';
+import { useTranslation } from 'react-i18next';
 
 interface MedicationCardProps {
   medication: Medication;
@@ -39,6 +40,7 @@ export function MedicationCard({
   onSnooze, 
   onViewDetails 
 }: MedicationCardProps) {
+  const { t } = useTranslation();
   const isPending = dose.status === 'pending' || dose.status === 'snoozed';
   const isTaken = dose.status === 'taken';
   const isSkipped = dose.status === 'skipped';
@@ -76,7 +78,7 @@ export function MedicationCard({
               {isLowStock && (
                 <Badge variant="destructive" className="flex items-center gap-1 text-xs">
                   <AlertTriangle className="w-3 h-3" />
-                  Low Stock
+                  {t('dashboard.lowStock')}
                 </Badge>
               )}
             </div>
@@ -86,9 +88,9 @@ export function MedicationCard({
         <button
           onClick={() => onViewDetails(medication)}
           className="flex items-center gap-1 text-primary hover:text-primary/80 transition-colors p-2"
-          aria-label={`View details for ${medication.name}`}
+          aria-label={`${t('common.info')} ${medication.name}`}
         >
-          <span className="text-base font-medium">Info</span>
+          <span className="text-base font-medium">{t('common.info')}</span>
           <ChevronRight className="w-5 h-5" />
         </button>
       </div>
@@ -98,7 +100,7 @@ export function MedicationCard({
         <Clock className="w-5 h-5" />
         <span className="text-lg">{dose.time}</span>
         {dose.snoozeUntil && (
-          <span className="text-warning font-medium">• Snoozed until {dose.snoozeUntil}</span>
+          <span className="text-warning font-medium">• {t('dashboard.snoozedUntil')} {dose.snoozeUntil}</span>
         )}
       </div>
 
@@ -109,8 +111,8 @@ export function MedicationCard({
             <Check className="w-6 h-6 text-success-foreground" />
           </div>
           <div>
-            <p className="text-success font-semibold text-lg">Taken</p>
-            {dose.takenAt && <p className="text-muted-foreground">at {dose.takenAt}</p>}
+            <p className="text-success font-semibold text-lg">{t('dashboard.taken')}</p>
+            {dose.takenAt && <p className="text-muted-foreground">{t('dashboard.at')} {dose.takenAt}</p>}
           </div>
         </div>
       ) : isSkipped ? (
@@ -118,7 +120,7 @@ export function MedicationCard({
           <div className="w-10 h-10 rounded-full bg-muted-foreground/20 flex items-center justify-center">
             <X className="w-6 h-6 text-muted-foreground" />
           </div>
-          <p className="text-muted-foreground font-medium text-lg">Skipped</p>
+          <p className="text-muted-foreground font-medium text-lg">{t('dashboard.skipped')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-3">
@@ -129,7 +131,7 @@ export function MedicationCard({
             className="flex-1"
           >
             <Check className="w-6 h-6" />
-            Take
+            {t('common.take')}
           </Button>
           <Button 
             variant="snooze" 
@@ -138,7 +140,7 @@ export function MedicationCard({
             className="flex-1"
           >
             <Clock className="w-6 h-6" />
-            Snooze
+            {t('common.snooze')}
           </Button>
           <Button 
             variant="skip" 
@@ -147,7 +149,7 @@ export function MedicationCard({
             className="flex-1"
           >
             <X className="w-6 h-6" />
-            Skip
+            {t('common.skip')}
           </Button>
         </div>
       )}

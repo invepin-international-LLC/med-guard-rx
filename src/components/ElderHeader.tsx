@@ -3,6 +3,7 @@ import { Bell, Menu, Coins } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEquippedAvatar } from '@/contexts/EquippedAvatarContext';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 import drBombayAvatar from '@/assets/dr-bombay-avatar.png';
 
 interface ElderHeaderProps {
@@ -24,7 +25,8 @@ export function ElderHeader({
   coinBalance,
   notificationCount = 0
 }: ElderHeaderProps) {
-  const greeting = getGreeting();
+  const { t } = useTranslation();
+  const greeting = getGreeting(t);
   const firstName = userName.split(' ')[0];
   const { equippedAvatar } = useEquippedAvatar();
   
@@ -92,7 +94,7 @@ export function ElderHeader({
               isBouncing && "scale-110"
             )}
             style={{ transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
-            title="Coin Shop"
+            title={t('rewards.shop')}
           >
             <Coins className={cn("w-4 h-4 sm:w-6 sm:h-6 text-accent transition-transform", isBouncing && "animate-spin")} style={isBouncing ? { animationDuration: '0.4s', animationIterationCount: '1' } : {}} />
             <span className="text-xs sm:text-base font-bold text-accent tabular-nums">{displayBalance}</span>
@@ -129,9 +131,9 @@ export function ElderHeader({
   );
 }
 
-function getGreeting(): string {
+function getGreeting(t: (key: string) => string): string {
   const hour = new Date().getHours();
-  if (hour < 12) return 'Good morning';
-  if (hour < 17) return 'Good afternoon';
-  return 'Good evening';
+  if (hour < 12) return t('dashboard.goodMorning');
+  if (hour < 17) return t('dashboard.goodAfternoon');
+  return t('dashboard.goodEvening');
 }

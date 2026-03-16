@@ -1,6 +1,7 @@
 import { RefreshCw, AlertTriangle, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 interface RefillAlertMedication {
   id: string;
@@ -18,6 +19,8 @@ interface RefillAlertsWidgetProps {
 }
 
 export function RefillAlertsWidget({ medications, onViewMedication, onCallPharmacy }: RefillAlertsWidgetProps) {
+  const { t } = useTranslation();
+
   // Filter to only medications that need refills
   const needsRefill = medications.filter(med => {
     const hasLowQuantity = med.quantityRemaining !== undefined && med.quantityRemaining <= 7;
@@ -61,10 +64,13 @@ export function RefillAlertsWidget({ medications, onViewMedication, onCallPharma
         )}
         <div>
           <h3 className="text-elder-lg text-foreground">
-            {urgentCount > 0 ? 'Urgent Refills Needed' : 'Refill Reminders'}
+            {urgentCount > 0 ? t('refills.urgentRefills') : t('refills.refillReminders')}
           </h3>
           <p className="text-muted-foreground">
-            {sortedMeds.length} medication{sortedMeds.length > 1 ? 's' : ''} need{sortedMeds.length === 1 ? 's' : ''} refilling
+            {sortedMeds.length === 1 
+              ? t('refills.needsRefilling', { count: sortedMeds.length })
+              : t('refills.needsRefilling_plural', { count: sortedMeds.length })
+            }
           </p>
         </div>
       </div>
@@ -99,7 +105,7 @@ export function RefillAlertsWidget({ medications, onViewMedication, onCallPharma
                       "text-sm font-medium",
                       med.quantityRemaining <= 3 ? "text-destructive" : "text-warning"
                     )}>
-                      {med.quantityRemaining} left
+                      {med.quantityRemaining} {t('medications.left')}
                     </span>
                   </div>
                 )}
@@ -109,10 +115,10 @@ export function RefillAlertsWidget({ medications, onViewMedication, onCallPharma
                     med.daysUntilRefill <= 3 ? "text-destructive" : "text-warning"
                   )}>
                     {med.daysUntilRefill === 0 
-                      ? 'Due today' 
+                      ? t('medications.dueToday')
                       : med.daysUntilRefill === 1 
-                        ? 'Due tomorrow'
-                        : `${med.daysUntilRefill} days`}
+                        ? t('medications.dueTomorrow')
+                        : `${med.daysUntilRefill} ${t('medications.days')}`}
                   </span>
                 )}
               </div>
@@ -122,7 +128,10 @@ export function RefillAlertsWidget({ medications, onViewMedication, onCallPharma
 
         {sortedMeds.length > 3 && (
           <p className="text-center text-muted-foreground text-sm py-2">
-            +{sortedMeds.length - 3} more medication{sortedMeds.length - 3 > 1 ? 's' : ''}
+            {sortedMeds.length - 3 === 1
+              ? t('refills.more', { count: sortedMeds.length - 3 })
+              : t('refills.more_plural', { count: sortedMeds.length - 3 })
+            }
           </p>
         )}
       </div>
@@ -135,7 +144,7 @@ export function RefillAlertsWidget({ medications, onViewMedication, onCallPharma
           className="w-full mt-4 h-14 text-lg rounded-xl"
           onClick={onCallPharmacy}
         >
-          📞 Call Pharmacy for Refills
+          {t('refills.callPharmacy')}
         </Button>
       )}
     </div>

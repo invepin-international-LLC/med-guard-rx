@@ -45,6 +45,7 @@ import { FentanylSafetyGuide } from '@/components/FentanylSafetyGuide';
 import { AdherenceReportPDF } from '@/components/AdherenceReportPDF';
 import { SymptomJournal } from '@/components/SymptomJournal';
 import { LanguageSelector } from '@/components/LanguageSelector';
+import { useTranslation } from 'react-i18next';
 
 type NavItem = 'today' | 'medications' | 'scan' | 'stats' | 'safety' | 'profile';
 
@@ -89,6 +90,7 @@ function ProfileMenuItem({
 
 export function TodayDashboard() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [activeNav, setActiveNav] = useState<NavItem>('today');
   const [selectedMedication, setSelectedMedication] = useState<Medication | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -283,8 +285,8 @@ export function TodayDashboard() {
       await awardPerfectDayBonus();
       // Trigger confetti celebration for perfect day!
       triggerConfetti();
-      toast.success('🎉 Perfect Day!', {
-        description: 'You took all your medications today!',
+      toast.success(`🎉 ${t('dashboard.perfectDay')}`, {
+        description: t('dashboard.perfectDayDesc'),
         duration: 4000,
       });
     }
@@ -310,9 +312,9 @@ export function TodayDashboard() {
       utterance.rate = 0.9;
       utterance.pitch = 1;
       speechSynthesis.speak(utterance);
-      toast.info('Reading aloud...', { duration: 2000 });
+      toast.info(t('dashboard.readingAloud'), { duration: 2000 });
     } else {
-      toast.error('Voice not available on this device');
+      toast.error(t('dashboard.voiceNotAvailable'));
     }
   };
 
@@ -396,7 +398,7 @@ export function TodayDashboard() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-16 h-16 text-accent animate-spin mx-auto mb-4" />
-          <p className="text-elder text-muted-foreground">Loading your medications...</p>
+          <p className="text-elder text-muted-foreground">{t('common.loadingMedications')}</p>
         </div>
       </div>
     );
@@ -461,12 +463,12 @@ export function TodayDashboard() {
             {/* Quick Stats */}
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-success/10 rounded-xl p-4 text-center">
-                <p className="text-3xl font-bold text-success">{stats.currentStreak}</p>
-                <p className="text-muted-foreground">Day Streak</p>
+               <p className="text-3xl font-bold text-success">{stats.currentStreak}</p>
+                <p className="text-muted-foreground">{t('adherence.dayStreak')}</p>
               </div>
               <div className="bg-primary/10 rounded-xl p-4 text-center">
                 <p className="text-3xl font-bold text-primary">{stats.weeklyAdherence}%</p>
-                <p className="text-muted-foreground">Weekly</p>
+                <p className="text-muted-foreground">{t('profile.weekly')}</p>
               </div>
             </div>
           </div>
@@ -494,9 +496,12 @@ export function TodayDashboard() {
                   <Users className="h-6 w-6 text-primary" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-lg">Caregiver Dashboard</h3>
+                  <h3 className="font-semibold text-lg">{t('profile.caregiverDashboard')}</h3>
                   <p className="text-sm text-muted-foreground">
-                    View {patientsICareFor.length} {patientsICareFor.length === 1 ? 'person' : 'people'} you care for
+                    {patientsICareFor.length === 1 
+                      ? t('profile.viewPeopleYouCareFor', { count: patientsICareFor.length })
+                      : t('profile.viewPeopleYouCareFor_plural', { count: patientsICareFor.length })
+                    }
                   </p>
                 </div>
                 <ChevronRight className="h-6 w-6 text-muted-foreground" />
@@ -508,22 +513,22 @@ export function TodayDashboard() {
           <div className="space-y-3">
             <ProfileMenuItem 
               icon={Phone}
-              label="Emergency Contacts"
-              description="Manage caregivers & alerts"
+              label={t('profile.emergencyContacts')}
+              description={t('profile.manageCaregiversAlerts')}
               onClick={() => setShowContactsManager(true)}
               highlight
             />
             <ProfileMenuItem 
               icon={Shield}
-              label="HIPAA Health Records"
-              description="Secure medical info & insurance"
+              label={t('profile.hipaaHealthRecords')}
+              description={t('profile.secureMedicalInfo')}
               onClick={() => setShowHipaaSection(true)}
               highlight
             />
             <ProfileMenuItem 
               icon={Settings}
-              label="App Settings"
-              description="Notifications, display, voice"
+              label={t('profile.appSettings')}
+              description={t('profile.settingsDesc')}
               onClick={() => setShowSettings(true)}
             />
           </div>
@@ -547,7 +552,7 @@ export function TodayDashboard() {
             <SheetHeader className="pb-4">
               <SheetTitle className="flex items-center gap-2 text-2xl">
                 <Shield className="w-6 h-6 text-success" />
-                Health Records Vault
+                {t('profile.healthRecordsVault')}
               </SheetTitle>
             </SheetHeader>
             <HipaaSection onClose={() => setShowHipaaSection(false)} />
@@ -560,7 +565,7 @@ export function TodayDashboard() {
             <SheetHeader className="pb-4">
               <SheetTitle className="flex items-center gap-2 text-2xl">
                 <Settings className="w-6 h-6 text-primary" />
-                App Settings
+                {t('profile.appSettings')}
               </SheetTitle>
             </SheetHeader>
             <div className="space-y-6 pb-8">
@@ -569,7 +574,7 @@ export function TodayDashboard() {
               <SoundSettings />
               <AppleHealthSettings />
               <div className="bg-card rounded-2xl p-4 border-2 border-border">
-                <h3 className="text-lg font-semibold text-foreground mb-3">Language / Idioma</h3>
+                <h3 className="text-lg font-semibold text-foreground mb-3">{t('profile.languageIdioma')}</h3>
                 <LanguageSelector />
               </div>
             </div>
@@ -632,7 +637,7 @@ export function TodayDashboard() {
           coinBalance={rewards?.coins}
         />
         <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-          <h2 className="text-2xl font-bold text-foreground mb-4">📊 Medication History</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-4">{t('dashboard.medicationHistory')}</h2>
           <AdherenceReportPDF className="w-full" />
           <AdherenceHistory />
           <SymptomJournal />
@@ -665,9 +670,9 @@ export function TodayDashboard() {
           coinBalance={rewards?.coins}
         />
         <main className="max-w-2xl mx-auto px-4 py-6">
-          <h2 className="text-2xl font-bold text-foreground mb-4">🛡️ Fentanyl Safety Guide</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-4">{t('dashboard.fentanylSafetyGuide')}</h2>
           <p className="text-muted-foreground mb-4 text-sm">
-            Learn to spot counterfeit pills and protect yourself and loved ones.
+            {t('dashboard.fentanylSafetyDesc')}
           </p>
           <FentanylSafetyGuide />
         </main>
@@ -860,9 +865,9 @@ export function TodayDashboard() {
             <div className="w-24 h-24 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-6">
               <img src="/favicon.png" alt="Med Guard Rx" className="w-16 h-16" />
             </div>
-            <h2 className="text-elder-xl text-foreground mb-4">No Medications Yet</h2>
+            <h2 className="text-elder-xl text-foreground mb-4">{t('dashboard.noMedicationsYet')}</h2>
             <p className="text-elder text-muted-foreground mb-6">
-              Scan a prescription label or add your first medication to get started.
+              {t('dashboard.noMedicationsDesc')}
             </p>
             <Button 
               variant="accent" 
@@ -870,7 +875,7 @@ export function TodayDashboard() {
               className="w-full"
               onClick={handleOpenScanner}
             >
-              Scan Prescription
+              {t('dashboard.scanPrescription')}
             </Button>
           </div>
         )}
@@ -878,7 +883,7 @@ export function TodayDashboard() {
         {/* 24-Hour Clock */}
         {hasDoses && (
           <div className="bg-card rounded-3xl p-6 shadow-elder-lg border-2 border-border">
-            <h2 className="text-elder-xl text-foreground mb-6 text-center">Today's Schedule</h2>
+            <h2 className="text-elder-xl text-foreground mb-6 text-center">{t('dashboard.todaySchedule')}</h2>
             <InteractiveDoseClock doses={clockDoses} size="md" />
           </div>
         )}
@@ -886,7 +891,7 @@ export function TodayDashboard() {
         {/* Timeline by Time of Day */}
         {hasDoses && (
           <div>
-            <h2 className="text-elder-2xl text-foreground mb-6">Medications</h2>
+            <h2 className="text-elder-2xl text-foreground mb-6">{t('common.medications')}</h2>
             
             {timeOrder.map(timeOfDay => {
               const items = groupedDoses[timeOfDay];
@@ -960,7 +965,7 @@ export function TodayDashboard() {
                   <section className="bg-primary/10 rounded-2xl p-6 border-2 border-primary/20">
                     <div className="flex items-center gap-3 mb-3">
                       <Heart className="w-8 h-8 text-primary" />
-                      <h3 className="text-elder-xl text-foreground">What It's For</h3>
+                      <h3 className="text-elder-xl text-foreground">{t('medications.whatItsFor')}</h3>
                     </div>
                     <p className="text-elder text-foreground">{selectedMedication.purpose}</p>
                   </section>
@@ -971,14 +976,14 @@ export function TodayDashboard() {
                   <section className="bg-card rounded-2xl p-6 border-2 border-border shadow-elder">
                     <div className="flex items-center gap-3 mb-3">
                       <Info className="w-8 h-8 text-info" />
-                      <h3 className="text-elder-xl text-foreground">How It Works</h3>
+                      <h3 className="text-elder-xl text-foreground">{t('medications.howItWorks')}</h3>
                     </div>
                     <p className="text-elder text-muted-foreground">
                       {selectedMedication.howItWorks}
                     </p>
                     <Button variant="link" className="mt-2 p-0 h-auto text-info text-lg">
                       <BookOpen className="w-5 h-5 mr-2" />
-                      Learn More
+                      {t('medications.learnMore')}
                     </Button>
                   </section>
                 )}
@@ -988,7 +993,7 @@ export function TodayDashboard() {
                   <section className="bg-secondary rounded-2xl p-6 border-2 border-border">
                     <div className="flex items-center gap-3 mb-3">
                       <Clock className="w-8 h-8 text-secondary-foreground" />
-                      <h3 className="text-elder-xl text-foreground">How to Take</h3>
+                      <h3 className="text-elder-xl text-foreground">{t('medications.howToTake')}</h3>
                     </div>
                     <p className="text-elder text-foreground">{selectedMedication.instructions}</p>
                   </section>
@@ -999,7 +1004,7 @@ export function TodayDashboard() {
                   <section className="bg-destructive/10 rounded-2xl p-6 border-3 border-destructive/40">
                     <div className="flex items-center gap-3 mb-3">
                       <AlertTriangle className="w-8 h-8 text-destructive" />
-                      <h3 className="text-elder-xl text-destructive">Important Warnings</h3>
+                      <h3 className="text-elder-xl text-destructive">{t('medications.warnings')}</h3>
                     </div>
                     <ul className="space-y-3">
                       {selectedMedication.importantWarnings.map((warning, index) => (
@@ -1017,7 +1022,7 @@ export function TodayDashboard() {
                   <section className="bg-warning/10 rounded-2xl p-6 border-2 border-warning/30">
                     <div className="flex items-center gap-3 mb-3">
                       <Info className="w-8 h-8 text-warning" />
-                      <h3 className="text-elder-xl text-foreground">Possible Side Effects</h3>
+                      <h3 className="text-elder-xl text-foreground">{t('medications.possibleSideEffects')}</h3>
                     </div>
                     <div className="flex flex-wrap gap-3">
                       {selectedMedication.sideEffects.map((effect, index) => (
@@ -1038,7 +1043,7 @@ export function TodayDashboard() {
                     <div className="flex items-center gap-3">
                       <RefreshCw className="w-7 h-7 text-muted-foreground" />
                       <div>
-                        <p className="text-lg font-semibold">Next Refill</p>
+                        <p className="text-lg font-semibold">{t('medications.nextRefill')}</p>
                         <p className="text-muted-foreground">{selectedMedication.refillDate}</p>
                       </div>
                     </div>
@@ -1049,12 +1054,12 @@ export function TodayDashboard() {
                 <div className="space-y-4 pt-4">
                   <Button variant="outline" size="xl" className="w-full justify-start gap-4">
                     <PlayCircle className="w-8 h-8" />
-                    Watch Educational Videos
+                    {t('medications.watchVideos')}
                   </Button>
                   
                   <Button variant="accent" size="xl" className="w-full justify-start gap-4">
                     <Phone className="w-8 h-8" />
-                    Call Your Pharmacist
+                    {t('medications.callPharmacist')}
                   </Button>
                 </div>
 
@@ -1062,7 +1067,7 @@ export function TodayDashboard() {
                 {selectedMedication.prescriber && (
                   <section className="bg-muted/50 rounded-2xl p-5 border-2 border-border">
                     <p className="text-muted-foreground">
-                      <span className="font-semibold">Prescribed by:</span> {selectedMedication.prescriber}
+                      <span className="font-semibold">{t('medications.prescribedBy')}</span> {selectedMedication.prescriber}
                     </p>
                   </section>
                 )}
