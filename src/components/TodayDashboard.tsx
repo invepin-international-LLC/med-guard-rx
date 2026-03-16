@@ -1054,7 +1054,7 @@ export function TodayDashboard() {
                 <div className="space-y-4 pt-4">
                   <Button variant="outline" size="xl" className="w-full justify-start gap-4">
                     <PlayCircle className="w-8 h-8" />
-                    Watch Educational Videos
+                    {t('medications.watchVideos')}
                   </Button>
                   
                   <Button variant="accent" size="xl" className="w-full justify-start gap-4">
