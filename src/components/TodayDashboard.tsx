@@ -398,7 +398,7 @@ export function TodayDashboard() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-16 h-16 text-accent animate-spin mx-auto mb-4" />
-          <p className="text-elder text-muted-foreground">Loading your medications...</p>
+          <p className="text-elder text-muted-foreground">{t('common.loadingMedications')}</p>
         </div>
       </div>
     );
