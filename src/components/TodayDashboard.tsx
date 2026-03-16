@@ -556,7 +556,7 @@ export function TodayDashboard() {
 
         {/* App Settings Sheet */}
         <Sheet open={showSettings} onOpenChange={setShowSettings}>
-          <SheetContent side="bottom" className="h-[90vh] overflow-y-auto rounded-t-3xl">
+          <SheetContent side="bottom" className="h-[90vh] rounded-t-3xl">
             <SheetHeader className="pb-4">
               <SheetTitle className="flex items-center gap-2 text-2xl">
                 <Settings className="w-6 h-6 text-primary" />
