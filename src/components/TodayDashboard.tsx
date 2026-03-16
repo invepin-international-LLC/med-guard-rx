@@ -513,22 +513,22 @@ export function TodayDashboard() {
           <div className="space-y-3">
             <ProfileMenuItem 
               icon={Phone}
-              label="Emergency Contacts"
-              description="Manage caregivers & alerts"
+              label={t('profile.emergencyContacts')}
+              description={t('profile.manageCaregiversAlerts')}
               onClick={() => setShowContactsManager(true)}
               highlight
             />
             <ProfileMenuItem 
               icon={Shield}
-              label="HIPAA Health Records"
-              description="Secure medical info & insurance"
+              label={t('profile.hipaaHealthRecords')}
+              description={t('profile.secureMedicalInfo')}
               onClick={() => setShowHipaaSection(true)}
               highlight
             />
             <ProfileMenuItem 
               icon={Settings}
-              label="App Settings"
-              description="Notifications, display, voice"
+              label={t('profile.appSettings')}
+              description={t('profile.settingsDesc')}
               onClick={() => setShowSettings(true)}
             />
           </div>
