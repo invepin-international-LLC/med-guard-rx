@@ -670,9 +670,9 @@ export function TodayDashboard() {
           coinBalance={rewards?.coins}
         />
         <main className="max-w-2xl mx-auto px-4 py-6">
-          <h2 className="text-2xl font-bold text-foreground mb-4">🛡️ Fentanyl Safety Guide</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-4">{t('dashboard.fentanylSafetyGuide')}</h2>
           <p className="text-muted-foreground mb-4 text-sm">
-            Learn to spot counterfeit pills and protect yourself and loved ones.
+            {t('dashboard.fentanylSafetyDesc')}
           </p>
           <FentanylSafetyGuide />
         </main>
