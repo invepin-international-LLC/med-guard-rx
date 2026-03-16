@@ -285,8 +285,8 @@ export function TodayDashboard() {
       await awardPerfectDayBonus();
       // Trigger confetti celebration for perfect day!
       triggerConfetti();
-      toast.success('🎉 Perfect Day!', {
-        description: 'You took all your medications today!',
+      toast.success(`🎉 ${t('dashboard.perfectDay')}`, {
+        description: t('dashboard.perfectDayDesc'),
         duration: 4000,
       });
     }
