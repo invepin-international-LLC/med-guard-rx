@@ -883,7 +883,7 @@ export function TodayDashboard() {
         {/* 24-Hour Clock */}
         {hasDoses && (
           <div className="bg-card rounded-3xl p-6 shadow-elder-lg border-2 border-border">
-            <h2 className="text-elder-xl text-foreground mb-6 text-center">Today's Schedule</h2>
+            <h2 className="text-elder-xl text-foreground mb-6 text-center">{t('dashboard.todaySchedule')}</h2>
             <InteractiveDoseClock doses={clockDoses} size="md" />
           </div>
         )}
