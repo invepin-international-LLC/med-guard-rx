@@ -45,6 +45,7 @@ import { FentanylSafetyGuide } from '@/components/FentanylSafetyGuide';
 import { AdherenceReportPDF } from '@/components/AdherenceReportPDF';
 import { SymptomJournal } from '@/components/SymptomJournal';
 import { LanguageSelector } from '@/components/LanguageSelector';
+import { useTranslation } from 'react-i18next';
 
 type NavItem = 'today' | 'medications' | 'scan' | 'stats' | 'safety' | 'profile';
 
