@@ -565,7 +565,7 @@ export function TodayDashboard() {
             <SheetHeader className="pb-4">
               <SheetTitle className="flex items-center gap-2 text-2xl">
                 <Settings className="w-6 h-6 text-primary" />
-                App Settings
+                {t('profile.appSettings')}
               </SheetTitle>
             </SheetHeader>
             <div className="space-y-6 pb-8">
