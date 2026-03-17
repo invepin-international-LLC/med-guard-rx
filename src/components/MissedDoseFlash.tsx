@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface MissedDoseFlashProps {
   isActive: boolean;
@@ -14,37 +15,50 @@ interface MissedDoseFlashProps {
  */
 export function MissedDoseFlash({ isActive, medicationName, onDismiss }: MissedDoseFlashProps) {
   const [flashPhase, setFlashPhase] = useState(0);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (!isActive) {
+    if (isActive) {
+      setVisible(true);
+      setFlashPhase(0);
+    }
+  }, [isActive]);
+
+  useEffect(() => {
+    if (!visible) {
       setFlashPhase(0);
       return;
     }
 
-    // Flash 6 times then hold on alert screen
     let count = 0;
     const interval = setInterval(() => {
       count++;
       setFlashPhase(prev => (prev === 1 ? 2 : 1));
       if (count >= 12) {
         clearInterval(interval);
-        setFlashPhase(3); // Hold on alert
+        setFlashPhase(3);
       }
     }, 250);
 
     return () => clearInterval(interval);
-  }, [isActive]);
+  }, [visible]);
+
+  const handleDismiss = useCallback(() => {
+    setVisible(false);
+    setFlashPhase(0);
+    onDismiss();
+  }, [onDismiss]);
 
   return (
     <AnimatePresence>
-      {isActive && (
+      {visible && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.15 }}
           className="fixed inset-0 z-[9999] flex items-center justify-center"
-          onClick={onDismiss}
+          onClick={handleDismiss}
           style={{
             backgroundColor:
               flashPhase === 1
@@ -72,11 +86,23 @@ export function MissedDoseFlash({ isActive, medicationName, onDismiss }: MissedD
                 MISSED DOSE
               </h2>
               {medicationName && (
-                <p className="text-xl font-semibold text-white/90 mb-6">
+                <p className="text-xl font-semibold text-white/90 mb-4">
                   {medicationName}
                 </p>
               )}
-              <p className="text-lg text-white/70">Tap anywhere to dismiss</p>
+              <Button
+                variant="destructive"
+                size="lg"
+                className="mt-4 text-lg px-8 py-3"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDismiss();
+                }}
+              >
+                <X className="w-5 h-5 mr-2" />
+                Dismiss
+              </Button>
+              <p className="text-sm text-white/50 mt-4">Tap anywhere to dismiss</p>
             </motion.div>
           )}
         </motion.div>
