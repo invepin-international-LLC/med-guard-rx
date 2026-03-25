@@ -77,7 +77,7 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
           <div className="flex-1">
             <h3 className="text-elder-lg text-foreground">Push Notifications</h3>
             <p className="text-muted-foreground mt-1">
-              Install the Med Guard Rx app on your iPhone or Android to receive medication reminders even when you're not using the app.
+              Install the Med Guard Rx app on your iPhone or iPad to receive medication reminders even when you're not using the app.
             </p>
           </div>
         </div>
