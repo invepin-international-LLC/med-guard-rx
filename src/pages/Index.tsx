@@ -131,7 +131,6 @@ export default function Index() {
       <PinEntry 
         onSuccess={handlePinSuccess}
         userName={user?.user_metadata?.name || 'User'}
-        correctPin="1234"
         biometricAvailable={true}
       />
     );
