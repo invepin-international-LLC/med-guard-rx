@@ -68,18 +68,24 @@ export function useAppleHealth() {
         return;
       }
 
-      const Health = await getHealthPlugin();
-      if (!Health) {
-        setIsAvailable(false);
-        return;
-      }
-
       try {
-        const result = await Health.isAvailable();
+        const Health = await getHealthPlugin();
+        if (!Health) {
+          console.warn('HealthKit plugin not loaded — hiding feature');
+          setIsAvailable(false);
+          return;
+        }
+
+        // Wrap in a timeout so a hanging native call doesn't block forever
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('HealthKit availability check timed out')), 5000)
+        );
+
+        const result = await Promise.race([Health.isAvailable(), timeoutPromise]) as any;
         const available = result?.available === true;
         console.log('HealthKit availability:', JSON.stringify(result));
         setIsAvailable(available);
-        
+
         if (available) {
           const stored = localStorage.getItem('healthkit_authorized');
           if (stored === 'true') {
@@ -88,6 +94,7 @@ export function useAppleHealth() {
         }
       } catch (error) {
         console.error('Error checking HealthKit availability:', error);
+        // Hide the feature entirely so it doesn't appear broken
         setIsAvailable(false);
       }
     };
@@ -118,9 +125,10 @@ export function useAppleHealth() {
       console.error('HealthKit authorization error:', error);
       if (error?.message?.includes('denied') || error?.message?.includes('cancelled')) {
         setIsDenied(true);
-        toast.error('Apple Health access was denied. You can enable it in Settings > Privacy > Health.');
+        toast.error('Apple Health access was denied. You can grant access from the Health app under Sharing & Permissions.');
       } else {
-        toast.error('Failed to connect to Apple Health. Please try again.');
+        // Don't show a scary error; just let the user know it didn't work
+        toast.error('Could not connect to Apple Health right now. Please try again later.');
       }
       return false;
     }
@@ -164,27 +172,23 @@ export function useAppleHealth() {
 
       const healthData: Record<string, HealthDataPoint[]> = {};
 
-      try {
-        const steps = await Health.readSamples({
-          dataType: 'steps',
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
-        });
-        healthData.steps = steps?.samples || [];
-      } catch (e) {
-        console.log('Steps data not available:', e);
-      }
+      // Wrap each read in its own try/catch so one failure doesn't break all
+      const readSample = async (dataType: string) => {
+        try {
+          const result = await Health.readSamples({
+            dataType,
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString(),
+          });
+          return result?.samples || [];
+        } catch (e) {
+          console.log(`${dataType} data not available:`, e);
+          return [];
+        }
+      };
 
-      try {
-        const heartRate = await Health.readSamples({
-          dataType: 'heartRate',
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
-        });
-        healthData.heartRate = heartRate?.samples || [];
-      } catch (e) {
-        console.log('Heart rate data not available:', e);
-      }
+      healthData.steps = await readSample('steps');
+      healthData.heartRate = await readSample('heartRate');
 
       return healthData;
     } catch (error) {

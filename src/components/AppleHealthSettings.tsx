@@ -107,22 +107,16 @@ export function AppleHealthSettings() {
               ) : healthDenied ? (
                 <div className="space-y-4">
                   <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-4 space-y-3">
-                    <p className="text-sm font-semibold text-destructive">Access Denied</p>
+                    <p className="text-sm font-semibold text-destructive">Access Not Granted</p>
                     <p className="text-sm text-muted-foreground">
-                      Med Guard Rx needs permission to read your health data. Please enable it in your device settings.
+                      Med Guard Rx was not granted permission to access your health data. You can try again below — when prompted, please allow access.
                     </p>
-                    <div className="bg-muted rounded-lg p-3 text-left space-y-1.5">
-                      <p className="text-xs font-semibold text-foreground">To enable Health access:</p>
-                      <ol className="space-y-1 text-xs text-muted-foreground list-decimal list-inside">
-                        <li>Open <span className="font-semibold text-foreground">Settings</span></li>
-                        <li>Tap <span className="font-semibold text-foreground">Privacy & Security</span></li>
-                        <li>Tap <span className="font-semibold text-foreground">Health</span></li>
-                        <li>Find <span className="font-semibold text-foreground">Med Guard Rx</span> and enable access</li>
-                      </ol>
-                    </div>
                   </div>
                   <Button
-                    onClick={requestAuthorization}
+                    onClick={() => {
+                      // Reset denied state so the native prompt can appear again
+                      requestAuthorization();
+                    }}
                     variant="outline"
                     className="w-full"
                   >
