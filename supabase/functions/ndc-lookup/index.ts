@@ -96,34 +96,35 @@ function getProductNdcCandidates(ndc: string): string[] {
 }
 
 // Get package NDC format candidates for searching packaging.package_ndc
+function addPackageWithZeroVariants(candidates: string[], lab: string, prod: string, pkg: string) {
+  candidates.push(`${lab}-${prod}-${pkg}`);
+  candidates.push(`${stripLeadingZeros(lab)}-${stripLeadingZeros(prod)}-${stripLeadingZeros(pkg)}`);
+  candidates.push(`${lab}-${stripLeadingZeros(prod)}-${pkg}`);
+  candidates.push(`${stripLeadingZeros(lab)}-${prod}-${pkg}`);
+}
+
 function getPackageNdcCandidates(ndc: string): string[] {
   const clean = ndc.replace(/\D/g, '');
   const candidates: string[] = [];
 
   if (clean.length === 11) {
-    // Try all 3 format splits
-    candidates.push(`${clean.slice(0, 4)}-${clean.slice(4, 8)}-${clean.slice(8)}`);
-    candidates.push(`${clean.slice(0, 5)}-${clean.slice(5, 8)}-${clean.slice(8)}`);
-    candidates.push(`${clean.slice(0, 5)}-${clean.slice(5, 9)}-${clean.slice(9)}`);
+    addPackageWithZeroVariants(candidates, clean.slice(0, 4), clean.slice(4, 8), clean.slice(8));
+    addPackageWithZeroVariants(candidates, clean.slice(0, 5), clean.slice(5, 8), clean.slice(8));
+    addPackageWithZeroVariants(candidates, clean.slice(0, 5), clean.slice(5, 9), clean.slice(9));
   } else if (clean.length === 10) {
-    // Might be missing a leading zero - try with and without
-    candidates.push(`${clean.slice(0, 4)}-${clean.slice(4, 8)}-${clean.slice(8)}`);
-    candidates.push(`${clean.slice(0, 5)}-${clean.slice(5, 8)}-${clean.slice(8)}`);
-    candidates.push(`${clean.slice(0, 5)}-${clean.slice(5, 9)}-${clean.slice(9)}`);
+    addPackageWithZeroVariants(candidates, clean.slice(0, 4), clean.slice(4, 8), clean.slice(8));
+    addPackageWithZeroVariants(candidates, clean.slice(0, 5), clean.slice(5, 8), clean.slice(8));
+    addPackageWithZeroVariants(candidates, clean.slice(0, 5), clean.slice(5, 9), clean.slice(9));
     const padded = '0' + clean;
-    candidates.push(`${padded.slice(0, 4)}-${padded.slice(4, 8)}-${padded.slice(8)}`);
-    candidates.push(`${padded.slice(0, 5)}-${padded.slice(5, 8)}-${padded.slice(8)}`);
-    candidates.push(`${padded.slice(0, 5)}-${padded.slice(5, 9)}-${padded.slice(9)}`);
+    addPackageWithZeroVariants(candidates, padded.slice(0, 4), padded.slice(4, 8), padded.slice(8));
+    addPackageWithZeroVariants(candidates, padded.slice(0, 5), padded.slice(5, 8), padded.slice(8));
+    addPackageWithZeroVariants(candidates, padded.slice(0, 5), padded.slice(5, 9), padded.slice(9));
   }
 
-  // If already formatted with dashes, include as-is
-  if (ndc.includes('-')) {
-    candidates.push(ndc);
-    // Strip leading zero variant
-    const parts = ndc.split('-');
-    if (parts.length === 3 && parts[0].startsWith('0') && parts[0].length > 1) {
-      candidates.push(`${parts[0].slice(1)}-${parts[1]}-${parts[2]}`);
-    }
+  // If already formatted with dashes
+  const parts = ndc.split('-');
+  if (parts.length === 3) {
+    addPackageWithZeroVariants(candidates, parts[0], parts[1], parts[2]);
   }
 
   return [...new Set(candidates)];
