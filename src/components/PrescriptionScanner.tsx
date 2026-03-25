@@ -350,8 +350,8 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   };
 
   const handleManualLookup = async () => {
-    if (manualNdc.replace(/-/g, '').length < 10) {
-      setError('Please enter a valid 10-11 digit NDC code');
+    if (manualNdc.replace(/-/g, '').length < 7) {
+      setError('Please enter a valid NDC code (at least 7 digits)');
       return;
     }
 
