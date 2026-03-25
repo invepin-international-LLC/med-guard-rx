@@ -634,19 +634,19 @@ export function TodayDashboard() {
                       const { data: { user } } = await supabase.auth.getUser();
                       if (!user) return;
 
-                      // Delete user data from all tables
-                      const tables = [
-                        'dose_logs', 'scheduled_doses', 'medications', 'adherence_streaks',
-                        'user_rewards', 'user_badges', 'user_challenges', 'user_inventory',
-                        'user_preferences', 'spin_history', 'symptom_logs', 'hipaa_records',
-                        'hipaa_access_log', 'emergency_contacts', 'pharmacies', 'push_tokens',
-                        'caregiver_notifications', 'caregiver_invitations', 'caregiver_relationships',
-                        'drug_interactions', 'profiles'
-                      ];
-
-                      for (const table of tables) {
-                        await supabase.from(table).delete().eq('user_id', user.id);
-                      }
+                      // Delete user data from tables that allow deletion
+                      await supabase.from('dose_logs').delete().eq('user_id', user.id);
+                      await supabase.from('scheduled_doses').delete().eq('user_id', user.id);
+                      await supabase.from('medications').delete().eq('user_id', user.id);
+                      await supabase.from('adherence_streaks').delete().eq('user_id', user.id);
+                      await supabase.from('emergency_contacts').delete().eq('user_id', user.id);
+                      await supabase.from('pharmacies').delete().eq('user_id', user.id);
+                      await supabase.from('push_tokens').delete().eq('user_id', user.id);
+                      await supabase.from('caregiver_notifications').delete().eq('user_id', user.id);
+                      await supabase.from('caregiver_invitations').delete().eq('patient_id', user.id);
+                      await supabase.from('caregiver_relationships').delete().eq('patient_id', user.id);
+                      await supabase.from('symptom_logs').delete().eq('user_id', user.id);
+                      await supabase.from('profiles').delete().eq('user_id', user.id);
 
                       // Sign out
                       await supabase.auth.signOut();
