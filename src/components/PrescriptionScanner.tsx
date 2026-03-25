@@ -594,7 +594,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
                 variant="default" 
                 size="xl" 
                 onClick={handleManualLookup}
-                disabled={isLoading || manualNdc.replace(/-/g, '').length < 10}
+                disabled={isLoading || manualNdc.replace(/-/g, '').length < 7}
                 className="w-full gap-3"
               >
                 {isLoading ? (
@@ -611,6 +611,105 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
               </Button>
             </div>
 
+            <div className="pt-2">
+              <Button 
+                variant="outline" 
+                size="lg" 
+                onClick={switchToNameSearch}
+                className="w-full gap-3"
+              >
+                <Search className="w-5 h-5" />
+                Search by Drug Name Instead
+              </Button>
+            </div>
+          </Card>
+        )}
+
+        {/* Name Search Mode */}
+        {mode === 'name' && !scannedResult && (
+          <Card className="w-full max-w-md p-8 space-y-6 bg-card border-2 border-border shadow-elder-lg">
+            <div className="text-center space-y-2">
+              <div className="w-20 h-20 bg-primary/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Search className="w-12 h-12 text-primary" />
+              </div>
+              <h2 className="text-elder-xl font-bold text-foreground">Search by Drug Name</h2>
+              <p className="text-muted-foreground text-lg">
+                Enter the brand or generic name of your medication
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-lg font-medium text-foreground">Drug Name</label>
+                <Input
+                  type="text"
+                  placeholder="e.g. Tylenol, Lisinopril, Metformin"
+                  value={drugNameQuery}
+                  onChange={(e) => setDrugNameQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleNameSearch()}
+                  className="text-center text-elder-lg h-16 border-2"
+                  autoFocus
+                />
+              </div>
+
+              {error && (
+                <div className="bg-destructive/10 border-2 border-destructive/30 rounded-xl p-4">
+                  <p className="text-destructive text-center">{error}</p>
+                </div>
+              )}
+
+              <Button 
+                variant="default" 
+                size="xl" 
+                onClick={handleNameSearch}
+                disabled={isLoading || drugNameQuery.trim().length < 2}
+                className="w-full gap-3"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                    Searching...
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-6 h-6" />
+                    Search Medications
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {/* Name Search Results */}
+            {nameSearchResults.length > 0 && (
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                <p className="text-sm text-muted-foreground font-medium">
+                  {nameSearchResults.length} result(s) found — tap to select:
+                </p>
+                {nameSearchResults.map((med, i) => (
+                  <button
+                    key={`${med.ndcCode}-${i}`}
+                    onClick={() => {
+                      setScannedResult(med);
+                      setNameSearchResults([]);
+                    }}
+                    className="w-full text-left bg-muted hover:bg-muted/80 rounded-xl p-4 space-y-1 transition-colors border-2 border-transparent hover:border-primary"
+                  >
+                    <p className="font-bold text-foreground text-lg">{med.name}</p>
+                    {med.genericName && med.genericName !== med.name && (
+                      <p className="text-sm text-muted-foreground">{med.genericName}</p>
+                    )}
+                    <div className="flex gap-3 text-sm text-muted-foreground">
+                      <span>{med.strength}</span>
+                      <span>•</span>
+                      <span>{med.form}</span>
+                    </div>
+                    {med.manufacturer && (
+                      <p className="text-xs text-muted-foreground">{med.manufacturer}</p>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
           </Card>
         )}
 
