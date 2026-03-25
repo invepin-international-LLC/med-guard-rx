@@ -456,7 +456,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
           <span className="text-lg">Cancel</span>
         </Button>
         <h1 className="text-elder-xl font-bold">
-          {mode === 'camera' ? 'Scan Prescription' : 'Enter NDC Code'}
+          {mode === 'camera' ? 'Scan Prescription' : mode === 'manual' ? 'Enter NDC Code' : 'Search Drug'}
         </h1>
         <div className="w-24" />
       </header>
