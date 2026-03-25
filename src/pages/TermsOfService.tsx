@@ -24,7 +24,7 @@ export default function TermsOfService() {
 
         <h2>2. Description of Service</h2>
         <p>
-          Med Guard Rx is a medication management application that helps users track medications, receive dose reminders, monitor adherence, and access AI-powered medication information. The App is designed as a personal health management tool.
+          Med Guard Rx is a medication management application available exclusively on Apple devices (iPhone and iPad). The App helps users track medications, receive dose reminders, monitor adherence, and access AI-powered medication information. The App is designed as a personal health management tool.
         </p>
 
         <h2>3. Medical Disclaimer</h2>

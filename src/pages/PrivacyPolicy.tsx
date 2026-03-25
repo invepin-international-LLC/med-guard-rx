@@ -24,7 +24,7 @@ export default function PrivacyPolicy() {
         <ul>
           <li><strong>Account Information:</strong> Email address, name, and authentication credentials.</li>
           <li><strong>Health Data:</strong> Medications, dosage schedules, adherence history, symptom logs, allergies, medical conditions, and emergency contacts.</li>
-          <li><strong>Device Information:</strong> Device type, operating system, and push notification tokens.</li>
+          <li><strong>Device Information:</strong> Device type, iOS version, and push notification tokens.</li>
           <li><strong>Apple Health Data:</strong> When authorized, we read health metrics (steps, heart rate) and write medication adherence data to Apple HealthKit.</li>
         </ul>
 
