@@ -588,6 +588,81 @@ export function TodayDashboard() {
                 <h3 className="text-lg font-semibold text-foreground mb-3">{t('profile.languageIdioma')}</h3>
                 <LanguageSelector />
               </div>
+
+              {/* Legal Links in Settings */}
+              <div className="bg-card rounded-2xl p-4 border-2 border-border space-y-3">
+                <h3 className="text-lg font-semibold text-foreground">Legal</h3>
+                <button
+                  onClick={() => navigate('/privacy')}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary transition-colors text-left"
+                >
+                  <FileText className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-sm font-medium">Privacy Policy</span>
+                  <ChevronRight className="w-4 h-4 ml-auto text-muted-foreground" />
+                </button>
+                <button
+                  onClick={() => navigate('/terms')}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary transition-colors text-left"
+                >
+                  <Scale className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-sm font-medium">Terms of Service</span>
+                  <ChevronRight className="w-4 h-4 ml-auto text-muted-foreground" />
+                </button>
+              </div>
+
+              {/* Delete Account */}
+              <div className="bg-destructive/5 rounded-2xl p-4 border-2 border-destructive/20 space-y-3">
+                <h3 className="text-lg font-semibold text-destructive">Delete Account</h3>
+                <p className="text-sm text-muted-foreground">
+                  Permanently delete your account and all associated data including medications, health records, and adherence history. This action cannot be undone.
+                </p>
+                <Button
+                  variant="destructive"
+                  className="w-full"
+                  onClick={async () => {
+                    const confirmed = window.confirm(
+                      'Are you sure you want to permanently delete your account? All your medications, health records, adherence history, and rewards will be permanently removed. This cannot be undone.'
+                    );
+                    if (!confirmed) return;
+
+                    const doubleConfirmed = window.confirm(
+                      'This is your final warning. Type OK to confirm you want to delete everything.'
+                    );
+                    if (!doubleConfirmed) return;
+
+                    try {
+                      const { data: { user } } = await supabase.auth.getUser();
+                      if (!user) return;
+
+                      // Delete user data from all tables
+                      const tables = [
+                        'dose_logs', 'scheduled_doses', 'medications', 'adherence_streaks',
+                        'user_rewards', 'user_badges', 'user_challenges', 'user_inventory',
+                        'user_preferences', 'spin_history', 'symptom_logs', 'hipaa_records',
+                        'hipaa_access_log', 'emergency_contacts', 'pharmacies', 'push_tokens',
+                        'caregiver_notifications', 'caregiver_invitations', 'caregiver_relationships',
+                        'drug_interactions', 'profiles'
+                      ];
+
+                      for (const table of tables) {
+                        await supabase.from(table).delete().eq('user_id', user.id);
+                      }
+
+                      // Sign out
+                      await supabase.auth.signOut();
+                      localStorage.clear();
+                      toast.success('Account deleted successfully');
+                      navigate('/');
+                    } catch (error) {
+                      console.error('Error deleting account:', error);
+                      toast.error('Failed to delete account. Please try again.');
+                    }
+                  }}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete My Account
+                </Button>
+              </div>
             </div>
           </SheetContent>
         </Sheet>
