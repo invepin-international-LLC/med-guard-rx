@@ -672,37 +672,23 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
                   placeholder="e.g. Tylenol, Lisinopril, Metformin"
                   value={drugNameQuery}
                   onChange={(e) => setDrugNameQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleNameSearch()}
                   className="text-center text-elder-lg h-16 border-2"
                   autoFocus
                 />
               </div>
+
+              {isNameSearching && (
+                <div className="flex items-center justify-center gap-2 py-2">
+                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                  <span className="text-muted-foreground">Searching...</span>
+                </div>
+              )}
 
               {error && (
                 <div className="bg-destructive/10 border-2 border-destructive/30 rounded-xl p-4">
                   <p className="text-destructive text-center">{error}</p>
                 </div>
               )}
-
-              <Button 
-                variant="default" 
-                size="xl" 
-                onClick={handleNameSearch}
-                disabled={isLoading || drugNameQuery.trim().length < 2}
-                className="w-full gap-3"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-6 h-6 animate-spin" />
-                    Searching...
-                  </>
-                ) : (
-                  <>
-                    <Search className="w-6 h-6" />
-                    Search Medications
-                  </>
-                )}
-              </Button>
             </div>
 
             {/* Name Search Results */}
