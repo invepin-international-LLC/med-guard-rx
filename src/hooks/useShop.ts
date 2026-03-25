@@ -133,20 +133,15 @@ export function useShop() {
           equippedTheme: data.equipped_theme || 'default',
           equippedAvatar: data.equipped_avatar || 'default',
         });
-      } else {
-        // Initialize preferences
-        await supabase.from('user_preferences').insert({
-          user_id: userId,
-          equipped_theme: 'default',
-          equipped_avatar: 'default',
-        });
       }
+      // Note: preferences are initialized if not found, but INSERT policy was removed
+      // The handle_new_user trigger or a server function should initialize this
     } catch (error) {
       console.error('Error fetching preferences:', error);
     }
   }, [userId]);
 
-  // Purchase an item
+  // Purchase an item — uses server-side purchase_shop_item RPC
   const purchaseItem = useCallback(async (item: ShopItem, currentCoins: number): Promise<boolean> => {
     if (!userId) return false;
 
@@ -157,55 +152,40 @@ export function useShop() {
       return false;
     }
 
-    try {
-      // Check if user already owns this permanent item
-      if (!item.durationHours) {
-        const existing = inventory.find(inv => 
-          inv.item.itemType === item.itemType && 
-          (!inv.expiresAt || new Date(inv.expiresAt) > new Date())
-        );
-        if (existing) {
-          toast.error('Already owned!', {
-            description: 'You already have this item.',
-          });
-          return false;
-        }
-      }
-
-      // Deduct coins
-      const { error: coinsError } = await supabase
-        .from('user_rewards')
-        .update({ coins: currentCoins - item.price })
-        .eq('user_id', userId);
-
-      if (coinsError) throw coinsError;
-
-      // Calculate expiration for temporary items
-      let expiresAt = null;
-      if (item.durationHours) {
-        const expires = new Date();
-        expires.setHours(expires.getHours() + item.durationHours);
-        expiresAt = expires.toISOString();
-      }
-
-      // Add to inventory
-      const { error: inventoryError } = await supabase
-        .from('user_inventory')
-        .insert({
-          user_id: userId,
-          item_id: item.id,
-          expires_at: expiresAt,
+    // Check local ownership for permanent items
+    if (!item.durationHours) {
+      const existing = inventory.find(inv => 
+        inv.item.itemType === item.itemType && 
+        (!inv.expiresAt || new Date(inv.expiresAt) > new Date())
+      );
+      if (existing) {
+        toast.error('Already owned!', {
+          description: 'You already have this item.',
         });
+        return false;
+      }
+    }
 
-      if (inventoryError) throw inventoryError;
+    try {
+      const { data, error } = await supabase.rpc('purchase_shop_item', {
+        _item_id: item.id,
+      });
 
-      // Handle special power-ups
-      if (item.category === 'powerup') {
-        await handlePowerupPurchase(item);
+      if (error) {
+        if (error.message.includes('Not enough coins')) {
+          toast.error('Not enough coins!');
+        } else if (error.message.includes('already owned')) {
+          toast.error('Already owned!');
+        } else {
+          throw error;
+        }
+        return false;
       }
 
-      toast.success(`Purchased ${item.name}!`, {
-        description: item.durationHours 
+      const result = data as { success: boolean; new_coins: number; item_name: string; expires_at: string | null };
+
+      toast.success(`Purchased ${result.item_name}!`, {
+        description: result.expires_at
           ? `Active for ${item.durationHours} hours` 
           : 'Added to your collection',
       });
@@ -218,43 +198,6 @@ export function useShop() {
       return false;
     }
   }, [userId, inventory, fetchInventory]);
-
-  // Handle power-up purchases
-  const handlePowerupPurchase = async (item: ShopItem) => {
-    if (!userId) return;
-
-    if (item.itemType.startsWith('shield_')) {
-      // Activate streak shield
-      const hours = item.durationHours || 24;
-      const expires = new Date();
-      expires.setHours(expires.getHours() + hours);
-
-      await supabase
-        .from('user_rewards')
-        .update({
-          streak_shield_active: true,
-          streak_shield_expires_at: expires.toISOString(),
-        })
-        .eq('user_id', userId);
-    } else if (item.itemType === 'triple_spins') {
-      // Add 3 spins
-      const { data: rewards } = await supabase
-        .from('user_rewards')
-        .select('available_spins')
-        .eq('user_id', userId)
-        .single();
-
-      if (rewards) {
-        await supabase
-          .from('user_rewards')
-          .update({ available_spins: rewards.available_spins + 3 })
-          .eq('user_id', userId);
-      }
-    } else if (item.itemType === 'double_coins_24h') {
-      // This would need to be checked elsewhere when awarding coins
-      // For now, we just store it in inventory with expiration
-    }
-  };
 
   // Equip an item
   const equipItem = useCallback(async (item: ShopItem) => {
