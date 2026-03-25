@@ -631,24 +631,10 @@ export function TodayDashboard() {
                     if (!doubleConfirmed) return;
 
                     try {
-                      const { data: { user } } = await supabase.auth.getUser();
-                      if (!user) return;
+                      const { error } = await supabase.functions.invoke('delete-account');
+                      if (error) throw error;
 
-                      // Delete user data from tables that allow deletion
-                      await supabase.from('dose_logs').delete().eq('user_id', user.id);
-                      await supabase.from('scheduled_doses').delete().eq('user_id', user.id);
-                      await supabase.from('medications').delete().eq('user_id', user.id);
-                      await supabase.from('adherence_streaks').delete().eq('user_id', user.id);
-                      await supabase.from('emergency_contacts').delete().eq('user_id', user.id);
-                      await supabase.from('pharmacies').delete().eq('user_id', user.id);
-                      await supabase.from('push_tokens').delete().eq('user_id', user.id);
-                      await supabase.from('caregiver_notifications').delete().eq('user_id', user.id);
-                      await supabase.from('caregiver_invitations').delete().eq('patient_id', user.id);
-                      await supabase.from('caregiver_relationships').delete().eq('patient_id', user.id);
-                      await supabase.from('symptom_logs').delete().eq('user_id', user.id);
-                      await supabase.from('profiles').delete().eq('user_id', user.id);
-
-                      // Sign out
+                      // Sign out and clear local state
                       await supabase.auth.signOut();
                       localStorage.clear();
                       toast.success('Account deleted successfully');
