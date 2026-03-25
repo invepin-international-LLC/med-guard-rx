@@ -533,6 +533,17 @@ export function TodayDashboard() {
             />
           </div>
 
+          {/* Legal Links */}
+          <div className="flex items-center justify-center gap-4 pt-2">
+            <button onClick={() => navigate('/privacy')} className="text-xs text-muted-foreground hover:text-foreground underline transition-colors">
+              Privacy Policy
+            </button>
+            <span className="text-xs text-muted-foreground">·</span>
+            <button onClick={() => navigate('/terms')} className="text-xs text-muted-foreground hover:text-foreground underline transition-colors">
+              Terms of Service
+            </button>
+          </div>
+
           {/* Emergency Card */}
           <EmergencyCardElder info={userInfo} />
         </main>
