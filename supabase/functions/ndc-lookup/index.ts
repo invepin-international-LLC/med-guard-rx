@@ -130,9 +130,9 @@ function getPackageNdcCandidates(ndc: string): string[] {
   return [...new Set(candidates)];
 }
 
-async function searchOpenFDA(searchQuery: string): Promise<OpenFDAProduct[] | null> {
+async function searchOpenFDA(searchQuery: string, limit = 5): Promise<OpenFDAProduct[] | null> {
   try {
-    const url = `https://api.fda.gov/drug/ndc.json?${searchQuery}&limit=5`;
+    const url = `https://api.fda.gov/drug/ndc.json?${searchQuery}&limit=${limit}`;
     console.log(`OpenFDA request: ${url}`);
     const response = await fetch(url);
     if (!response.ok) return null;
@@ -201,17 +201,64 @@ async function lookupNdc(ndc: string): Promise<MedicationResult | null> {
   return null;
 }
 
+async function searchByName(name: string): Promise<MedicationResult[]> {
+  console.log(`Searching by drug name: ${name}`);
+  const sanitized = name.replace(/[^a-zA-Z0-9 ]/g, '').trim();
+  if (!sanitized) return [];
+
+  const results: MedicationResult[] = [];
+
+  // Search by brand_name and generic_name
+  const brandResults = await searchOpenFDA(`search=brand_name:"${sanitized}"`, 10);
+  const genericResults = await searchOpenFDA(`search=generic_name:"${sanitized}"`, 10);
+
+  const allProducts = [...(brandResults || []), ...(genericResults || [])];
+  
+  // Deduplicate by product_ndc
+  const seen = new Set<string>();
+  for (const product of allProducts) {
+    const key = product.product_ndc;
+    if (key && !seen.has(key)) {
+      seen.add(key);
+      results.push(formatProduct(product, key));
+    }
+  }
+
+  return results.slice(0, 10);
+}
+
 serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { ndc } = await req.json();
+    const body = await req.json();
+    const { ndc, name } = body;
 
+    // Name search mode
+    if (name) {
+      console.log(`Received name search request for: ${name}`);
+      const results = await searchByName(name);
+
+      if (results.length > 0) {
+        console.log(`Found ${results.length} medications for name: ${name}`);
+        return new Response(
+          JSON.stringify({ success: true, medications: results }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({ success: false, error: 'No medications found matching that name', name }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // NDC lookup mode
     if (!ndc) {
       return new Response(
-        JSON.stringify({ error: 'NDC code is required' }),
+        JSON.stringify({ error: 'NDC code or drug name is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -233,7 +280,7 @@ serve(async (req: Request) => {
       { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('Error processing NDC lookup:', error);
+    console.error('Error processing lookup:', error);
     return new Response(
       JSON.stringify({ error: 'Internal server error', details: String(error) }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

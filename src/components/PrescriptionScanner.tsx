@@ -14,7 +14,8 @@ import {
   AlertTriangle,
   ScanLine,
   Keyboard,
-  ArrowLeft
+  ArrowLeft,
+  Search
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -36,7 +37,7 @@ interface PrescriptionScannerProps {
 }
 
 
-type ScannerMode = 'camera' | 'manual';
+type ScannerMode = 'camera' | 'manual' | 'name';
 
 // Check if running in native Capacitor
 const isNativeApp = () => {
@@ -64,6 +65,8 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [torchOn, setTorchOn] = useState(false);
   const [manualNdc, setManualNdc] = useState('');
+  const [drugNameQuery, setDrugNameQuery] = useState('');
+  const [nameSearchResults, setNameSearchResults] = useState<ScannedMedication[]>([]);
   const [usingNativeScanner, setUsingNativeScanner] = useState(false);
   
   const scannerRef = useRef<Html5Qrcode | null>(null);
@@ -325,11 +328,22 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     setScannedResult(null);
   }, [stopScanner]);
 
+  const switchToNameSearch = useCallback(async () => {
+    await stopScanner();
+    setMode('name');
+    setError(null);
+    setScannedResult(null);
+    setNameSearchResults([]);
+    setDrugNameQuery('');
+  }, [stopScanner]);
+
   const switchToCameraMode = useCallback(() => {
     setMode('camera');
     setError(null);
     setScannedResult(null);
     setManualNdc('');
+    setDrugNameQuery('');
+    setNameSearchResults([]);
     setScannerStarted(false);
   }, []);
 
@@ -378,8 +392,38 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       setIsLoading(false);
     }
   };
+  const handleNameSearch = async () => {
+    if (drugNameQuery.trim().length < 2) {
+      setError('Please enter at least 2 characters');
+      return;
+    }
 
-  // Cleanup on unmount
+    setIsLoading(true);
+    setError(null);
+    setNameSearchResults([]);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('ndc-lookup', {
+        body: { name: drugNameQuery.trim() }
+      });
+
+      if (error) throw error;
+
+      if (data?.success && data?.medications?.length) {
+        setNameSearchResults(data.medications);
+        toast.success(`Found ${data.medications.length} result(s)`);
+      } else {
+        setError('No medications found. Try a different spelling or brand/generic name.');
+      }
+    } catch (err) {
+      console.error('Name search error:', err);
+      setError('Error searching medications. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
   useEffect(() => {
     return () => {
       stopScanner();
@@ -412,7 +456,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
           <span className="text-lg">Cancel</span>
         </Button>
         <h1 className="text-elder-xl font-bold">
-          {mode === 'camera' ? 'Scan Prescription' : 'Enter NDC Code'}
+          {mode === 'camera' ? 'Scan Prescription' : mode === 'manual' ? 'Enter NDC Code' : 'Search Drug'}
         </h1>
         <div className="w-24" />
       </header>
@@ -550,7 +594,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
                 variant="default" 
                 size="xl" 
                 onClick={handleManualLookup}
-                disabled={isLoading || manualNdc.replace(/-/g, '').length < 10}
+                disabled={isLoading || manualNdc.replace(/-/g, '').length < 7}
                 className="w-full gap-3"
               >
                 {isLoading ? (
@@ -567,6 +611,105 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
               </Button>
             </div>
 
+            <div className="pt-2">
+              <Button 
+                variant="outline" 
+                size="lg" 
+                onClick={switchToNameSearch}
+                className="w-full gap-3"
+              >
+                <Search className="w-5 h-5" />
+                Search by Drug Name Instead
+              </Button>
+            </div>
+          </Card>
+        )}
+
+        {/* Name Search Mode */}
+        {mode === 'name' && !scannedResult && (
+          <Card className="w-full max-w-md p-8 space-y-6 bg-card border-2 border-border shadow-elder-lg">
+            <div className="text-center space-y-2">
+              <div className="w-20 h-20 bg-primary/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Search className="w-12 h-12 text-primary" />
+              </div>
+              <h2 className="text-elder-xl font-bold text-foreground">Search by Drug Name</h2>
+              <p className="text-muted-foreground text-lg">
+                Enter the brand or generic name of your medication
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-lg font-medium text-foreground">Drug Name</label>
+                <Input
+                  type="text"
+                  placeholder="e.g. Tylenol, Lisinopril, Metformin"
+                  value={drugNameQuery}
+                  onChange={(e) => setDrugNameQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleNameSearch()}
+                  className="text-center text-elder-lg h-16 border-2"
+                  autoFocus
+                />
+              </div>
+
+              {error && (
+                <div className="bg-destructive/10 border-2 border-destructive/30 rounded-xl p-4">
+                  <p className="text-destructive text-center">{error}</p>
+                </div>
+              )}
+
+              <Button 
+                variant="default" 
+                size="xl" 
+                onClick={handleNameSearch}
+                disabled={isLoading || drugNameQuery.trim().length < 2}
+                className="w-full gap-3"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                    Searching...
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-6 h-6" />
+                    Search Medications
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {/* Name Search Results */}
+            {nameSearchResults.length > 0 && (
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                <p className="text-sm text-muted-foreground font-medium">
+                  {nameSearchResults.length} result(s) found — tap to select:
+                </p>
+                {nameSearchResults.map((med, i) => (
+                  <button
+                    key={`${med.ndcCode}-${i}`}
+                    onClick={() => {
+                      setScannedResult(med);
+                      setNameSearchResults([]);
+                    }}
+                    className="w-full text-left bg-muted hover:bg-muted/80 rounded-xl p-4 space-y-1 transition-colors border-2 border-transparent hover:border-primary"
+                  >
+                    <p className="font-bold text-foreground text-lg">{med.name}</p>
+                    {med.genericName && med.genericName !== med.name && (
+                      <p className="text-sm text-muted-foreground">{med.genericName}</p>
+                    )}
+                    <div className="flex gap-3 text-sm text-muted-foreground">
+                      <span>{med.strength}</span>
+                      <span>•</span>
+                      <span>{med.form}</span>
+                    </div>
+                    {med.manufacturer && (
+                      <p className="text-xs text-muted-foreground">{med.manufacturer}</p>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
           </Card>
         )}
 
@@ -686,29 +829,72 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       </div>
 
       {/* Footer / Mode Toggle */}
-      <div className="p-4 bg-card border-t-2 border-border">
+      <div className="p-4 bg-card border-t-2 border-border space-y-2">
         {mode === 'camera' && !scannedResult && (
-          <p className="text-center text-muted-foreground text-lg">
-            Can't scan?{' '}
-            <Button 
-              variant="link" 
-              className="text-lg p-0 h-auto text-primary font-semibold"
-              onClick={switchToManualMode}
-            >
-              Enter NDC code manually
-            </Button>
-          </p>
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-center text-muted-foreground text-lg">
+              Can't scan?{' '}
+              <Button 
+                variant="link" 
+                className="text-lg p-0 h-auto text-primary font-semibold"
+                onClick={switchToManualMode}
+              >
+                Enter NDC code
+              </Button>
+              {' or '}
+              <Button 
+                variant="link" 
+                className="text-lg p-0 h-auto text-primary font-semibold"
+                onClick={switchToNameSearch}
+              >
+                search by name
+              </Button>
+            </p>
+          </div>
         )}
         {mode === 'manual' && !scannedResult && (
-          <Button 
-            variant="ghost" 
-            size="lg" 
-            className="w-full gap-3 text-muted-foreground"
-            onClick={switchToCameraMode}
-          >
-            <Camera className="w-6 h-6" />
-            Switch to Camera Scanner
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="ghost" 
+              size="lg" 
+              className="flex-1 gap-2 text-muted-foreground"
+              onClick={switchToCameraMode}
+            >
+              <Camera className="w-5 h-5" />
+              Camera
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="lg" 
+              className="flex-1 gap-2 text-muted-foreground"
+              onClick={switchToNameSearch}
+            >
+              <Search className="w-5 h-5" />
+              Search by Name
+            </Button>
+          </div>
+        )}
+        {mode === 'name' && !scannedResult && (
+          <div className="flex gap-2">
+            <Button 
+              variant="ghost" 
+              size="lg" 
+              className="flex-1 gap-2 text-muted-foreground"
+              onClick={switchToCameraMode}
+            >
+              <Camera className="w-5 h-5" />
+              Camera
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="lg" 
+              className="flex-1 gap-2 text-muted-foreground"
+              onClick={switchToManualMode}
+            >
+              <Keyboard className="w-5 h-5" />
+              NDC Code
+            </Button>
+          </div>
         )}
       </div>
     </div>
