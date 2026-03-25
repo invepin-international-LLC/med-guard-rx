@@ -677,6 +677,24 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
                 />
               </div>
 
+              {/* Quick-select common medications */}
+              {!drugNameQuery && nameSearchResults.length === 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground font-medium">Common medications:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {['Tylenol', 'Ibuprofen', 'Metformin', 'Lisinopril', 'Atorvastatin', 'Amlodipine', 'Omeprazole', 'Levothyroxine', 'Metoprolol', 'Losartan'].map((name) => (
+                      <button
+                        key={name}
+                        onClick={() => setDrugNameQuery(name)}
+                        className="px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium border border-primary/20 hover:bg-primary/20 transition-colors"
+                      >
+                        {name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {isNameSearching && (
                 <div className="flex items-center justify-center gap-2 py-2">
                   <Loader2 className="w-5 h-5 animate-spin text-primary" />
