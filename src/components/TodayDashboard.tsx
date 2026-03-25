@@ -597,7 +597,7 @@ export function TodayDashboard() {
                   onClick={() => setShowChangePin(true)}
                   className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary transition-colors text-left"
                 >
-                  <Lock className="w-5 h-5 text-primary" />
+                  <LockIcon className="w-5 h-5 text-primary" />
                   <div className="flex-1">
                     <span className="text-sm font-medium block">Change PIN</span>
                     <span className="text-xs text-muted-foreground">Update your 4-digit security PIN</span>
