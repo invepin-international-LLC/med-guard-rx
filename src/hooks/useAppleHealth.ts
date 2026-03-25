@@ -125,9 +125,10 @@ export function useAppleHealth() {
       console.error('HealthKit authorization error:', error);
       if (error?.message?.includes('denied') || error?.message?.includes('cancelled')) {
         setIsDenied(true);
-        toast.error('Apple Health access was denied. You can enable it in Settings > Privacy > Health.');
+        toast.error('Apple Health access was denied. You can grant access from the Health app under Sharing & Permissions.');
       } else {
-        toast.error('Failed to connect to Apple Health. Please try again.');
+        // Don't show a scary error; just let the user know it didn't work
+        toast.error('Could not connect to Apple Health right now. Please try again later.');
       }
       return false;
     }
