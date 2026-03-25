@@ -330,7 +330,7 @@ export function TodayDashboard() {
     setActiveNav('today');
   };
 
-  const handleMedicationScanned = async (scannedMed: { 
+  const handleMedicationScanned = (scannedMed: { 
     ndcCode: string; 
     name: string; 
     genericName?: string; 
@@ -338,14 +338,26 @@ export function TodayDashboard() {
     form: string; 
     manufacturer?: string;
   }) => {
-    const result = await addMedication(scannedMed);
-    if (result) {
-      toast.success(`${scannedMed.name} ${scannedMed.strength} has been added to your medications!`, {
-        duration: 4000,
-      });
-    }
+    // Map FDA dosage form to local form options
+    const formMap: Record<string, string> = {
+      'tablet': 'pill', 'pill': 'pill', 'capsule': 'capsule',
+      'liquid': 'liquid', 'solution': 'liquid', 'suspension': 'liquid',
+      'injection': 'injection', 'patch': 'patch',
+      'inhaler': 'inhaler', 'drops': 'drops',
+      'cream': 'cream', 'ointment': 'cream', 'gel': 'cream',
+    };
+    const rawForm = (scannedMed.form || '').toLowerCase();
+    const mappedForm = Object.entries(formMap).find(([key]) => rawForm.includes(key))?.[1] || 'pill';
+
+    setPrefillMedData({
+      name: scannedMed.name,
+      genericName: scannedMed.genericName || undefined,
+      strength: scannedMed.strength,
+      form: mappedForm,
+    });
     setShowScanner(false);
     setActiveNav('today');
+    setShowAddMedication(true);
   };
 
   const handleAddMedicationManually = async (newMed: NewMedicationData) => {
