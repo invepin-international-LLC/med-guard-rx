@@ -106,6 +106,7 @@ export function TodayDashboard() {
   const [showDrRx, setShowDrRx] = useState(false);
   const [openShop, setOpenShop] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showChangePin, setShowChangePin] = useState(false);
   
   const { isCaregiver, patientsICareFor } = useCaregiver();
 
