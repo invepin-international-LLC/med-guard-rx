@@ -1019,7 +1019,28 @@ export type Database = {
       }
     }
     Functions: {
+      award_badge: {
+        Args: {
+          _badge_description?: string
+          _badge_name: string
+          _badge_type: string
+        }
+        Returns: Json
+      }
+      award_spins: { Args: { _spins: number }; Returns: undefined }
       is_caregiver_for: { Args: { patient_user_id: string }; Returns: boolean }
+      purchase_shop_item: { Args: { _item_id: string }; Returns: Json }
+      record_spin: {
+        Args: {
+          _bonus_spins?: number
+          _new_multiplier?: number
+          _prize_type: string
+          _prize_value: number
+          _shield_hours?: number
+          _symbols: string[]
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
