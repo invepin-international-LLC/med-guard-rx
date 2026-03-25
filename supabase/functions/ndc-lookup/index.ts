@@ -10,25 +10,11 @@ interface OpenFDAProduct {
   brand_name?: string;
   generic_name?: string;
   dosage_form?: string;
-  active_ingredients?: Array<{
-    name: string;
-    strength: string;
-  }>;
+  active_ingredients?: Array<{ name: string; strength: string }>;
   labeler_name?: string;
   product_type?: string;
   route?: string[];
-  packaging?: Array<{
-    package_ndc: string;
-    description?: string;
-  }>;
-}
-
-interface OpenFDAResponse {
-  results?: OpenFDAProduct[];
-  error?: {
-    code: string;
-    message: string;
-  };
+  packaging?: Array<{ package_ndc: string; description?: string }>;
 }
 
 interface MedicationResult {
@@ -42,110 +28,125 @@ interface MedicationResult {
   productType?: string;
 }
 
-// Generate NDC format variations for lookup
-function generateNdcVariants(ndc: string): string[] {
-  // Remove all non-numeric characters
+/**
+ * NDC codes come in 3 standard configurations (total 10 digits for product, 11 for package):
+ *   4-4-2  (labeler-product-package)
+ *   5-3-2
+ *   5-4-1
+ * 
+ * OpenFDA stores product_ndc WITHOUT the package segment (labeler-product only).
+ * Package NDCs in packaging[] include the package segment.
+ * 
+ * Users may enter 10-digit (product) or 11-digit (full package) NDCs.
+ * We need to try all plausible splits.
+ */
+
+// Extract product_ndc candidates from a raw NDC string
+function getProductNdcCandidates(ndc: string): string[] {
   const clean = ndc.replace(/\D/g, '');
-  const variants: string[] = [];
-  
-  // OpenFDA uses 4-4-2, 5-3-2, or 5-4-1 formats in product_ndc
-  // Package NDC uses 10 or 11 digit formats
-  
-  if (clean.length === 10) {
-    // Standard 10 digit - format as various possibilities
-    // 4-4-2
-    variants.push(`${clean.slice(0, 4)}-${clean.slice(4, 8)}-${clean.slice(8, 10)}`);
-    // 5-3-2
-    variants.push(`${clean.slice(0, 5)}-${clean.slice(5, 8)}-${clean.slice(8, 10)}`);
-    // 5-4-1
-    variants.push(`${clean.slice(0, 5)}-${clean.slice(5, 9)}-${clean.slice(9, 10)}`);
-    // Also search raw
-    variants.push(clean);
-  } else if (clean.length === 11) {
-    // 11 digit format - try 5-4-2 and variations
-    variants.push(`${clean.slice(0, 5)}-${clean.slice(5, 9)}-${clean.slice(9, 11)}`);
-    variants.push(`${clean.slice(1, 5)}-${clean.slice(5, 9)}-${clean.slice(9, 11)}`);
-    variants.push(clean);
-    // Also try dropping leading zero
-    variants.push(clean.slice(1));
+  const candidates: string[] = [];
+
+  if (clean.length === 11) {
+    // 11 digits = full package NDC. Try all 3 splits to get product portion:
+    // 4-4-2 → product = first 8 digits → format as XXXX-XXXX
+    candidates.push(`${clean.slice(0, 4)}-${clean.slice(4, 8)}`);
+    // 5-3-2 → product = first 8 digits → format as XXXXX-XXX
+    candidates.push(`${clean.slice(0, 5)}-${clean.slice(5, 8)}`);
+    // 5-4-1 → product = first 9 digits → format as XXXXX-XXXX
+    candidates.push(`${clean.slice(0, 5)}-${clean.slice(5, 9)}`);
+  } else if (clean.length === 10) {
+    // 10 digits = could be product NDC or package NDC without leading zeros
+    // As product: try all splits
+    candidates.push(`${clean.slice(0, 4)}-${clean.slice(4, 8)}`);  // 4-4
+    candidates.push(`${clean.slice(0, 5)}-${clean.slice(5, 8)}`);  // 5-3
+    candidates.push(`${clean.slice(0, 5)}-${clean.slice(5, 9)}`);  // 5-4
+    // Also try as 11-digit with leading zero
+    const padded = '0' + clean;
+    candidates.push(`${padded.slice(0, 4)}-${padded.slice(4, 8)}`);
+    candidates.push(`${padded.slice(0, 5)}-${padded.slice(5, 8)}`);
+    candidates.push(`${padded.slice(0, 5)}-${padded.slice(5, 9)}`);
+  } else if (clean.length >= 7 && clean.length <= 9) {
+    // Might already be a product NDC without dashes
+    if (clean.length === 8) {
+      candidates.push(`${clean.slice(0, 4)}-${clean.slice(4)}`);
+      candidates.push(`${clean.slice(0, 5)}-${clean.slice(5)}`);
+    } else if (clean.length === 9) {
+      candidates.push(`${clean.slice(0, 5)}-${clean.slice(5)}`);
+      candidates.push(`${clean.slice(0, 4)}-${clean.slice(4)}`);
+    }
   }
-  
-  // Add the original input as-is
-  variants.push(ndc);
-  
-  return [...new Set(variants)];
+
+  // If input already has dashes, extract the product portion (first two segments)
+  const parts = ndc.split('-');
+  if (parts.length === 3) {
+    candidates.push(`${parts[0]}-${parts[1]}`);
+    // Also try stripping leading zero from labeler
+    if (parts[0].startsWith('0') && parts[0].length > 1) {
+      candidates.push(`${parts[0].slice(1)}-${parts[1]}`);
+    }
+  } else if (parts.length === 2) {
+    candidates.push(ndc);
+  }
+
+  // Deduplicate
+  return [...new Set(candidates)];
 }
 
-async function searchOpenFDA(searchQuery: string): Promise<OpenFDAResponse | null> {
+// Get package NDC format candidates for searching packaging.package_ndc
+function getPackageNdcCandidates(ndc: string): string[] {
+  const clean = ndc.replace(/\D/g, '');
+  const candidates: string[] = [];
+
+  if (clean.length === 11) {
+    // Try all 3 format splits
+    candidates.push(`${clean.slice(0, 4)}-${clean.slice(4, 8)}-${clean.slice(8)}`);
+    candidates.push(`${clean.slice(0, 5)}-${clean.slice(5, 8)}-${clean.slice(8)}`);
+    candidates.push(`${clean.slice(0, 5)}-${clean.slice(5, 9)}-${clean.slice(9)}`);
+  } else if (clean.length === 10) {
+    // Might be missing a leading zero - try with and without
+    candidates.push(`${clean.slice(0, 4)}-${clean.slice(4, 8)}-${clean.slice(8)}`);
+    candidates.push(`${clean.slice(0, 5)}-${clean.slice(5, 8)}-${clean.slice(8)}`);
+    candidates.push(`${clean.slice(0, 5)}-${clean.slice(5, 9)}-${clean.slice(9)}`);
+    const padded = '0' + clean;
+    candidates.push(`${padded.slice(0, 4)}-${padded.slice(4, 8)}-${padded.slice(8)}`);
+    candidates.push(`${padded.slice(0, 5)}-${padded.slice(5, 8)}-${padded.slice(8)}`);
+    candidates.push(`${padded.slice(0, 5)}-${padded.slice(5, 9)}-${padded.slice(9)}`);
+  }
+
+  // If already formatted with dashes, include as-is
+  if (ndc.includes('-')) {
+    candidates.push(ndc);
+    // Strip leading zero variant
+    const parts = ndc.split('-');
+    if (parts.length === 3 && parts[0].startsWith('0') && parts[0].length > 1) {
+      candidates.push(`${parts[0].slice(1)}-${parts[1]}-${parts[2]}`);
+    }
+  }
+
+  return [...new Set(candidates)];
+}
+
+async function searchOpenFDA(searchQuery: string): Promise<OpenFDAProduct[] | null> {
   try {
     const url = `https://api.fda.gov/drug/ndc.json?${searchQuery}&limit=5`;
     console.log(`OpenFDA request: ${url}`);
-    
     const response = await fetch(url);
-    
-    if (!response.ok) {
-      if (response.status === 404) {
-        return null;
-      }
-      console.log(`OpenFDA returned status ${response.status}`);
-      return null;
-    }
-    
-    return await response.json();
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data?.results || null;
   } catch (error) {
-    console.error(`OpenFDA search error:`, error);
+    console.error('OpenFDA search error:', error);
     return null;
   }
 }
 
-async function lookupNdcInOpenFDA(ndc: string): Promise<MedicationResult | null> {
-  const variants = generateNdcVariants(ndc);
-  console.log(`Looking up NDC: ${ndc}, variants: ${variants.join(', ')}`);
-  
-  // Try exact product_ndc matches first
-  for (const variant of variants) {
-    const data = await searchOpenFDA(`search=product_ndc:"${variant}"`);
-    if (data?.results?.length) {
-      const product = data.results[0];
-      return formatProduct(product, ndc);
-    }
-  }
-  
-  // Try package_ndc search
-  for (const variant of variants) {
-    const data = await searchOpenFDA(`search=packaging.package_ndc:"${variant}"`);
-    if (data?.results?.length) {
-      const product = data.results[0];
-      return formatProduct(product, ndc);
-    }
-  }
-  
-  // Try generic search (more flexible)
-  const cleanNdc = ndc.replace(/\D/g, '');
-  if (cleanNdc.length >= 9) {
-    // Try a wildcard-style search with just numbers
-    const data = await searchOpenFDA(`search=product_ndc:*${cleanNdc.slice(0, 9)}*`);
-    if (data?.results?.length) {
-      const product = data.results[0];
-      return formatProduct(product, ndc);
-    }
-  }
-  
-  return null;
-}
-
 function formatProduct(product: OpenFDAProduct, originalNdc: string): MedicationResult {
-  // Extract strength from active ingredients
   let strength = 'See label';
-  if (product.active_ingredients && product.active_ingredients.length > 0) {
-    const strengths = product.active_ingredients
-      .map(ing => ing.strength)
-      .filter(s => s);
-    if (strengths.length > 0) {
-      strength = strengths.join(', ');
-    }
+  if (product.active_ingredients?.length) {
+    const strengths = product.active_ingredients.map(i => i.strength).filter(Boolean);
+    if (strengths.length) strength = strengths.join(', ');
   }
-  
+
   return {
     ndcCode: product.product_ndc || originalNdc,
     name: product.brand_name || product.generic_name || 'Unknown Medication',
@@ -158,60 +159,75 @@ function formatProduct(product: OpenFDAProduct, originalNdc: string): Medication
   };
 }
 
+async function lookupNdc(ndc: string): Promise<MedicationResult | null> {
+  console.log(`Looking up NDC: ${ndc}`);
+
+  // Strategy 1: Search by product_ndc (labeler-product, no package segment)
+  const productCandidates = getProductNdcCandidates(ndc);
+  console.log(`Product NDC candidates: ${productCandidates.join(', ')}`);
+
+  for (const candidate of productCandidates) {
+    const results = await searchOpenFDA(`search=product_ndc:"${candidate}"`);
+    if (results?.length) return formatProduct(results[0], ndc);
+  }
+
+  // Strategy 2: Search by packaging.package_ndc (full NDC with package segment)
+  const packageCandidates = getPackageNdcCandidates(ndc);
+  console.log(`Package NDC candidates: ${packageCandidates.join(', ')}`);
+
+  for (const candidate of packageCandidates) {
+    const results = await searchOpenFDA(`search=packaging.package_ndc:"${candidate}"`);
+    if (results?.length) return formatProduct(results[0], ndc);
+  }
+
+  // Strategy 3: Wildcard search with core digits (less precise but catches edge cases)
+  const clean = ndc.replace(/\D/g, '');
+  if (clean.length >= 8) {
+    // Search with middle portion of the NDC to avoid leading/trailing zero issues
+    const core = clean.length >= 10 ? clean.slice(1, 9) : clean.slice(0, 8);
+    const results = await searchOpenFDA(`search=product_ndc:*${core}*`);
+    if (results?.length) return formatProduct(results[0], ndc);
+  }
+
+  return null;
+}
+
 serve(async (req: Request) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const { ndc } = await req.json();
-    
+
     if (!ndc) {
       return new Response(
         JSON.stringify({ error: 'NDC code is required' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     console.log(`Received NDC lookup request for: ${ndc}`);
-    
-    const result = await lookupNdcInOpenFDA(ndc);
-    
+    const result = await lookupNdc(ndc);
+
     if (result) {
-      console.log(`Successfully found medication: ${result.name}`);
+      console.log(`Found medication: ${result.name}`);
       return new Response(
         JSON.stringify({ success: true, medication: result }),
-        { 
-          status: 200, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    } else {
-      console.log(`No medication found for NDC: ${ndc}`);
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Medication not found in FDA database',
-          ndc 
-        }),
-        { 
-          status: 404, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log(`No medication found for NDC: ${ndc}`);
+    return new Response(
+      JSON.stringify({ success: false, error: 'Medication not found in FDA database', ndc }),
+      { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   } catch (error) {
     console.error('Error processing NDC lookup:', error);
     return new Response(
       JSON.stringify({ error: 'Internal server error', details: String(error) }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
