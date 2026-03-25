@@ -1028,6 +1028,14 @@ export type Database = {
         Returns: Json
       }
       award_spins: { Args: { _spins: number }; Returns: undefined }
+      claim_challenge_reward: {
+        Args: { _user_challenge_id: string }
+        Returns: Json
+      }
+      increment_challenge_progress: {
+        Args: { _challenge_id: string; _week_start: string }
+        Returns: Json
+      }
       is_caregiver_for: { Args: { patient_user_id: string }; Returns: boolean }
       purchase_shop_item: { Args: { _item_id: string }; Returns: Json }
       record_spin: {
