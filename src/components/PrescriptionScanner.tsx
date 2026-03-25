@@ -143,7 +143,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         const requestResult = await BarcodeScanner.requestPermissions();
         if (requestResult.camera !== 'granted') {
           setHasPermission(false);
-          setError('Camera permission denied. Please allow camera access in Settings.');
+          setError('Camera permission is required to scan barcodes. Please allow access when prompted, or enter the code manually.');
           return;
         }
       }
