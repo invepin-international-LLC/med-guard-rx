@@ -579,17 +579,8 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
             <div className="space-y-2">
               <h2 className="text-elder-xl font-bold text-foreground">Camera Access Needed</h2>
               <p className="text-muted-foreground text-lg">
-                Med Guard Rx needs camera access to scan prescription barcodes.
+                Med Guard Rx needs camera access to scan prescription barcodes. Please allow access when prompted.
               </p>
-            </div>
-            <div className="bg-muted rounded-2xl p-5 text-left space-y-3">
-              <p className="text-foreground font-semibold text-lg">To enable camera access:</p>
-              <ol className="space-y-2 text-muted-foreground text-base list-decimal list-inside">
-                <li>Open your iPhone <span className="font-semibold text-foreground">Settings</span></li>
-                <li>Scroll down and tap <span className="font-semibold text-foreground">Privacy & Security</span></li>
-                <li>Tap <span className="font-semibold text-foreground">Camera</span></li>
-                <li>Find <span className="font-semibold text-foreground">Med Guard Rx</span> and turn it on</li>
-              </ol>
             </div>
             <div className="flex flex-col gap-3">
               <Button variant="default" size="xl" onClick={handleRetry} className="w-full gap-3">

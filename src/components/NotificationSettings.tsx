@@ -136,10 +136,7 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
           <div className="flex-1">
             <h3 className="text-elder-lg text-foreground">Notifications Blocked</h3>
             <p className="text-muted-foreground mt-1">
-              To receive medication reminders, please enable notifications in your device settings.
-            </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              Go to Settings → Med Guard Rx → Notifications → Allow Notifications
+              Medication reminders are currently disabled. To receive them, please allow notifications when prompted.
             </p>
           </div>
         </div>
