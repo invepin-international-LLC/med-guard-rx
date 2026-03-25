@@ -67,6 +67,8 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   const [manualNdc, setManualNdc] = useState('');
   const [drugNameQuery, setDrugNameQuery] = useState('');
   const [nameSearchResults, setNameSearchResults] = useState<ScannedMedication[]>([]);
+  const [isNameSearching, setIsNameSearching] = useState(false);
+  const nameSearchAbortRef = useRef<AbortController | null>(null);
   const [usingNativeScanner, setUsingNativeScanner] = useState(false);
   
   const scannerRef = useRef<Html5Qrcode | null>(null);
@@ -392,36 +394,60 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       setIsLoading(false);
     }
   };
-  const handleNameSearch = async () => {
-    if (drugNameQuery.trim().length < 2) {
-      setError('Please enter at least 2 characters');
+  // Debounced typeahead search for drug name
+  useEffect(() => {
+    if (mode !== 'name') return;
+    const query = drugNameQuery.trim();
+    if (query.length < 2) {
+      setNameSearchResults([]);
+      setIsNameSearching(false);
+      setError(null);
       return;
     }
 
-    setIsLoading(true);
+    setIsNameSearching(true);
     setError(null);
-    setNameSearchResults([]);
 
-    try {
-      const { data, error } = await supabase.functions.invoke('ndc-lookup', {
-        body: { name: drugNameQuery.trim() }
-      });
-
-      if (error) throw error;
-
-      if (data?.success && data?.medications?.length) {
-        setNameSearchResults(data.medications);
-        toast.success(`Found ${data.medications.length} result(s)`);
-      } else {
-        setError('No medications found. Try a different spelling or brand/generic name.');
-      }
-    } catch (err) {
-      console.error('Name search error:', err);
-      setError('Error searching medications. Please try again.');
-    } finally {
-      setIsLoading(false);
+    // Cancel previous in-flight request
+    if (nameSearchAbortRef.current) {
+      nameSearchAbortRef.current.abort();
     }
-  };
+
+    const abortController = new AbortController();
+    nameSearchAbortRef.current = abortController;
+
+    const timer = setTimeout(async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('ndc-lookup', {
+          body: { name: query }
+        });
+
+        if (abortController.signal.aborted) return;
+
+        if (error) throw error;
+
+        if (data?.success && data?.medications?.length) {
+          setNameSearchResults(data.medications);
+        } else {
+          setNameSearchResults([]);
+          setError('No medications found. Try a different spelling.');
+        }
+      } catch (err: any) {
+        if (abortController.signal.aborted) return;
+        console.error('Name search error:', err);
+        setError('Error searching medications. Please try again.');
+      } finally {
+        if (!abortController.signal.aborted) {
+          setIsNameSearching(false);
+        }
+      }
+    }, 400);
+
+    return () => {
+      clearTimeout(timer);
+      abortController.abort();
+    };
+  }, [drugNameQuery, mode]);
 
 
   useEffect(() => {
@@ -646,37 +672,23 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
                   placeholder="e.g. Tylenol, Lisinopril, Metformin"
                   value={drugNameQuery}
                   onChange={(e) => setDrugNameQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleNameSearch()}
                   className="text-center text-elder-lg h-16 border-2"
                   autoFocus
                 />
               </div>
+
+              {isNameSearching && (
+                <div className="flex items-center justify-center gap-2 py-2">
+                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                  <span className="text-muted-foreground">Searching...</span>
+                </div>
+              )}
 
               {error && (
                 <div className="bg-destructive/10 border-2 border-destructive/30 rounded-xl p-4">
                   <p className="text-destructive text-center">{error}</p>
                 </div>
               )}
-
-              <Button 
-                variant="default" 
-                size="xl" 
-                onClick={handleNameSearch}
-                disabled={isLoading || drugNameQuery.trim().length < 2}
-                className="w-full gap-3"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-6 h-6 animate-spin" />
-                    Searching...
-                  </>
-                ) : (
-                  <>
-                    <Search className="w-6 h-6" />
-                    Search Medications
-                  </>
-                )}
-              </Button>
             </div>
 
             {/* Name Search Results */}
