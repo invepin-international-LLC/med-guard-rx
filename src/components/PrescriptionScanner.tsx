@@ -829,29 +829,72 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       </div>
 
       {/* Footer / Mode Toggle */}
-      <div className="p-4 bg-card border-t-2 border-border">
+      <div className="p-4 bg-card border-t-2 border-border space-y-2">
         {mode === 'camera' && !scannedResult && (
-          <p className="text-center text-muted-foreground text-lg">
-            Can't scan?{' '}
-            <Button 
-              variant="link" 
-              className="text-lg p-0 h-auto text-primary font-semibold"
-              onClick={switchToManualMode}
-            >
-              Enter NDC code manually
-            </Button>
-          </p>
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-center text-muted-foreground text-lg">
+              Can't scan?{' '}
+              <Button 
+                variant="link" 
+                className="text-lg p-0 h-auto text-primary font-semibold"
+                onClick={switchToManualMode}
+              >
+                Enter NDC code
+              </Button>
+              {' or '}
+              <Button 
+                variant="link" 
+                className="text-lg p-0 h-auto text-primary font-semibold"
+                onClick={switchToNameSearch}
+              >
+                search by name
+              </Button>
+            </p>
+          </div>
         )}
         {mode === 'manual' && !scannedResult && (
-          <Button 
-            variant="ghost" 
-            size="lg" 
-            className="w-full gap-3 text-muted-foreground"
-            onClick={switchToCameraMode}
-          >
-            <Camera className="w-6 h-6" />
-            Switch to Camera Scanner
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="ghost" 
+              size="lg" 
+              className="flex-1 gap-2 text-muted-foreground"
+              onClick={switchToCameraMode}
+            >
+              <Camera className="w-5 h-5" />
+              Camera
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="lg" 
+              className="flex-1 gap-2 text-muted-foreground"
+              onClick={switchToNameSearch}
+            >
+              <Search className="w-5 h-5" />
+              Search by Name
+            </Button>
+          </div>
+        )}
+        {mode === 'name' && !scannedResult && (
+          <div className="flex gap-2">
+            <Button 
+              variant="ghost" 
+              size="lg" 
+              className="flex-1 gap-2 text-muted-foreground"
+              onClick={switchToCameraMode}
+            >
+              <Camera className="w-5 h-5" />
+              Camera
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="lg" 
+              className="flex-1 gap-2 text-muted-foreground"
+              onClick={switchToManualMode}
+            >
+              <Keyboard className="w-5 h-5" />
+              NDC Code
+            </Button>
+          </div>
         )}
       </div>
     </div>
