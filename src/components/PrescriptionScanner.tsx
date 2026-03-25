@@ -392,8 +392,38 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       setIsLoading(false);
     }
   };
+  const handleNameSearch = async () => {
+    if (drugNameQuery.trim().length < 2) {
+      setError('Please enter at least 2 characters');
+      return;
+    }
 
-  // Cleanup on unmount
+    setIsLoading(true);
+    setError(null);
+    setNameSearchResults([]);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('ndc-lookup', {
+        body: { name: drugNameQuery.trim() }
+      });
+
+      if (error) throw error;
+
+      if (data?.success && data?.medications?.length) {
+        setNameSearchResults(data.medications);
+        toast.success(`Found ${data.medications.length} result(s)`);
+      } else {
+        setError('No medications found. Try a different spelling or brand/generic name.');
+      }
+    } catch (err) {
+      console.error('Name search error:', err);
+      setError('Error searching medications. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
   useEffect(() => {
     return () => {
       stopScanner();
