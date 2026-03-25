@@ -669,7 +669,7 @@ export function TodayDashboard() {
           </SheetContent>
         </Sheet>
 
-        {/* Navigation Drawer for Profile */}
+        <ChangePinSheet open={showChangePin} onClose={() => setShowChangePin(false)} />
         <NavigationDrawer
           open={showNavigationDrawer}
           onClose={() => setShowNavigationDrawer(false)}
