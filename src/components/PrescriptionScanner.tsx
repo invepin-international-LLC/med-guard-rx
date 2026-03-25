@@ -67,6 +67,8 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   const [manualNdc, setManualNdc] = useState('');
   const [drugNameQuery, setDrugNameQuery] = useState('');
   const [nameSearchResults, setNameSearchResults] = useState<ScannedMedication[]>([]);
+  const [isNameSearching, setIsNameSearching] = useState(false);
+  const nameSearchAbortRef = useRef<AbortController | null>(null);
   const [usingNativeScanner, setUsingNativeScanner] = useState(false);
   
   const scannerRef = useRef<Html5Qrcode | null>(null);
