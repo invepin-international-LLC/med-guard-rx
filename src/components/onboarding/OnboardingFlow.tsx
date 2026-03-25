@@ -159,6 +159,13 @@ export function OnboardingFlow({ onComplete, userName = 'there' }: OnboardingFlo
         >
           {currentStep === 0 ? step.description : step.description}
         </p>
+
+        {/* Extra content (e.g. disclaimer fine print) */}
+        {step.extra && (
+          <div key={`extra-${step.id}`} className="animate-fade-in" style={{ animationDelay: '150ms' }}>
+            {step.extra}
+          </div>
+        )}
       </div>
 
       {/* Progress dots */}
