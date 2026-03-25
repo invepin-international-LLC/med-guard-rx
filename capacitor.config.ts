@@ -36,9 +36,10 @@ const config: CapacitorConfig = {
 // - com.apple.developer.healthkit.background-delivery (Background health updates)
 // - com.apple.developer.siri (Siri Shortcuts)
 // 
-// Add these to your Info.plist:
-// - NSHealthShareUsageDescription: "Med Guard Rx syncs your medication adherence with Apple Health."
-// - NSHealthUpdateUsageDescription: "Med Guard Rx can write medication adherence data to Apple Health."
-// - NSSiriUsageDescription: "Use Siri to log medications and check your schedule."
+// Run scripts/patch-ios-plist.sh after `npx cap sync ios` to inject:
+// - NSHealthShareUsageDescription
+// - NSHealthUpdateUsageDescription
+// - NSCameraUsageDescription
+// - NSSiriUsageDescription
 
 export default config;
