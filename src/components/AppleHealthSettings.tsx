@@ -139,8 +139,10 @@ export function AppleHealthSettings() {
           ) : null}
         </CardContent>
       </Card>
+      )}
 
-      {/* Siri Shortcuts Section */}
+      {/* Siri Shortcuts Section - only render if available */}
+      {siriAvailable && (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
@@ -151,43 +153,36 @@ export function AppleHealthSettings() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {siriAvailable ? (
-            <>
-              <p className="text-sm text-muted-foreground">
-                Use your voice to log medications and check your schedule.
-              </p>
+          <p className="text-sm text-muted-foreground">
+            Use your voice to log medications and check your schedule.
+          </p>
 
-              {/* Available Phrases */}
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Available voice commands:</p>
-                <div className="space-y-1">
-                  {availableShortcuts.slice(0, 4).map((shortcut) => (
-                    <div
-                      key={shortcut.persistentIdentifier}
-                      className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg px-3 py-2"
-                    >
-                      <span className="text-primary">"Hey Siri,</span>
-                      <span>{shortcut.suggestedInvocationPhrase}"</span>
-                    </div>
-                  ))}
+          {/* Available Phrases */}
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Available voice commands:</p>
+            <div className="space-y-1">
+              {availableShortcuts.slice(0, 4).map((shortcut) => (
+                <div
+                  key={shortcut.persistentIdentifier}
+                  className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg px-3 py-2"
+                >
+                  <span className="text-primary">"Hey Siri,</span>
+                  <span>{shortcut.suggestedInvocationPhrase}"</span>
                 </div>
-              </div>
+              ))}
+            </div>
+          </div>
 
-              <Button
-                variant="outline"
-                onClick={openShortcutsSettings}
-                className="w-full"
-              >
-                Open Shortcuts App
-              </Button>
-            </>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              Siri Shortcuts are only available on iPhone.
-            </p>
-          )}
+          <Button
+            variant="outline"
+            onClick={openShortcutsSettings}
+            className="w-full"
+          >
+            Open Shortcuts App
+          </Button>
         </CardContent>
       </Card>
+      )}
     </div>
   );
 }
