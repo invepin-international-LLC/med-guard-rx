@@ -37,7 +37,7 @@ interface PrescriptionScannerProps {
 }
 
 
-type ScannerMode = 'camera' | 'manual';
+type ScannerMode = 'camera' | 'manual' | 'name';
 
 // Check if running in native Capacitor
 const isNativeApp = () => {
