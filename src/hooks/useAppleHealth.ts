@@ -68,18 +68,24 @@ export function useAppleHealth() {
         return;
       }
 
-      const Health = await getHealthPlugin();
-      if (!Health) {
-        setIsAvailable(false);
-        return;
-      }
-
       try {
-        const result = await Health.isAvailable();
+        const Health = await getHealthPlugin();
+        if (!Health) {
+          console.warn('HealthKit plugin not loaded — hiding feature');
+          setIsAvailable(false);
+          return;
+        }
+
+        // Wrap in a timeout so a hanging native call doesn't block forever
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('HealthKit availability check timed out')), 5000)
+        );
+
+        const result = await Promise.race([Health.isAvailable(), timeoutPromise]) as any;
         const available = result?.available === true;
         console.log('HealthKit availability:', JSON.stringify(result));
         setIsAvailable(available);
-        
+
         if (available) {
           const stored = localStorage.getItem('healthkit_authorized');
           if (stored === 'true') {
@@ -88,6 +94,7 @@ export function useAppleHealth() {
         }
       } catch (error) {
         console.error('Error checking HealthKit availability:', error);
+        // Hide the feature entirely so it doesn't appear broken
         setIsAvailable(false);
       }
     };
