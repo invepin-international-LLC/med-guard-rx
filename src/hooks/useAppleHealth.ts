@@ -25,11 +25,10 @@ interface AdherenceData {
 }
 
 // Check if we're running in Capacitor on iOS
+// Use the same check as useSiriShortcuts which works reliably on device
 const isNativeiOS = () => {
   if (typeof window === 'undefined') return false;
-  const cap = (window as any).Capacitor;
-  // Use isNativePlatform to ensure we're truly in a native context
-  return cap?.isNativePlatform?.() && cap?.getPlatform?.() === 'ios';
+  return (window as any).Capacitor?.getPlatform?.() === 'ios';
 };
 
 // Cached reference to avoid repeated dynamic imports

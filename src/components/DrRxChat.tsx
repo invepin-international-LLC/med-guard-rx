@@ -301,7 +301,9 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
       console.error('Speech recognition error:', event.error);
       setIsListening(false);
       if (event.error === 'not-allowed') {
-        toast.error('Microphone access is required for voice input. Please allow access when prompted.');
+        toast.error('Microphone access is required for voice input. Please enable it in Settings > Privacy > Microphone.');
+      } else if (event.error !== 'aborted') {
+        toast.error('Voice input is not available right now.');
       }
     };
 
