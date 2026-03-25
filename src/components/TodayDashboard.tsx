@@ -24,7 +24,7 @@ import { HipaaSection } from '@/components/HipaaSection';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Heart, Info, AlertTriangle, Phone, PlayCircle, BookOpen, Clock, RefreshCw, Settings, ChevronRight, User, Shield, Loader2, Smartphone, Users } from 'lucide-react';
+import { Heart, Info, AlertTriangle, Phone, PlayCircle, BookOpen, Clock, RefreshCw, Settings, ChevronRight, User, Shield, Loader2, Smartphone, Users, Trash2, FileText, Scale } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { CaregiverInviteManager } from '@/components/CaregiverInviteManager';
 import { useCaregiver } from '@/hooks/useCaregiver';
