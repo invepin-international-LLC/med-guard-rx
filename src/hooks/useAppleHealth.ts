@@ -172,27 +172,23 @@ export function useAppleHealth() {
 
       const healthData: Record<string, HealthDataPoint[]> = {};
 
-      try {
-        const steps = await Health.readSamples({
-          dataType: 'steps',
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
-        });
-        healthData.steps = steps?.samples || [];
-      } catch (e) {
-        console.log('Steps data not available:', e);
-      }
+      // Wrap each read in its own try/catch so one failure doesn't break all
+      const readSample = async (dataType: string) => {
+        try {
+          const result = await Health.readSamples({
+            dataType,
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString(),
+          });
+          return result?.samples || [];
+        } catch (e) {
+          console.log(`${dataType} data not available:`, e);
+          return [];
+        }
+      };
 
-      try {
-        const heartRate = await Health.readSamples({
-          dataType: 'heartRate',
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
-        });
-        healthData.heartRate = heartRate?.samples || [];
-      } catch (e) {
-        console.log('Heart rate data not available:', e);
-      }
+      healthData.steps = await readSample('steps');
+      healthData.heartRate = await readSample('heartRate');
 
       return healthData;
     } catch (error) {
