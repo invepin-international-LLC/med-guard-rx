@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronRight, ChevronLeft, Check, Bell, Shield, Clock, Users, Pill, Camera } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Check, Bell, Shield, Clock, Users, Pill, Camera, AlertTriangle, UserCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface OnboardingStep {
@@ -9,6 +9,7 @@ interface OnboardingStep {
   title: string;
   description: string;
   color: string;
+  extra?: React.ReactNode;
 }
 
 const onboardingSteps: OnboardingStep[] = [
@@ -18,6 +19,25 @@ const onboardingSteps: OnboardingStep[] = [
     title: 'Welcome to Med Guard Rx',
     description: 'Your personal medication companion designed to help you stay on track with your health.',
     color: 'bg-primary text-primary-foreground',
+  },
+  {
+    id: 'disclaimer',
+    icon: <AlertTriangle className="w-16 h-16" />,
+    title: 'Important Health Notice',
+    description: 'Med Guard Rx is a personal health management tool and is NOT a substitute for professional medical advice, diagnosis, or treatment. Always consult your doctor or pharmacist before making changes to your medication routine.',
+    color: 'bg-destructive text-destructive-foreground',
+    extra: (
+      <p className="text-xs text-muted-foreground text-center mt-4 max-w-sm px-4">
+        By continuing, you acknowledge that this app does not provide medical advice and agree to our Terms of Service and Privacy Policy.
+      </p>
+    ),
+  },
+  {
+    id: 'age',
+    icon: <UserCheck className="w-16 h-16" />,
+    title: 'Age Requirement',
+    description: 'You must be at least 13 years old to use Med Guard Rx. If you are under 18, please use this app with the guidance of a parent or guardian.',
+    color: 'bg-info text-info-foreground',
   },
   {
     id: 'reminders',
@@ -139,6 +159,13 @@ export function OnboardingFlow({ onComplete, userName = 'there' }: OnboardingFlo
         >
           {currentStep === 0 ? step.description : step.description}
         </p>
+
+        {/* Extra content (e.g. disclaimer fine print) */}
+        {step.extra && (
+          <div key={`extra-${step.id}`} className="animate-fade-in" style={{ animationDelay: '150ms' }}>
+            {step.extra}
+          </div>
+        )}
       </div>
 
       {/* Progress dots */}
