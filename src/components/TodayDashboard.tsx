@@ -24,7 +24,7 @@ import { HipaaSection } from '@/components/HipaaSection';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Heart, Info, AlertTriangle, Phone, PlayCircle, BookOpen, Clock, RefreshCw, Settings, ChevronRight, User, Shield, Loader2, Smartphone, Users, Trash2, FileText, Scale } from 'lucide-react';
+import { Heart, Info, AlertTriangle, Phone, PlayCircle, BookOpen, Clock, RefreshCw, Settings, ChevronRight, User, Shield, Loader2, Smartphone, Users, Trash2, FileText, Scale, Lock as LockIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { CaregiverInviteManager } from '@/components/CaregiverInviteManager';
 import { useCaregiver } from '@/hooks/useCaregiver';
@@ -45,6 +45,7 @@ import { FentanylSafetyGuide } from '@/components/FentanylSafetyGuide';
 import { AdherenceReportPDF } from '@/components/AdherenceReportPDF';
 import { SymptomJournal } from '@/components/SymptomJournal';
 import { LanguageSelector } from '@/components/LanguageSelector';
+import { ChangePinSheet } from '@/components/ChangePinSheet';
 import { useTranslation } from 'react-i18next';
 
 type NavItem = 'today' | 'medications' | 'scan' | 'stats' | 'safety' | 'profile';
@@ -106,6 +107,7 @@ export function TodayDashboard() {
   const [showDrRx, setShowDrRx] = useState(false);
   const [openShop, setOpenShop] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showChangePin, setShowChangePin] = useState(false);
   
   const { isCaregiver, patientsICareFor } = useCaregiver();
 
@@ -589,7 +591,21 @@ export function TodayDashboard() {
                 <LanguageSelector />
               </div>
 
-              {/* Legal Links in Settings */}
+              {/* Change PIN */}
+              <div className="bg-card rounded-2xl p-4 border-2 border-border">
+                <button
+                  onClick={() => setShowChangePin(true)}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary transition-colors text-left"
+                >
+                  <LockIcon className="w-5 h-5 text-primary" />
+                  <div className="flex-1">
+                    <span className="text-sm font-medium block">Change PIN</span>
+                    <span className="text-xs text-muted-foreground">Update your 4-digit security PIN</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                </button>
+              </div>
+
               <div className="bg-card rounded-2xl p-4 border-2 border-border space-y-3">
                 <h3 className="text-lg font-semibold text-foreground">Legal</h3>
                 <button
@@ -653,7 +669,7 @@ export function TodayDashboard() {
           </SheetContent>
         </Sheet>
 
-        {/* Navigation Drawer for Profile */}
+        <ChangePinSheet open={showChangePin} onClose={() => setShowChangePin(false)} />
         <NavigationDrawer
           open={showNavigationDrawer}
           onClose={() => setShowNavigationDrawer(false)}
