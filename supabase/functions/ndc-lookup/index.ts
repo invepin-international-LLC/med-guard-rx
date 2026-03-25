@@ -166,28 +166,33 @@ function formatProduct(product: OpenFDAProduct, originalNdc: string): Medication
 async function lookupNdc(ndc: string): Promise<MedicationResult | null> {
   console.log(`Looking up NDC: ${ndc}`);
 
-  // Strategy 1: Search by product_ndc (labeler-product, no package segment)
+  // Strategy 1: Batch search product_ndc with OR query
   const productCandidates = getProductNdcCandidates(ndc);
   console.log(`Product NDC candidates: ${productCandidates.join(', ')}`);
 
-  for (const candidate of productCandidates) {
-    const results = await searchOpenFDA(`search=product_ndc:"${candidate}"`);
+  // Try batching up to 8 candidates in a single OR query
+  const batchSize = 8;
+  for (let i = 0; i < productCandidates.length; i += batchSize) {
+    const batch = productCandidates.slice(i, i + batchSize);
+    const orQuery = batch.map(c => `product_ndc:"${c}"`).join('+OR+');
+    const results = await searchOpenFDA(`search=${orQuery}`);
     if (results?.length) return formatProduct(results[0], ndc);
   }
 
-  // Strategy 2: Search by packaging.package_ndc (full NDC with package segment)
+  // Strategy 2: Batch search packaging.package_ndc
   const packageCandidates = getPackageNdcCandidates(ndc);
   console.log(`Package NDC candidates: ${packageCandidates.join(', ')}`);
 
-  for (const candidate of packageCandidates) {
-    const results = await searchOpenFDA(`search=packaging.package_ndc:"${candidate}"`);
+  for (let i = 0; i < packageCandidates.length; i += batchSize) {
+    const batch = packageCandidates.slice(i, i + batchSize);
+    const orQuery = batch.map(c => `packaging.package_ndc:"${c}"`).join('+OR+');
+    const results = await searchOpenFDA(`search=${orQuery}`);
     if (results?.length) return formatProduct(results[0], ndc);
   }
 
-  // Strategy 3: Wildcard search with core digits (less precise but catches edge cases)
+  // Strategy 3: Wildcard search with core digits
   const clean = ndc.replace(/\D/g, '');
   if (clean.length >= 8) {
-    // Search with middle portion of the NDC to avoid leading/trailing zero issues
     const core = clean.length >= 10 ? clean.slice(1, 9) : clean.slice(0, 8);
     const results = await searchOpenFDA(`search=product_ndc:*${core}*`);
     if (results?.length) return formatProduct(results[0], ndc);
