@@ -23,9 +23,21 @@ add_plist_key() {
   fi
 }
 
+# HealthKit
 add_plist_key "NSHealthShareUsageDescription" "Med Guard Rx syncs your medication adherence with Apple Health to give you a complete picture of your health."
 add_plist_key "NSHealthUpdateUsageDescription" "Med Guard Rx can write medication adherence data to Apple Health to help track your wellness."
 
+# Camera (required for prescription barcode scanner)
+add_plist_key "NSCameraUsageDescription" "Med Guard Rx uses your camera to scan prescription barcodes and identify medications."
+
+# Siri (required for Siri Shortcuts integration)
+add_plist_key "NSSiriUsageDescription" "Use Siri to log medications, check your schedule, and manage doses hands-free."
+
 echo ""
-echo "✅ Info.plist patched successfully!"
+echo "✅ Info.plist patched successfully with all required privacy strings!"
+echo "   - NSHealthShareUsageDescription"
+echo "   - NSHealthUpdateUsageDescription"
+echo "   - NSCameraUsageDescription"
+echo "   - NSSiriUsageDescription"
+echo ""
 echo "   You can now archive and distribute from Xcode."
