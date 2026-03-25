@@ -24,7 +24,7 @@ import { HipaaSection } from '@/components/HipaaSection';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Heart, Info, AlertTriangle, Phone, PlayCircle, BookOpen, Clock, RefreshCw, Settings, ChevronRight, User, Shield, Loader2, Smartphone, Users } from 'lucide-react';
+import { Heart, Info, AlertTriangle, Phone, PlayCircle, BookOpen, Clock, RefreshCw, Settings, ChevronRight, User, Shield, Loader2, Smartphone, Users, Trash2, FileText, Scale } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { CaregiverInviteManager } from '@/components/CaregiverInviteManager';
 import { useCaregiver } from '@/hooks/useCaregiver';
@@ -533,6 +533,17 @@ export function TodayDashboard() {
             />
           </div>
 
+          {/* Legal Links */}
+          <div className="flex items-center justify-center gap-4 pt-2">
+            <button onClick={() => navigate('/privacy')} className="text-xs text-muted-foreground hover:text-foreground underline transition-colors">
+              Privacy Policy
+            </button>
+            <span className="text-xs text-muted-foreground">·</span>
+            <button onClick={() => navigate('/terms')} className="text-xs text-muted-foreground hover:text-foreground underline transition-colors">
+              Terms of Service
+            </button>
+          </div>
+
           {/* Emergency Card */}
           <EmergencyCardElder info={userInfo} />
         </main>
@@ -576,6 +587,81 @@ export function TodayDashboard() {
               <div className="bg-card rounded-2xl p-4 border-2 border-border">
                 <h3 className="text-lg font-semibold text-foreground mb-3">{t('profile.languageIdioma')}</h3>
                 <LanguageSelector />
+              </div>
+
+              {/* Legal Links in Settings */}
+              <div className="bg-card rounded-2xl p-4 border-2 border-border space-y-3">
+                <h3 className="text-lg font-semibold text-foreground">Legal</h3>
+                <button
+                  onClick={() => navigate('/privacy')}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary transition-colors text-left"
+                >
+                  <FileText className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-sm font-medium">Privacy Policy</span>
+                  <ChevronRight className="w-4 h-4 ml-auto text-muted-foreground" />
+                </button>
+                <button
+                  onClick={() => navigate('/terms')}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary transition-colors text-left"
+                >
+                  <Scale className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-sm font-medium">Terms of Service</span>
+                  <ChevronRight className="w-4 h-4 ml-auto text-muted-foreground" />
+                </button>
+              </div>
+
+              {/* Delete Account */}
+              <div className="bg-destructive/5 rounded-2xl p-4 border-2 border-destructive/20 space-y-3">
+                <h3 className="text-lg font-semibold text-destructive">Delete Account</h3>
+                <p className="text-sm text-muted-foreground">
+                  Permanently delete your account and all associated data including medications, health records, and adherence history. This action cannot be undone.
+                </p>
+                <Button
+                  variant="destructive"
+                  className="w-full"
+                  onClick={async () => {
+                    const confirmed = window.confirm(
+                      'Are you sure you want to permanently delete your account? All your medications, health records, adherence history, and rewards will be permanently removed. This cannot be undone.'
+                    );
+                    if (!confirmed) return;
+
+                    const doubleConfirmed = window.confirm(
+                      'This is your final warning. Type OK to confirm you want to delete everything.'
+                    );
+                    if (!doubleConfirmed) return;
+
+                    try {
+                      const { data: { user } } = await supabase.auth.getUser();
+                      if (!user) return;
+
+                      // Delete user data from tables that allow deletion
+                      await supabase.from('dose_logs').delete().eq('user_id', user.id);
+                      await supabase.from('scheduled_doses').delete().eq('user_id', user.id);
+                      await supabase.from('medications').delete().eq('user_id', user.id);
+                      await supabase.from('adherence_streaks').delete().eq('user_id', user.id);
+                      await supabase.from('emergency_contacts').delete().eq('user_id', user.id);
+                      await supabase.from('pharmacies').delete().eq('user_id', user.id);
+                      await supabase.from('push_tokens').delete().eq('user_id', user.id);
+                      await supabase.from('caregiver_notifications').delete().eq('user_id', user.id);
+                      await supabase.from('caregiver_invitations').delete().eq('patient_id', user.id);
+                      await supabase.from('caregiver_relationships').delete().eq('patient_id', user.id);
+                      await supabase.from('symptom_logs').delete().eq('user_id', user.id);
+                      await supabase.from('profiles').delete().eq('user_id', user.id);
+
+                      // Sign out
+                      await supabase.auth.signOut();
+                      localStorage.clear();
+                      toast.success('Account deleted successfully');
+                      navigate('/');
+                    } catch (error) {
+                      console.error('Error deleting account:', error);
+                      toast.error('Failed to delete account. Please try again.');
+                    }
+                  }}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete My Account
+                </Button>
               </div>
             </div>
           </SheetContent>

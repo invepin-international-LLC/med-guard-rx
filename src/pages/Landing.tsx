@@ -310,9 +310,20 @@ export default function Landing() {
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
         transition={{ duration: 0.5 }}
-        className="text-center py-8 text-xs text-muted-foreground"
+        className="text-center py-8 space-y-3"
       >
-        © {new Date().getFullYear()} Med Guard Rx. All rights reserved.
+        <div className="flex items-center justify-center gap-4 text-xs">
+          <button onClick={() => navigate('/privacy')} className="text-muted-foreground hover:text-foreground underline transition-colors">
+            Privacy Policy
+          </button>
+          <span className="text-muted-foreground">·</span>
+          <button onClick={() => navigate('/terms')} className="text-muted-foreground hover:text-foreground underline transition-colors">
+            Terms of Service
+          </button>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          © {new Date().getFullYear()} Med Guard Rx. All rights reserved.
+        </p>
       </motion.footer>
 
       {/* Tutorial Overlay */}
