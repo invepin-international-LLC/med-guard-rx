@@ -135,9 +135,17 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
           </div>
           <div className="flex-1">
             <h3 className="text-elder-lg text-foreground">Notifications Blocked</h3>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-muted-foreground mt-1 mb-4">
               Medication reminders are currently disabled. To receive them, please allow notifications when prompted.
             </p>
+            <Button
+              onClick={handleEnableNotifications}
+              variant="outline"
+              className="w-full h-12 text-base gap-2 border-destructive/30 hover:bg-destructive/10"
+            >
+              <Bell className="w-5 h-5" />
+              Try Again
+            </Button>
           </div>
         </div>
       </div>
