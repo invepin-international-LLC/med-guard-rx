@@ -42,53 +42,56 @@ interface MedicationResult {
  */
 
 // Extract product_ndc candidates from a raw NDC string
+function stripLeadingZeros(segment: string): string {
+  const stripped = segment.replace(/^0+/, '');
+  return stripped || '0';
+}
+
+function addWithZeroVariants(candidates: string[], labeler: string, product: string) {
+  // Add the exact format
+  candidates.push(`${labeler}-${product}`);
+  // Strip leading zeros from each segment (FDA stores without padding)
+  candidates.push(`${stripLeadingZeros(labeler)}-${stripLeadingZeros(product)}`);
+  candidates.push(`${labeler}-${stripLeadingZeros(product)}`);
+  candidates.push(`${stripLeadingZeros(labeler)}-${product}`);
+}
+
 function getProductNdcCandidates(ndc: string): string[] {
   const clean = ndc.replace(/\D/g, '');
   const candidates: string[] = [];
 
   if (clean.length === 11) {
-    // 11 digits = full package NDC. Try all 3 splits to get product portion:
-    // 4-4-2 → product = first 8 digits → format as XXXX-XXXX
-    candidates.push(`${clean.slice(0, 4)}-${clean.slice(4, 8)}`);
-    // 5-3-2 → product = first 8 digits → format as XXXXX-XXX
-    candidates.push(`${clean.slice(0, 5)}-${clean.slice(5, 8)}`);
-    // 5-4-1 → product = first 9 digits → format as XXXXX-XXXX
-    candidates.push(`${clean.slice(0, 5)}-${clean.slice(5, 9)}`);
+    // 11 digits = full package NDC. Try all 3 splits:
+    addWithZeroVariants(candidates, clean.slice(0, 4), clean.slice(4, 8)); // 4-4-2
+    addWithZeroVariants(candidates, clean.slice(0, 5), clean.slice(5, 8)); // 5-3-2
+    addWithZeroVariants(candidates, clean.slice(0, 5), clean.slice(5, 9)); // 5-4-1
   } else if (clean.length === 10) {
-    // 10 digits = could be product NDC or package NDC without leading zeros
-    // As product: try all splits
-    candidates.push(`${clean.slice(0, 4)}-${clean.slice(4, 8)}`);  // 4-4
-    candidates.push(`${clean.slice(0, 5)}-${clean.slice(5, 8)}`);  // 5-3
-    candidates.push(`${clean.slice(0, 5)}-${clean.slice(5, 9)}`);  // 5-4
+    addWithZeroVariants(candidates, clean.slice(0, 4), clean.slice(4, 8));
+    addWithZeroVariants(candidates, clean.slice(0, 5), clean.slice(5, 8));
+    addWithZeroVariants(candidates, clean.slice(0, 5), clean.slice(5, 9));
     // Also try as 11-digit with leading zero
     const padded = '0' + clean;
-    candidates.push(`${padded.slice(0, 4)}-${padded.slice(4, 8)}`);
-    candidates.push(`${padded.slice(0, 5)}-${padded.slice(5, 8)}`);
-    candidates.push(`${padded.slice(0, 5)}-${padded.slice(5, 9)}`);
+    addWithZeroVariants(candidates, padded.slice(0, 4), padded.slice(4, 8));
+    addWithZeroVariants(candidates, padded.slice(0, 5), padded.slice(5, 8));
+    addWithZeroVariants(candidates, padded.slice(0, 5), padded.slice(5, 9));
   } else if (clean.length >= 7 && clean.length <= 9) {
-    // Might already be a product NDC without dashes
     if (clean.length === 8) {
-      candidates.push(`${clean.slice(0, 4)}-${clean.slice(4)}`);
-      candidates.push(`${clean.slice(0, 5)}-${clean.slice(5)}`);
+      addWithZeroVariants(candidates, clean.slice(0, 4), clean.slice(4));
+      addWithZeroVariants(candidates, clean.slice(0, 5), clean.slice(5));
     } else if (clean.length === 9) {
-      candidates.push(`${clean.slice(0, 5)}-${clean.slice(5)}`);
-      candidates.push(`${clean.slice(0, 4)}-${clean.slice(4)}`);
+      addWithZeroVariants(candidates, clean.slice(0, 5), clean.slice(5));
+      addWithZeroVariants(candidates, clean.slice(0, 4), clean.slice(4));
     }
   }
 
   // If input already has dashes, extract the product portion (first two segments)
   const parts = ndc.split('-');
   if (parts.length === 3) {
-    candidates.push(`${parts[0]}-${parts[1]}`);
-    // Also try stripping leading zero from labeler
-    if (parts[0].startsWith('0') && parts[0].length > 1) {
-      candidates.push(`${parts[0].slice(1)}-${parts[1]}`);
-    }
+    addWithZeroVariants(candidates, parts[0], parts[1]);
   } else if (parts.length === 2) {
-    candidates.push(ndc);
+    addWithZeroVariants(candidates, parts[0], parts[1]);
   }
 
-  // Deduplicate
   return [...new Set(candidates)];
 }
 
