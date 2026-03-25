@@ -354,6 +354,7 @@ export function TodayDashboard() {
       genericName: scannedMed.genericName || undefined,
       strength: scannedMed.strength,
       form: mappedForm,
+      prescriber: scannedMed.manufacturer || undefined,
     });
     setShowScanner(false);
     setActiveNav('today');
