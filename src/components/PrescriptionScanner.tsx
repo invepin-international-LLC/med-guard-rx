@@ -328,11 +328,22 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     setScannedResult(null);
   }, [stopScanner]);
 
+  const switchToNameSearch = useCallback(async () => {
+    await stopScanner();
+    setMode('name');
+    setError(null);
+    setScannedResult(null);
+    setNameSearchResults([]);
+    setDrugNameQuery('');
+  }, [stopScanner]);
+
   const switchToCameraMode = useCallback(() => {
     setMode('camera');
     setError(null);
     setScannedResult(null);
     setManualNdc('');
+    setDrugNameQuery('');
+    setNameSearchResults([]);
     setScannerStarted(false);
   }, []);
 
