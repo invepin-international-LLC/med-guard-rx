@@ -24,14 +24,16 @@ export function AppleHealthSettings() {
     availableShortcuts,
   } = useSiriShortcuts();
 
-  // Hide entirely on non-iOS platforms to avoid appearing as incomplete feature
+  // Hide entirely when neither feature is available and functional
+  // This prevents showing "not available" messages that look like incomplete features (App Store Guideline 2.2)
   if (!healthAvailable && !siriAvailable) {
     return null;
   }
 
   return (
     <div className="space-y-4">
-      {/* Apple Health Section */}
+      {/* Apple Health Section - only render if available */}
+      {healthAvailable && (
       <Card className={healthAuthorized ? 'border-green-500/50 bg-green-500/5' : ''}>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
@@ -134,11 +136,7 @@ export function AppleHealthSettings() {
                 </Button>
               )}
             </>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              Apple Health is only available on iPhone.
-            </p>
-          )}
+          ) : null}
         </CardContent>
       </Card>
 
