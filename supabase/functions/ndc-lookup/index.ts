@@ -130,9 +130,9 @@ function getPackageNdcCandidates(ndc: string): string[] {
   return [...new Set(candidates)];
 }
 
-async function searchOpenFDA(searchQuery: string): Promise<OpenFDAProduct[] | null> {
+async function searchOpenFDA(searchQuery: string, limit = 5): Promise<OpenFDAProduct[] | null> {
   try {
-    const url = `https://api.fda.gov/drug/ndc.json?${searchQuery}&limit=5`;
+    const url = `https://api.fda.gov/drug/ndc.json?${searchQuery}&limit=${limit}`;
     console.log(`OpenFDA request: ${url}`);
     const response = await fetch(url);
     if (!response.ok) return null;
