@@ -24,14 +24,16 @@ export function AppleHealthSettings() {
     availableShortcuts,
   } = useSiriShortcuts();
 
-  // Hide entirely on non-iOS platforms to avoid appearing as incomplete feature
+  // Hide entirely when neither feature is available and functional
+  // This prevents showing "not available" messages that look like incomplete features (App Store Guideline 2.2)
   if (!healthAvailable && !siriAvailable) {
     return null;
   }
 
   return (
     <div className="space-y-4">
-      {/* Apple Health Section */}
+      {/* Apple Health Section - only render if available */}
+      {healthAvailable && (
       <Card className={healthAuthorized ? 'border-green-500/50 bg-green-500/5' : ''}>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
@@ -134,15 +136,13 @@ export function AppleHealthSettings() {
                 </Button>
               )}
             </>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              Apple Health is only available on iPhone.
-            </p>
-          )}
+          ) : null}
         </CardContent>
       </Card>
+      )}
 
-      {/* Siri Shortcuts Section */}
+      {/* Siri Shortcuts Section - only render if available */}
+      {siriAvailable && (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
@@ -153,43 +153,36 @@ export function AppleHealthSettings() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {siriAvailable ? (
-            <>
-              <p className="text-sm text-muted-foreground">
-                Use your voice to log medications and check your schedule.
-              </p>
+          <p className="text-sm text-muted-foreground">
+            Use your voice to log medications and check your schedule.
+          </p>
 
-              {/* Available Phrases */}
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Available voice commands:</p>
-                <div className="space-y-1">
-                  {availableShortcuts.slice(0, 4).map((shortcut) => (
-                    <div
-                      key={shortcut.persistentIdentifier}
-                      className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg px-3 py-2"
-                    >
-                      <span className="text-primary">"Hey Siri,</span>
-                      <span>{shortcut.suggestedInvocationPhrase}"</span>
-                    </div>
-                  ))}
+          {/* Available Phrases */}
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Available voice commands:</p>
+            <div className="space-y-1">
+              {availableShortcuts.slice(0, 4).map((shortcut) => (
+                <div
+                  key={shortcut.persistentIdentifier}
+                  className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg px-3 py-2"
+                >
+                  <span className="text-primary">"Hey Siri,</span>
+                  <span>{shortcut.suggestedInvocationPhrase}"</span>
                 </div>
-              </div>
+              ))}
+            </div>
+          </div>
 
-              <Button
-                variant="outline"
-                onClick={openShortcutsSettings}
-                className="w-full"
-              >
-                Open Shortcuts App
-              </Button>
-            </>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              Siri Shortcuts are only available on iPhone.
-            </p>
-          )}
+          <Button
+            variant="outline"
+            onClick={openShortcutsSettings}
+            className="w-full"
+          >
+            Open Shortcuts App
+          </Button>
         </CardContent>
       </Card>
+      )}
     </div>
   );
 }
