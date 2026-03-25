@@ -209,8 +209,8 @@ async function searchByName(name: string): Promise<MedicationResult[]> {
   const results: MedicationResult[] = [];
 
   // Search by brand_name and generic_name
-  const brandResults = await searchOpenFDA(`search=brand_name:"${sanitized}"&limit=10`);
-  const genericResults = await searchOpenFDA(`search=generic_name:"${sanitized}"&limit=10`);
+  const brandResults = await searchOpenFDA(`search=brand_name:"${sanitized}"`, 10);
+  const genericResults = await searchOpenFDA(`search=generic_name:"${sanitized}"`, 10);
 
   const allProducts = [...(brandResults || []), ...(genericResults || [])];
   
