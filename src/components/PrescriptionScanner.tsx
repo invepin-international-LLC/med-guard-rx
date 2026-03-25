@@ -394,36 +394,60 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       setIsLoading(false);
     }
   };
-  const handleNameSearch = async () => {
-    if (drugNameQuery.trim().length < 2) {
-      setError('Please enter at least 2 characters');
+  // Debounced typeahead search for drug name
+  useEffect(() => {
+    if (mode !== 'name') return;
+    const query = drugNameQuery.trim();
+    if (query.length < 2) {
+      setNameSearchResults([]);
+      setIsNameSearching(false);
+      setError(null);
       return;
     }
 
-    setIsLoading(true);
+    setIsNameSearching(true);
     setError(null);
-    setNameSearchResults([]);
 
-    try {
-      const { data, error } = await supabase.functions.invoke('ndc-lookup', {
-        body: { name: drugNameQuery.trim() }
-      });
-
-      if (error) throw error;
-
-      if (data?.success && data?.medications?.length) {
-        setNameSearchResults(data.medications);
-        toast.success(`Found ${data.medications.length} result(s)`);
-      } else {
-        setError('No medications found. Try a different spelling or brand/generic name.');
-      }
-    } catch (err) {
-      console.error('Name search error:', err);
-      setError('Error searching medications. Please try again.');
-    } finally {
-      setIsLoading(false);
+    // Cancel previous in-flight request
+    if (nameSearchAbortRef.current) {
+      nameSearchAbortRef.current.abort();
     }
-  };
+
+    const abortController = new AbortController();
+    nameSearchAbortRef.current = abortController;
+
+    const timer = setTimeout(async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('ndc-lookup', {
+          body: { name: query }
+        });
+
+        if (abortController.signal.aborted) return;
+
+        if (error) throw error;
+
+        if (data?.success && data?.medications?.length) {
+          setNameSearchResults(data.medications);
+        } else {
+          setNameSearchResults([]);
+          setError('No medications found. Try a different spelling.');
+        }
+      } catch (err: any) {
+        if (abortController.signal.aborted) return;
+        console.error('Name search error:', err);
+        setError('Error searching medications. Please try again.');
+      } finally {
+        if (!abortController.signal.aborted) {
+          setIsNameSearching(false);
+        }
+      }
+    }, 400);
+
+    return () => {
+      clearTimeout(timer);
+      abortController.abort();
+    };
+  }, [drugNameQuery, mode]);
 
 
   useEffect(() => {
