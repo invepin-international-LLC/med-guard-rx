@@ -758,6 +758,16 @@ export function TodayDashboard() {
     );
   }
 
+  // Show appointments page
+  if (activeNav === 'appointments') {
+    return (
+      <div className="min-h-screen bg-background pb-32">
+        <AppointmentsPage />
+        <ElderBottomNav activeItem={activeNav} onNavigate={setActiveNav} />
+      </div>
+    );
+  }
+
   // Show safety guide
   if (activeNav === 'safety') {
     return (
