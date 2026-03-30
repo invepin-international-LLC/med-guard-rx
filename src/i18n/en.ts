@@ -33,6 +33,7 @@ export const en = {
     stats: 'Stats',
     safety: 'Safety',
     profile: 'Profile',
+    appointments: 'Appts',
   },
   dashboard: {
     goodMorning: 'Good morning',
