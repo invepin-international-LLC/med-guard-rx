@@ -33,6 +33,7 @@ export const es = {
     stats: 'Estadísticas',
     safety: 'Seguridad',
     profile: 'Perfil',
+    appointments: 'Citas',
   },
   dashboard: {
     goodMorning: 'Buenos días',

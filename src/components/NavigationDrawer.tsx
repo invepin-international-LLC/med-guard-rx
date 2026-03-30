@@ -22,7 +22,7 @@
  interface NavigationDrawerProps {
    open: boolean;
    onClose: () => void;
-   onNavigate: (item: 'today' | 'medications' | 'scan' | 'stats' | 'safety' | 'profile') => void;
+   onNavigate: (item: 'today' | 'medications' | 'scan' | 'stats' | 'safety' | 'profile' | 'appointments') => void;
    activeItem: string;
    isCaregiver?: boolean;
    onCaregiverDashboard?: () => void;
@@ -39,7 +39,7 @@
     onDrBombayClick
   }: NavigationDrawerProps) {
    
-   const handleNavigation = (item: 'today' | 'medications' | 'scan' | 'stats' | 'safety' | 'profile') => {
+   const handleNavigation = (item: 'today' | 'medications' | 'scan' | 'stats' | 'safety' | 'profile' | 'appointments') => {
      onNavigate(item);
      onClose();
    };
@@ -58,6 +58,7 @@
      { id: 'today', icon: Home, label: 'Today', description: 'Your daily dashboard' },
      { id: 'medications', icon: Pill, label: 'Medications', description: 'Manage your meds' },
      { id: 'scan', icon: Camera, label: 'Scan', description: 'Add new prescriptions' },
+     { id: 'appointments', icon: Stethoscope, label: 'Appointments', description: 'Record & translate visits' },
      { id: 'stats', icon: BarChart3, label: 'Statistics', description: 'View your progress' },
      { id: 'profile', icon: User, label: 'Profile', description: 'Settings & preferences' },
    ];

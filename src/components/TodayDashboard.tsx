@@ -45,10 +45,11 @@ import { FentanylSafetyGuide } from '@/components/FentanylSafetyGuide';
 import { AdherenceReportPDF } from '@/components/AdherenceReportPDF';
 import { SymptomJournal } from '@/components/SymptomJournal';
 import { LanguageSelector } from '@/components/LanguageSelector';
+import { AppointmentsPage } from '@/components/AppointmentsPage';
 import { ChangePinSheet } from '@/components/ChangePinSheet';
 import { useTranslation } from 'react-i18next';
 
-type NavItem = 'today' | 'medications' | 'scan' | 'stats' | 'safety' | 'profile';
+type NavItem = 'today' | 'medications' | 'scan' | 'stats' | 'safety' | 'profile' | 'appointments';
 
 const timeOrder: TimeOfDay[] = ['morning', 'afternoon', 'evening', 'bedtime'];
 
@@ -753,6 +754,16 @@ export function TodayDashboard() {
           onCaregiverDashboard={() => navigate('/caregiver')}
           onDrBombayClick={() => setShowDrRx(true)}
         />
+      </div>
+    );
+  }
+
+  // Show appointments page
+  if (activeNav === 'appointments') {
+    return (
+      <div className="min-h-screen bg-background pb-32">
+        <AppointmentsPage />
+        <ElderBottomNav activeItem={activeNav} onNavigate={setActiveNav} />
       </div>
     );
   }

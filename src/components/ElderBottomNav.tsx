@@ -1,8 +1,8 @@
-import { Home, Pill, Camera, BarChart3, User, ShieldAlert } from 'lucide-react';
+import { Home, Pill, Camera, BarChart3, User, ShieldAlert, Stethoscope } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 
-type NavItem = 'today' | 'medications' | 'scan' | 'stats' | 'safety' | 'profile';
+type NavItem = 'today' | 'medications' | 'scan' | 'stats' | 'safety' | 'profile' | 'appointments';
 
 interface ElderBottomNavProps {
   activeItem: NavItem;
@@ -13,6 +13,7 @@ const navItems: { id: NavItem; icon: typeof Home; labelKey: string }[] = [
   { id: 'today', icon: Home, labelKey: 'nav.today' },
   { id: 'medications', icon: Pill, labelKey: 'nav.medications' },
   { id: 'scan', icon: Camera, labelKey: 'nav.scan' },
+  { id: 'appointments', icon: Stethoscope, labelKey: 'nav.appointments' },
   { id: 'safety', icon: ShieldAlert, labelKey: 'nav.safety' },
   { id: 'stats', icon: BarChart3, labelKey: 'nav.stats' },
   { id: 'profile', icon: User, labelKey: 'nav.profile' },

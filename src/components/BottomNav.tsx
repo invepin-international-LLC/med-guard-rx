@@ -1,8 +1,8 @@
-import { Home, Pill, Camera, User, Calendar } from 'lucide-react';
+import { Home, Pill, Camera, User, Stethoscope } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 
-type NavItem = 'today' | 'medications' | 'scan' | 'calendar' | 'profile';
+type NavItem = 'today' | 'medications' | 'scan' | 'appointments' | 'profile';
 
 interface BottomNavProps {
   activeItem: NavItem;
@@ -13,7 +13,7 @@ const navItems: { id: NavItem; icon: typeof Home; labelKey: string }[] = [
   { id: 'today', icon: Home, labelKey: 'nav.today' },
   { id: 'medications', icon: Pill, labelKey: 'nav.medications' },
   { id: 'scan', icon: Camera, labelKey: 'nav.scan' },
-  { id: 'calendar', icon: Calendar, labelKey: 'nav.calendar' },
+  { id: 'appointments', icon: Stethoscope, labelKey: 'nav.appointments' },
   { id: 'profile', icon: User, labelKey: 'nav.profile' },
 ];
 
