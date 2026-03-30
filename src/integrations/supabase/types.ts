@@ -47,6 +47,86 @@ export type Database = {
         }
         Relationships: []
       }
+      appointment_questions: {
+        Row: {
+          appointment_id: string | null
+          created_at: string
+          id: string
+          question: string
+          user_id: string
+          was_addressed: boolean | null
+        }
+        Insert: {
+          appointment_id?: string | null
+          created_at?: string
+          id?: string
+          question: string
+          user_id: string
+          was_addressed?: boolean | null
+        }
+        Update: {
+          appointment_id?: string | null
+          created_at?: string
+          id?: string
+          question?: string
+          user_id?: string
+          was_addressed?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_questions_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointments: {
+        Row: {
+          appointment_date: string | null
+          created_at: string
+          doctor_name: string | null
+          follow_up_flags: Json | null
+          id: string
+          medication_mentions: Json | null
+          plain_summary: string | null
+          raw_transcript: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          appointment_date?: string | null
+          created_at?: string
+          doctor_name?: string | null
+          follow_up_flags?: Json | null
+          id?: string
+          medication_mentions?: Json | null
+          plain_summary?: string | null
+          raw_transcript?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          appointment_date?: string | null
+          created_at?: string
+          doctor_name?: string | null
+          follow_up_flags?: Json | null
+          id?: string
+          medication_mentions?: Json | null
+          plain_summary?: string | null
+          raw_transcript?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       caregiver_invitations: {
         Row: {
           accepted_at: string | null
