@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, AlertTriangle, CheckCircle2, Circle, Pill, Calendar, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { AppointmentSummaryPDF } from './AppointmentSummaryPDF';
 import { useAppointments } from '@/hooks/useAppointments';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
@@ -77,6 +78,19 @@ export function AppointmentSummary({ appointmentId, onBack }: AppointmentSummary
             <p className="text-sm text-muted-foreground">Dr. {appointment.doctor_name}</p>
           )}
         </div>
+        {appointment.status === 'completed' && (
+          <AppointmentSummaryPDF
+            appointment={{
+              title: appointment.title,
+              doctor_name: appointment.doctor_name,
+              appointment_date: appointment.appointment_date,
+              plain_summary: appointment.plain_summary,
+              follow_up_flags: followUpFlags,
+              medication_mentions: medicationMentions,
+              raw_transcript: appointment.raw_transcript,
+            }}
+          />
+        )}
         <Button variant="ghost" size="icon" onClick={handleDelete} className="text-destructive">
           <Trash2 className="w-5 h-5" />
         </Button>
