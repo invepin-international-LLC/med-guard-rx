@@ -48,7 +48,7 @@ import { LanguageSelector } from '@/components/LanguageSelector';
 import { ChangePinSheet } from '@/components/ChangePinSheet';
 import { useTranslation } from 'react-i18next';
 
-type NavItem = 'today' | 'medications' | 'scan' | 'stats' | 'safety' | 'profile';
+type NavItem = 'today' | 'medications' | 'scan' | 'stats' | 'safety' | 'profile' | 'appointments';
 
 const timeOrder: TimeOfDay[] = ['morning', 'afternoon', 'evening', 'bedtime'];
 
