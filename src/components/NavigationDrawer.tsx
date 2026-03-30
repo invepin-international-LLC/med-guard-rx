@@ -22,7 +22,7 @@
  interface NavigationDrawerProps {
    open: boolean;
    onClose: () => void;
-   onNavigate: (item: 'today' | 'medications' | 'scan' | 'stats' | 'safety' | 'profile') => void;
+   onNavigate: (item: 'today' | 'medications' | 'scan' | 'stats' | 'safety' | 'profile' | 'appointments') => void;
    activeItem: string;
    isCaregiver?: boolean;
    onCaregiverDashboard?: () => void;
