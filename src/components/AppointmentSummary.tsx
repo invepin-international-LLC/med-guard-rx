@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, AlertTriangle, CheckCircle2, Circle, Pill, Calendar, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { AppointmentSummaryPDF } from './AppointmentSummaryPDF';
 import { useAppointments } from '@/hooks/useAppointments';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
