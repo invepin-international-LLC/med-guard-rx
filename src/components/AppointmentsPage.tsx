@@ -6,6 +6,7 @@ import { Stethoscope, Calendar, ChevronRight, Loader2, Mic, Clock, Bell } from '
 import { useAppointments } from '@/hooks/useAppointments';
 import { AppointmentRecorder } from '@/components/AppointmentRecorder';
 import { AppointmentSummary } from '@/components/AppointmentSummary';
+import { AppointmentActions } from '@/components/AppointmentActions';
 import { cn } from '@/lib/utils';
 import { format, isFuture, isToday, isTomorrow, differenceInHours } from 'date-fns';
 
