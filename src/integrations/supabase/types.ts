@@ -92,6 +92,8 @@ export type Database = {
           medication_mentions: Json | null
           plain_summary: string | null
           raw_transcript: string | null
+          reminder_1h_sent: boolean
+          reminder_24h_sent: boolean
           status: string
           title: string
           updated_at: string
@@ -106,6 +108,8 @@ export type Database = {
           medication_mentions?: Json | null
           plain_summary?: string | null
           raw_transcript?: string | null
+          reminder_1h_sent?: boolean
+          reminder_24h_sent?: boolean
           status?: string
           title?: string
           updated_at?: string
@@ -120,6 +124,8 @@ export type Database = {
           medication_mentions?: Json | null
           plain_summary?: string | null
           raw_transcript?: string | null
+          reminder_1h_sent?: boolean
+          reminder_24h_sent?: boolean
           status?: string
           title?: string
           updated_at?: string

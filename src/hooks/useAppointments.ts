@@ -48,9 +48,11 @@ export function useAppointments() {
     fetchAppointments();
   }, [fetchAppointments]);
 
-  const createAppointment = async (title: string, doctorName?: string): Promise<string | null> => {
+  const createAppointment = async (title: string, doctorName?: string, appointmentDate?: string): Promise<string | null> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
+
+    const isFutureDate = appointmentDate && new Date(appointmentDate) > new Date();
 
     const { data, error } = await supabase
       .from('appointments')
@@ -58,7 +60,8 @@ export function useAppointments() {
         user_id: user.id,
         title,
         doctor_name: doctorName || null,
-        status: 'recording',
+        appointment_date: appointmentDate || new Date().toISOString(),
+        status: isFutureDate ? 'scheduled' : 'recording',
       } as any)
       .select()
       .single();
