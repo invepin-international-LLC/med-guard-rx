@@ -53,8 +53,8 @@ export function AppleHealthSettings() {
             <>
               <p className="text-sm text-muted-foreground">
                 {healthAuthorized 
-                  ? 'Your medication adherence data syncs with Apple Health for a complete health picture.'
-                  : 'Connect to Apple Health to sync your medication adherence and track health metrics.'}
+                  ? 'Your medication adherence data syncs with Apple Health via HealthKit for a complete health picture. This app reads Steps and Heart Rate data, and writes medication adherence records.'
+                  : 'Connect to Apple Health via HealthKit to sync your medication adherence data and read health metrics like steps and heart rate.'}
               </p>
 
               {healthAuthorized ? (
