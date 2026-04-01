@@ -13,7 +13,7 @@ import { format, isFuture, isToday, isTomorrow, differenceInHours } from 'date-f
 type AppointmentView = 'list' | 'new' | 'record' | 'summary';
 
 export function AppointmentsPage() {
-  const { appointments, loading, createAppointment, refetch } = useAppointments();
+  const { appointments, loading, createAppointment, updateAppointment, deleteAppointment, refetch } = useAppointments();
   const [view, setView] = useState<AppointmentView>('list');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [newTitle, setNewTitle] = useState('');
