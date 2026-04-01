@@ -275,7 +275,11 @@ export function AppointmentsPage() {
                           📅 {getTimeUntil(apt.appointment_date)}
                         </span>
                       </div>
-                      <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                      <AppointmentActions
+                        appointment={apt}
+                        onUpdate={updateAppointment}
+                        onDelete={deleteAppointment}
+                      />
                     </CardContent>
                   </Card>
                 </button>
