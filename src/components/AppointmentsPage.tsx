@@ -6,13 +6,14 @@ import { Stethoscope, Calendar, ChevronRight, Loader2, Mic, Clock, Bell } from '
 import { useAppointments } from '@/hooks/useAppointments';
 import { AppointmentRecorder } from '@/components/AppointmentRecorder';
 import { AppointmentSummary } from '@/components/AppointmentSummary';
+import { AppointmentActions } from '@/components/AppointmentActions';
 import { cn } from '@/lib/utils';
 import { format, isFuture, isToday, isTomorrow, differenceInHours } from 'date-fns';
 
 type AppointmentView = 'list' | 'new' | 'record' | 'summary';
 
 export function AppointmentsPage() {
-  const { appointments, loading, createAppointment, refetch } = useAppointments();
+  const { appointments, loading, createAppointment, updateAppointment, deleteAppointment, refetch } = useAppointments();
   const [view, setView] = useState<AppointmentView>('list');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [newTitle, setNewTitle] = useState('');
@@ -274,7 +275,11 @@ export function AppointmentsPage() {
                           📅 {getTimeUntil(apt.appointment_date)}
                         </span>
                       </div>
-                      <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                      <AppointmentActions
+                        appointment={apt}
+                        onUpdate={updateAppointment}
+                        onDelete={deleteAppointment}
+                      />
                     </CardContent>
                   </Card>
                 </button>
@@ -337,7 +342,11 @@ export function AppointmentsPage() {
                             {isCompleted ? '✅ Analyzed' : isAnalyzing ? '⏳ Analyzing...' : '🎙️ In Progress'}
                           </span>
                         </div>
-                        <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                        <AppointmentActions
+                          appointment={apt}
+                          onUpdate={updateAppointment}
+                          onDelete={deleteAppointment}
+                        />
                       </CardContent>
                     </Card>
                   </button>
