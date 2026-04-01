@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Plus, Stethoscope, Calendar, ChevronRight, Loader2, Mic, Clock, Bell } from 'lucide-react';
+import { Stethoscope, Calendar, ChevronRight, Loader2, Mic, Clock, Bell } from 'lucide-react';
 import { useAppointments } from '@/hooks/useAppointments';
 import { AppointmentRecorder } from '@/components/AppointmentRecorder';
 import { AppointmentSummary } from '@/components/AppointmentSummary';
