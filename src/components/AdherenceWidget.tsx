@@ -19,6 +19,7 @@ interface AdherenceWidgetProps {
 
 export function AdherenceWidget({ stats, size = 'full' }: AdherenceWidgetProps) {
   const { t } = useTranslation();
+  const { isAvailable: healthAvailable, isAuthorized: healthAuthorized } = useAppleHealth();
   const isNewRecord = stats.currentStreak >= stats.longestStreak && stats.currentStreak > 0;
   const todayProgress = stats.todayTotal > 0 ? Math.round((stats.todayTaken / stats.todayTotal) * 100) : 0;
 
