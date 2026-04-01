@@ -63,9 +63,15 @@ export function AppointmentRecorder({ appointmentId, onBack, onAnalysisComplete 
       });
       setIsConnected(true);
       toast.success('Recording started');
-    } catch (e) {
+    } catch (e: any) {
       console.error('Failed to start recording:', e);
-      toast.error('Failed to start recording. Check microphone permissions.');
+      if (e?.name === 'NotAllowedError' || e?.message?.includes('denied') || e?.message?.includes('Permission')) {
+        toast.error('Microphone access was not granted. Please allow microphone access in your device Settings to record appointments.');
+      } else if (e?.name === 'NotFoundError' || e?.message?.includes('not found')) {
+        toast.error('No microphone found on this device.');
+      } else {
+        toast.error('Could not start recording right now. Please try again.');
+      }
     }
     setIsConnecting(false);
   }, [scribe]);

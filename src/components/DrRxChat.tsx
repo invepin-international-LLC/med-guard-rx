@@ -307,8 +307,14 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
       }
     };
 
-    recognition.start();
-    setIsListening(true);
+    try {
+      recognition.start();
+      setIsListening(true);
+    } catch (e) {
+      console.error('Failed to start speech recognition:', e);
+      toast.error('Voice input is not available on this device. Please type your question instead.');
+      setIsListening(false);
+    }
   };
 
   return (

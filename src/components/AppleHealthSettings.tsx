@@ -39,7 +39,7 @@ export function AppleHealthSettings() {
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-lg">
               <Heart className="h-5 w-5 text-red-500" />
-              Apple Health
+              Apple Health Integration
             </div>
             {healthAuthorized && (
               <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/50">
