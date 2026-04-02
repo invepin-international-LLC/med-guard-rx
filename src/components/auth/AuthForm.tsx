@@ -23,6 +23,7 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [appleLoading, setAppleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -30,6 +31,32 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
     name: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const handleAppleSignIn = async () => {
+    setAppleLoading(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth("apple", {
+        redirect_uri: window.location.origin,
+      });
+
+      if (result.error) {
+        toast.error('Apple Sign In failed. Please try again.');
+        return;
+      }
+
+      if (result.redirected) {
+        return; // Browser redirecting to Apple
+      }
+
+      // Session set — user is authenticated
+      toast.success('Welcome!');
+      onSuccess();
+    } catch {
+      toast.error('Apple Sign In failed. Please try again.');
+    } finally {
+      setAppleLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
