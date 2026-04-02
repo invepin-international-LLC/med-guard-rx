@@ -198,7 +198,8 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         setError('Camera permission denied.');
         return;
       }
-      setError('Could not start camera. Please try again or enter the code manually.');
+      toast.error('Could not start camera. Switching to search.');
+      setMode('name');
     }
   }, [processBarcode]);
 
