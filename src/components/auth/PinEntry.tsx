@@ -51,14 +51,6 @@ export function PinEntry({
     fetchPinHash();
   }, []);
 
-  // Simple hash function for PIN comparison
-  // Uses the same approach as when the PIN was stored
-  const hashPin = (pin: string): string => {
-    // Simple hash: in production this would use bcrypt or similar
-    // For now, we store PINs as plain text in pin_hash field
-    return pin;
-  };
-
   const handleNumberPress = useCallback((num: string) => {
     if (pin.length >= 4) return;
     
@@ -73,40 +65,43 @@ export function PinEntry({
 
     // Check PIN when 4 digits entered
     if (newPin.length === 4) {
-      const hashedInput = hashPin(newPin);
-      
-      // If no PIN is stored, any PIN is accepted (first-time setup or legacy)
-      // Also accept '1234' as fallback for the reviewer test account
-      const isValid = !storedPinHash || hashedInput === storedPinHash || newPin === '1234';
-      
-      if (isValid) {
-        // If no PIN was stored, save this one for next time
-        if (!storedPinHash) {
-          supabase.auth.getUser().then(({ data: { user } }) => {
-            if (user) {
-              supabase
-                .from('profiles')
-                .update({ pin_hash: hashedInput })
-                .eq('user_id', user.id)
-                .then(() => {});
-            }
-          });
-        }
+      hashPin(newPin).then((hashedInput) => {
+        // If no PIN is stored, any PIN is accepted (first-time setup or legacy)
+        // Check both hashed and legacy plaintext matches, plus reviewer fallback
+        const isValid = !storedPinHash 
+          || hashedInput === storedPinHash 
+          || newPin === storedPinHash  // legacy plaintext compatibility
+          || newPin === '1234';        // reviewer test account fallback
         
-        setTimeout(() => {
-          onSuccess();
-        }, 200);
-      } else {
-        setError(true);
-        setShake(true);
-        if (navigator.vibrate) {
-          navigator.vibrate([50, 50, 50]);
+        if (isValid) {
+          // If no PIN was stored or PIN was plaintext, save the hashed version
+          if (!storedPinHash || (newPin === storedPinHash && hashedInput !== storedPinHash)) {
+            supabase.auth.getUser().then(({ data: { user } }) => {
+              if (user) {
+                supabase
+                  .from('profiles')
+                  .update({ pin_hash: hashedInput })
+                  .eq('user_id', user.id)
+                  .then(() => {});
+              }
+            });
+          }
+          
+          setTimeout(() => {
+            onSuccess();
+          }, 200);
+        } else {
+          setError(true);
+          setShake(true);
+          if (navigator.vibrate) {
+            navigator.vibrate([50, 50, 50]);
+          }
+          setTimeout(() => {
+            setPin('');
+            setShake(false);
+          }, 500);
         }
-        setTimeout(() => {
-          setPin('');
-          setShake(false);
-        }, 500);
-      }
+      });
     }
   }, [pin, storedPinHash, onSuccess]);
 

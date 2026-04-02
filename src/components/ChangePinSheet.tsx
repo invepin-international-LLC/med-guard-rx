@@ -119,9 +119,10 @@ export function ChangePinSheet({ open, onClose }: ChangePinSheetProps) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
+      const hashed = await hashPin(pin);
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ pin_hash: pin })
+        .update({ pin_hash: hashed })
         .eq('user_id', user.id);
 
       if (updateError) throw updateError;
