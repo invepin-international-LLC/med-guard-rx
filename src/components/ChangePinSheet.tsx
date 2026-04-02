@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Lock, Delete, CheckCircle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { hashPin } from '@/lib/pin-hash';
 
 interface ChangePinSheetProps {
   open: boolean;
