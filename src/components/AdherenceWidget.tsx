@@ -47,17 +47,20 @@ export function AdherenceWidget({ stats, size = 'full' }: AdherenceWidgetProps) 
 
   return (
     <div className="bg-card rounded-3xl p-6 shadow-elder-lg border-2 border-border">
+      {/* HealthKit banner - clearly identifies HealthKit usage per Apple Guideline 2.5.1 */}
+      {healthAvailable && healthAuthorized && (
+        <div className="flex items-center gap-3 bg-destructive/10 border border-destructive/20 rounded-2xl px-4 py-3 mb-4">
+          <Heart className="w-6 h-6 text-destructive shrink-0" />
+          <div>
+            <p className="text-sm font-semibold text-foreground">Synced with Apple Health</p>
+            <p className="text-xs text-muted-foreground">Medication adherence data is shared with HealthKit</p>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-elder-xl text-foreground">{t('adherence.yourProgress')}</h2>
-        <div className="flex items-center gap-2">
-          {healthAvailable && healthAuthorized && (
-            <div className="flex items-center gap-1 bg-red-500/10 text-red-600 dark:text-red-400 px-2 py-1 rounded-full text-xs font-medium">
-              <Heart className="w-3 h-3" />
-              HealthKit
-            </div>
-          )}
-          <div className="text-4xl">💪</div>
-        </div>
+        <div className="text-4xl">💪</div>
       </div>
 
       {/* Today's Progress */}

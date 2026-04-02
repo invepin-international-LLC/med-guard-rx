@@ -117,7 +117,10 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
     setIsSpeaking(false);
   }, []);
 
-  const speechSupported = typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+  // On native iOS WKWebView, SpeechRecognition may exist but crash when starting.
+  // Only show mic button if not native app OR if API is truly available.
+  const isNative = typeof window !== 'undefined' && !!(window as any).Capacitor?.isNativePlatform?.();
+  const speechSupported = !isNative && typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
   useEffect(() => {
     const fetchMeds = async () => {
