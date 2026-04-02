@@ -75,7 +75,7 @@ export function AppointmentSummary({ appointmentId, onBack }: AppointmentSummary
         <div className="flex-1 min-w-0">
           <h1 className="text-elder-xl font-bold text-foreground truncate">{appointment.title}</h1>
           {appointment.doctor_name && (
-            <p className="text-sm text-muted-foreground">Dr. {appointment.doctor_name}</p>
+            <p className="text-sm text-muted-foreground">Dr. {appointment.doctor_name.replace(/^Dr\.?\s*/i, '')}</p>
           )}
         </div>
         {appointment.status === 'completed' && (

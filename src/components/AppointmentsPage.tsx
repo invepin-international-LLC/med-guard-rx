@@ -261,7 +261,7 @@ export function AppointmentsPage() {
                       <div className="flex-1 min-w-0">
                         <p className="font-bold text-foreground truncate">{apt.title}</p>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          {apt.doctor_name && <span>Dr. {apt.doctor_name}</span>}
+{apt.doctor_name && <span>Dr. {apt.doctor_name.replace(/^Dr\.?\s*/i, '')}</span>}
                           {apt.doctor_name && <span>•</span>}
                           <span>{getDateLabel(apt.appointment_date)}</span>
                           {apt.appointment_date && (
@@ -329,7 +329,7 @@ export function AppointmentsPage() {
                         <div className="flex-1 min-w-0">
                           <p className="font-bold text-foreground truncate">{apt.title}</p>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            {apt.doctor_name && <span>Dr. {apt.doctor_name}</span>}
+                            {apt.doctor_name && <span>Dr. {apt.doctor_name.replace(/^Dr\.?\s*/i, '')}</span>}
                             <span>•</span>
                             <span>{new Date(apt.appointment_date).toLocaleDateString()}</span>
                           </div>

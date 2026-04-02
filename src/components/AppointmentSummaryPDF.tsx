@@ -68,7 +68,7 @@ export function AppointmentSummaryPDF({ appointment }: AppointmentSummaryPDFProp
       doc.setFont('helvetica', 'normal');
       doc.text(appointment.title, 14, 26);
       if (appointment.doctor_name) {
-        doc.text(`Dr. ${appointment.doctor_name}`, 14, 33);
+        doc.text(`Dr. ${appointment.doctor_name.replace(/^Dr\.?\s*/i, '')}`, 14, 33);
       }
 
       // Date on right
