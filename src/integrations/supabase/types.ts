@@ -1123,6 +1123,18 @@ export type Database = {
         Returns: Json
       }
       is_caregiver_for: { Args: { patient_user_id: string }; Returns: boolean }
+      is_caregiver_for_adherence: {
+        Args: { patient_user_id: string }
+        Returns: boolean
+      }
+      is_caregiver_for_medications: {
+        Args: { patient_user_id: string }
+        Returns: boolean
+      }
+      is_caregiver_for_schedule: {
+        Args: { patient_user_id: string }
+        Returns: boolean
+      }
       purchase_shop_item: { Args: { _item_id: string }; Returns: Json }
       record_spin: {
         Args: {
