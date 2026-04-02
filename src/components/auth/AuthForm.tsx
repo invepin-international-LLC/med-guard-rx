@@ -220,6 +220,17 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
           {isLogin ? 'Create Account' : 'Sign In'}
         </Button>
       </div>
+
+      {/* Legal links - required by App Store Guideline 5.1.1 */}
+      <div className="mt-6 flex items-center justify-center gap-3 text-sm text-muted-foreground">
+        <button onClick={() => navigate('/privacy')} className="underline hover:text-foreground transition-colors">
+          Privacy Policy
+        </button>
+        <span>·</span>
+        <button onClick={() => navigate('/terms')} className="underline hover:text-foreground transition-colors">
+          Terms of Service
+        </button>
+      </div>
     </div>
   );
 }
