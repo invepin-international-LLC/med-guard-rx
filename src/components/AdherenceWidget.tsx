@@ -49,8 +49,8 @@ export function AdherenceWidget({ stats, size = 'full' }: AdherenceWidgetProps) 
     <div className="bg-card rounded-3xl p-6 shadow-elder-lg border-2 border-border">
       {/* HealthKit banner - clearly identifies HealthKit usage per Apple Guideline 2.5.1 */}
       {healthAvailable && healthAuthorized && (
-        <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/20 rounded-2xl px-4 py-3 mb-4">
-          <Heart className="w-6 h-6 text-red-500 shrink-0" />
+        <div className="flex items-center gap-3 bg-destructive/10 border border-destructive/20 rounded-2xl px-4 py-3 mb-4">
+          <Heart className="w-6 h-6 text-destructive shrink-0" />
           <div>
             <p className="text-sm font-semibold text-foreground">Synced with Apple Health</p>
             <p className="text-xs text-muted-foreground">Medication adherence data is shared with HealthKit</p>
