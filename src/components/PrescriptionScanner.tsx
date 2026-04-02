@@ -133,10 +133,20 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     setError(null);
     setScannedResult(null);
 
-    const nativeScanner = await getNativeScanner();
+    let nativeScanner;
+    try {
+      nativeScanner = await getNativeScanner();
+    } catch (e) {
+      console.error('Failed to load native scanner module:', e);
+      toast.error('Camera scanning is not available. Please use "Search by Name" instead.');
+      setMode('name');
+      return;
+    }
+
     if (!nativeScanner) {
-      // Do NOT fallback to web scanner on native iOS - getUserMedia won't work in WKWebView
-      setError('Barcode scanner is not available. Please enter the NDC code manually.');
+      // Gracefully redirect to name search instead of showing an error
+      toast.info('Camera scanner is not available on this device. Switching to search.');
+      setMode('name');
       return;
     }
 
