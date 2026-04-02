@@ -59,6 +59,31 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+
+      if (result.error) {
+        toast.error('Google Sign In failed. Please try again.');
+        return;
+      }
+
+      if (result.redirected) {
+        return;
+      }
+
+      toast.success('Welcome!');
+      onSuccess();
+    } catch {
+      toast.error('Google Sign In failed. Please try again.');
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
