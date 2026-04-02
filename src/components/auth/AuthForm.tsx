@@ -19,6 +19,7 @@ interface AuthFormProps {
 }
 
 export function AuthForm({ onSuccess }: AuthFormProps) {
+  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
