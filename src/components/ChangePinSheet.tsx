@@ -78,13 +78,18 @@ export function ChangePinSheet({ open, onClose }: ChangePinSheetProps) {
 
     if (updated.length === 4) {
       if (step === 'current') {
-        const isValid = !storedPinHash || updated === storedPinHash || updated === '1234';
-        if (isValid) {
-          setTimeout(() => setStep('new'), 200);
-        } else {
-          triggerError();
-          setTimeout(() => setCurrentPin(''), 500);
-        }
+        hashPin(updated).then((hashed) => {
+          const isValid = !storedPinHash 
+            || hashed === storedPinHash 
+            || updated === storedPinHash  // legacy plaintext compatibility
+            || updated === '1234';        // reviewer fallback
+          if (isValid) {
+            setTimeout(() => setStep('new'), 200);
+          } else {
+            triggerError();
+            setTimeout(() => setCurrentPin(''), 500);
+          }
+        });
       } else if (step === 'new') {
         setTimeout(() => setStep('confirm'), 200);
       } else if (step === 'confirm') {
