@@ -197,7 +197,8 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     // getUserMedia does NOT work reliably in WKWebView on iOS
     // Only use web scanner in actual browser contexts
     if (isNativeApp()) {
-      setError('Camera scanner requires the native barcode plugin. Please reinstall the app or enter the NDC code manually.');
+      toast.error('Camera scanning is not available. Please use "Search by Name" instead.');
+      setMode('name');
       return;
     }
 
