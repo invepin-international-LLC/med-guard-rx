@@ -33,11 +33,15 @@ add_plist_key "NSCameraUsageDescription" "Med Guard Rx uses your camera to scan 
 # Siri (required for Siri Shortcuts integration)
 add_plist_key "NSSiriUsageDescription" "Use Siri to log medications, check your schedule, and manage doses hands-free."
 
+# Microphone (required for appointment recorder transcription)
+add_plist_key "NSMicrophoneUsageDescription" "Med Guard Rx uses your microphone to transcribe doctor appointment conversations so you can review them later."
+
 echo ""
 echo "✅ Info.plist patched successfully with all required privacy strings!"
 echo "   - NSHealthShareUsageDescription"
 echo "   - NSHealthUpdateUsageDescription"
 echo "   - NSCameraUsageDescription"
 echo "   - NSSiriUsageDescription"
+echo "   - NSMicrophoneUsageDescription"
 echo ""
 echo "   You can now archive and distribute from Xcode."

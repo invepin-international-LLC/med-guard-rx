@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,6 +19,7 @@ interface AuthFormProps {
 }
 
 export function AuthForm({ onSuccess }: AuthFormProps) {
+  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -217,6 +219,17 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
         >
           {isLogin ? 'Create Account' : 'Sign In'}
         </Button>
+      </div>
+
+      {/* Legal links - required by App Store Guideline 5.1.1 */}
+      <div className="mt-6 flex items-center justify-center gap-3 text-sm text-muted-foreground">
+        <button onClick={() => navigate('/privacy')} className="underline hover:text-foreground transition-colors">
+          Privacy Policy
+        </button>
+        <span>·</span>
+        <button onClick={() => navigate('/terms')} className="underline hover:text-foreground transition-colors">
+          Terms of Service
+        </button>
       </div>
     </div>
   );

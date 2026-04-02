@@ -41,5 +41,6 @@ const config: CapacitorConfig = {
 // - NSHealthUpdateUsageDescription
 // - NSCameraUsageDescription
 // - NSSiriUsageDescription
+// - NSMicrophoneUsageDescription
 
 export default config;
