@@ -136,13 +136,12 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       nativeScanner = await getNativeScanner();
     } catch (e) {
       console.error('Failed to load native scanner module:', e);
-      setMode('name');
+      setError('Barcode scanner not available. Try entering the code manually.');
       return;
     }
 
     if (!nativeScanner) {
-      // Silently redirect to name search
-      setMode('name');
+      setError('Barcode scanner not available. Try entering the code manually.');
       return;
     }
 
