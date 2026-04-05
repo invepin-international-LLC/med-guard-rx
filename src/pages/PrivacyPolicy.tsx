@@ -67,19 +67,7 @@ export default function PrivacyPolicy() {
           <li><strong>Legal Requirements:</strong> When required by law, regulation, or legal process, or to protect safety.</li>
         </ul>
 
-        <h2>5. Apple HealthKit</h2>
-        <p>
-          Med Guard Rx integrates with Apple HealthKit to provide a comprehensive view of your health. In compliance with Apple's HealthKit guidelines:
-        </p>
-        <ul>
-          <li>HealthKit data is <strong>never</strong> used for advertising, marketing, or data mining.</li>
-          <li>HealthKit data is <strong>never</strong> sold to third parties, including advertising platforms, data brokers, or information resellers.</li>
-          <li>HealthKit data is <strong>never</strong> shared with third parties for purposes unrelated to health improvement or health research.</li>
-          <li>HealthKit data is <strong>never</strong> used to build user profiles for non-health-related purposes.</li>
-          <li>You may read and write: medication adherence records, health metrics (steps, heart rate).</li>
-          <li>You can disconnect Apple Health at any time from App Settings.</li>
-          <li>HealthKit data is stored only on your device and in our encrypted backend database — it is never cached in unencrypted form.</li>
-        </ul>
+        <h2>5. Push Notifications</h2>
 
         <h2>6. Push Notifications</h2>
         <p>
