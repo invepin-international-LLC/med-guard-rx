@@ -9,7 +9,7 @@ import { EmergencyCardElder } from '@/components/EmergencyCardElder';
 import { EmergencyContactsManager } from '@/components/EmergencyContactsManager';
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { SoundSettings } from '@/components/SoundSettings';
-import { AppleHealthSettings } from '@/components/AppleHealthSettings';
+
 import { DisplaySettings } from '@/components/DisplaySettings';
 import { QuickActionsElder } from '@/components/QuickActionsElder';
 import { InteractiveDoseClock } from '@/components/InteractiveDoseClock';
@@ -495,8 +495,6 @@ export function TodayDashboard() {
           {/* Sound Settings */}
           <SoundSettings />
 
-          {/* Apple Health & Siri */}
-          <AppleHealthSettings />
 
           {/* Family & Caregivers */}
           <CaregiverInviteManager />
@@ -599,7 +597,7 @@ export function TodayDashboard() {
               <DisplaySettings />
               <NotificationSettings />
               <SoundSettings />
-              <AppleHealthSettings />
+              
               <div className="bg-card rounded-2xl p-4 border-2 border-border">
                 <h3 className="text-lg font-semibold text-foreground mb-3">{t('profile.languageIdioma')}</h3>
                 <LanguageSelector />

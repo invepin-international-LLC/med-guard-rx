@@ -1,148 +1,23 @@
-import { Heart, RefreshCw, Unlink, Activity, Smartphone, Settings, RotateCcw } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { useAppleHealth } from '@/hooks/useAppleHealth';
 import { useSiriShortcuts } from '@/hooks/useSiriShortcuts';
-import { formatDistanceToNow } from 'date-fns';
 
 export function AppleHealthSettings() {
-  const {
-    isAvailable: healthAvailable,
-    isAuthorized: healthAuthorized,
-    isDenied: healthDenied,
-    isSyncing,
-    lastSyncDate,
-    requestAuthorization,
-    syncAdherenceData,
-    disconnect,
-  } = useAppleHealth();
-
   const {
     isAvailable: siriAvailable,
     openShortcutsSettings,
     availableShortcuts,
   } = useSiriShortcuts();
 
-  // Hide entirely when neither feature is available and functional
-  // This prevents showing "not available" messages that look like incomplete features (App Store Guideline 2.2)
-  if (!healthAvailable && !siriAvailable) {
+  // Hide entirely when Siri is not available
+  if (!siriAvailable) {
     return null;
   }
 
   return (
     <div className="space-y-4">
-      {/* Apple Health Section - only render if available */}
-      {healthAvailable && (
-      <Card className={healthAuthorized ? 'border-green-500/50 bg-green-500/5' : ''}>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-lg">
-              <Heart className="h-5 w-5 text-red-500" />
-              Apple Health Integration
-            </div>
-            {healthAuthorized && (
-              <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/50">
-                Connected
-              </Badge>
-            )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {healthAvailable ? (
-            <>
-              <p className="text-sm text-muted-foreground">
-                {healthAuthorized 
-                  ? 'Your medication adherence data syncs with Apple Health via HealthKit for a complete health picture. This app reads Steps and Heart Rate data, and writes medication adherence records.'
-                  : 'Connect to Apple Health via HealthKit to sync your medication adherence data and read health metrics like steps and heart rate.'}
-              </p>
-
-              {healthAuthorized ? (
-                <div className="space-y-3">
-                  {/* Sync Status */}
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Last synced:</span>
-                    <span>
-                      {lastSyncDate 
-                        ? formatDistanceToNow(lastSyncDate, { addSuffix: true })
-                        : 'Never'}
-                    </span>
-                  </div>
-
-                  {/* Data Types */}
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="secondary" className="text-xs">
-                      <Activity className="h-3 w-3 mr-1" />
-                      Adherence
-                    </Badge>
-                    <Badge variant="secondary" className="text-xs">
-                      <Heart className="h-3 w-3 mr-1" />
-                      Heart Rate
-                    </Badge>
-                    <Badge variant="secondary" className="text-xs">
-                      Steps
-                    </Badge>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={syncAdherenceData}
-                      disabled={isSyncing}
-                      className="flex-1"
-                    >
-                      <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
-                      {isSyncing ? 'Syncing...' : 'Sync Now'}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={disconnect}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Unlink className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ) : healthDenied ? (
-                <div className="space-y-4">
-                  <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-4 space-y-3">
-                    <p className="text-sm font-semibold text-destructive">Access Not Granted</p>
-                    <p className="text-sm text-muted-foreground">
-                      Med Guard Rx was not granted permission to access your health data. You can try again below — when prompted, please allow access.
-                    </p>
-                  </div>
-                  <Button
-                    onClick={() => {
-                      // Reset denied state so the native prompt can appear again
-                      requestAuthorization();
-                    }}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    <RotateCcw className="h-4 w-4 mr-2" />
-                    Try Again
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  onClick={requestAuthorization}
-                  className="w-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600"
-                >
-                  <Heart className="h-4 w-4 mr-2" />
-                  Connect Apple Health
-                </Button>
-              )}
-            </>
-          ) : null}
-        </CardContent>
-      </Card>
-      )}
-
-      {/* Siri Shortcuts Section - only render if available */}
-      {siriAvailable && (
+      {/* Siri Shortcuts Section */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
@@ -182,7 +57,6 @@ export function AppleHealthSettings() {
           </Button>
         </CardContent>
       </Card>
-      )}
     </div>
   );
 }

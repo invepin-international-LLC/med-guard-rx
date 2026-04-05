@@ -34,7 +34,7 @@ export default function TermsOfService() {
           <li>Adherence history, streak tracking, and PDF report generation.</li>
           <li>A gamification rewards system with coins, slot machine spins, badges, and weekly challenges.</li>
           <li>Caregiver invite and monitoring features.</li>
-          <li>Apple HealthKit integration for reading/writing health metrics.</li>
+          
           <li>Siri Shortcuts for hands-free medication management.</li>
           <li>HIPAA health records vault with audit logging.</li>
           <li>Emergency contact management.</li>
@@ -76,7 +76,7 @@ export default function TermsOfService() {
         <ul>
           <li><strong>Camera:</strong> Required for prescription barcode scanning and AI pill identification. Images are processed in real-time and are not permanently stored on our servers.</li>
           <li><strong>Notifications:</strong> Required for dose reminders, missed-dose alerts, refill warnings, and caregiver notifications.</li>
-          <li><strong>Apple HealthKit:</strong> Optional integration to read health metrics (steps, heart rate) and write medication adherence data. HealthKit data is never used for advertising or sold to third parties.</li>
+          
           <li><strong>Siri &amp; Shortcuts:</strong> Optional voice control for logging doses hands-free. Voice processing occurs on-device via Apple's Siri framework — we do not receive or store audio recordings.</li>
         </ul>
 
@@ -135,7 +135,7 @@ export default function TermsOfService() {
 
         <h2>12. Privacy</h2>
         <p>
-          Your use of the App is also governed by our <strong>Privacy Policy</strong>, which describes how we collect, use, store, and protect your information, including health data, HealthKit data, camera data, and push notification tokens. By using the App, you consent to the practices described in the Privacy Policy.
+          Your use of the App is also governed by our <strong>Privacy Policy</strong>, which describes how we collect, use, store, and protect your information, including health data, camera data, and push notification tokens. By using the App, you consent to the practices described in the Privacy Policy.
         </p>
 
         <h2>13. Limitation of Liability</h2>
@@ -148,7 +148,7 @@ export default function TermsOfService() {
           <li>Data loss, unauthorized access, or security breaches.</li>
           <li>Interruption or unavailability of push notifications or other services.</li>
           <li>Actions taken or not taken based on information provided by the App.</li>
-          <li>Integration issues with Apple HealthKit, Siri, or other third-party services.</li>
+          <li>Integration issues with Siri or other third-party services.</li>
         </ul>
         <p>
           <strong>The App is provided "AS IS" and "AS AVAILABLE" without warranties of any kind, express or implied.</strong>
@@ -168,7 +168,7 @@ export default function TermsOfService() {
 
         <h2>16. Third-Party Services</h2>
         <p>
-          The App integrates with third-party services including Apple HealthKit, Apple Siri, Apple Push Notification service (APNs), Firebase Cloud Messaging, and the U.S. FDA OpenFDA database. These services are governed by their own terms and privacy policies. We are not responsible for the availability, accuracy, or practices of third-party services.
+          The App integrates with third-party services including Apple Siri, Apple Push Notification service (APNs), Firebase Cloud Messaging, and the U.S. FDA OpenFDA database. These services are governed by their own terms and privacy policies. We are not responsible for the availability, accuracy, or practices of third-party services.
         </p>
 
         <h2>17. Updates &amp; Modifications</h2>

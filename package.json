@@ -20,7 +20,6 @@
     "@capacitor/ios": "^8.0.1",
     "@capacitor/push-notifications": "^8.0.0",
     "@capgo/capacitor-flash": "^8.0.20",
-    "@capgo/capacitor-health": "^8.2.11",
     "@elevenlabs/react": "^1.0.0",
     "@hookform/resolvers": "^3.10.0",
     "@lovable.dev/cloud-auth-js": "^1.0.1",

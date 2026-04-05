@@ -25,7 +25,7 @@ export default function PrivacyPolicy() {
           <li><strong>Account Information:</strong> Email address, name, and authentication credentials (encrypted PIN hash).</li>
           <li><strong>Health Data:</strong> Medications, dosage schedules, adherence history, symptom logs, allergies, medical conditions, HIPAA health records, and emergency contacts.</li>
           <li><strong>Device Information:</strong> Device type, operating system version, and push notification tokens.</li>
-          <li><strong>Apple HealthKit Data:</strong> When you grant permission, we read health metrics (steps, heart rate) and write medication adherence data to Apple HealthKit. See Section 5 for full details.</li>
+          
           <li><strong>Camera Data:</strong> When you grant camera permission, images are processed locally or sent to the FDA database to identify medications via barcode scanning and pill identification. Photos are not stored permanently on our servers.</li>
           <li><strong>Siri &amp; Voice Data:</strong> When you enable Siri Shortcuts, voice commands are processed by Apple's Siri framework on-device. We receive only the structured intent (e.g., "log morning meds") — we do not receive, store, or process raw audio recordings.</li>
           <li><strong>Push Notification Tokens:</strong> When you enable notifications, we store a device token to deliver medication reminders, missed-dose alerts, and refill warnings. See Section 6 for full details.</li>
@@ -67,21 +67,7 @@ export default function PrivacyPolicy() {
           <li><strong>Legal Requirements:</strong> When required by law, regulation, or legal process, or to protect safety.</li>
         </ul>
 
-        <h2>5. Apple HealthKit</h2>
-        <p>
-          Med Guard Rx integrates with Apple HealthKit to provide a comprehensive view of your health. In compliance with Apple's HealthKit guidelines:
-        </p>
-        <ul>
-          <li>HealthKit data is <strong>never</strong> used for advertising, marketing, or data mining.</li>
-          <li>HealthKit data is <strong>never</strong> sold to third parties, including advertising platforms, data brokers, or information resellers.</li>
-          <li>HealthKit data is <strong>never</strong> shared with third parties for purposes unrelated to health improvement or health research.</li>
-          <li>HealthKit data is <strong>never</strong> used to build user profiles for non-health-related purposes.</li>
-          <li>You may read and write: medication adherence records, health metrics (steps, heart rate).</li>
-          <li>You can disconnect Apple Health at any time from App Settings.</li>
-          <li>HealthKit data is stored only on your device and in our encrypted backend database — it is never cached in unencrypted form.</li>
-        </ul>
-
-        <h2>6. Push Notifications</h2>
+        <h2>5. Push Notifications</h2>
         <p>
           When you enable push notifications, Med Guard Rx uses Apple Push Notification service (APNs) and/or Firebase Cloud Messaging to deliver:
         </p>
@@ -95,7 +81,7 @@ export default function PrivacyPolicy() {
           You can disable notifications at any time from the app's Notification Settings or from your device's system Settings. Disabling notifications will not affect your medication data.
         </p>
 
-        <h2>7. Camera &amp; Barcode Scanning</h2>
+        <h2>6. Camera &amp; Barcode Scanning</h2>
         <p>
           Med Guard Rx requests camera access to:
         </p>
@@ -107,7 +93,7 @@ export default function PrivacyPolicy() {
           Camera images used for barcode scanning are processed in real-time and are <strong>not</strong> stored on our servers. Pill identification images may be sent to AI services for analysis and are not retained after processing. You can deny or revoke camera permission at any time from your device's system Settings.
         </p>
 
-        <h2>8. Siri &amp; Voice Shortcuts</h2>
+        <h2>7. Siri &amp; Voice Shortcuts</h2>
         <p>
           Med Guard Rx supports Siri Shortcuts for hands-free medication management. When you enable Siri integration:
         </p>
@@ -118,35 +104,35 @@ export default function PrivacyPolicy() {
           <li>You can remove any Siri Shortcut at any time from the Shortcuts app or Siri Settings.</li>
         </ul>
 
-        <h2>9. Your Rights</h2>
+        <h2>8. Your Rights</h2>
         <ul>
           <li><strong>Access &amp; Export:</strong> You can view all your data within the app at any time, including adherence history, HIPAA records, and access logs.</li>
           <li><strong>Deletion:</strong> You can permanently delete your account and all associated data (across 22+ data categories) from Profile → App Settings. Deletion is irreversible.</li>
-          <li><strong>Revoke Permissions:</strong> You can disconnect Apple Health, disable push notifications, revoke camera access, remove Siri Shortcuts, or remove caregivers at any time.</li>
+          <li><strong>Revoke Permissions:</strong> You can disable push notifications, revoke camera access, remove Siri Shortcuts, or remove caregivers at any time.</li>
           <li><strong>Data Portability:</strong> Adherence reports can be generated as PDF documents from within the app.</li>
         </ul>
 
-        <h2>10. Data Retention</h2>
+        <h2>9. Data Retention</h2>
         <p>
           We retain your data as long as your account is active. When you delete your account, all associated data — including medications, dose logs, health records, caregiver relationships, rewards, symptom logs, and push tokens — is permanently purged from our systems. No backup copies are retained.
         </p>
 
-        <h2>11. Children's Privacy</h2>
+        <h2>10. Children's Privacy</h2>
         <p>
           Med Guard Rx is intended for users aged 13 and older. We do not knowingly collect personal information from children under 13. If you believe a child under 13 has provided us with personal data, please contact us and we will promptly delete it.
         </p>
 
-        <h2>12. International Data</h2>
+        <h2>11. International Data</h2>
         <p>
           Your data may be processed and stored in the United States or other countries where our service providers operate. By using the app, you consent to the transfer of your data to these locations, which may have different data protection laws than your country of residence.
         </p>
 
-        <h2>13. Changes to This Policy</h2>
+        <h2>12. Changes to This Policy</h2>
         <p>
           We may update this Privacy Policy from time to time. We will notify you of significant changes through the app or via email. Continued use of the app after changes constitutes acceptance of the updated policy.
         </p>
 
-        <h2>14. Contact Us</h2>
+        <h2>13. Contact Us</h2>
         <p>
           If you have questions about this Privacy Policy or wish to exercise your data rights, contact us at:<br />
           <strong>support@medguardrx.com</strong>
