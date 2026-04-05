@@ -737,49 +737,28 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
           </Card>
         )}
 
-        {/* Permission Denied State — gentle redirect */}
-        {hasPermission === false && mode === 'camera' && (
+        {/* Error State */}
+        {error && mode === 'camera' && (
           <Card className="w-full max-w-md p-8 text-center space-y-6 bg-card border-2 border-border shadow-elder-lg">
-            <div className="w-24 h-24 bg-primary/20 rounded-3xl flex items-center justify-center mx-auto">
-              <Camera className="w-14 h-14 text-primary" />
+            <div className="w-24 h-24 bg-destructive/20 rounded-3xl flex items-center justify-center mx-auto">
+              <Camera className="w-14 h-14 text-destructive" />
             </div>
             <div className="space-y-2">
-              <h2 className="text-elder-xl font-bold text-foreground">Camera Access Needed</h2>
-              <p className="text-muted-foreground text-lg">
-                To scan barcodes, please allow camera access in your device settings. You can also search by name or enter the code manually.
-              </p>
+              <h2 className="text-elder-xl font-bold text-foreground">Camera Issue</h2>
+              <p className="text-muted-foreground text-lg">{error}</p>
             </div>
             <div className="flex flex-col gap-3">
-              <Button variant="default" size="xl" onClick={switchToNameSearch} className="w-full gap-3">
-                <Search className="w-6 h-6" />
-                Search by Drug Name
+              <Button variant="default" size="xl" onClick={handleRetry} className="w-full gap-3">
+                <RotateCcw className="w-6 h-6" />
+                Try Again
               </Button>
               <Button variant="outline" size="xl" onClick={switchToManualMode} className="w-full gap-3">
                 <Keyboard className="w-6 h-6" />
                 Enter NDC Code
               </Button>
-            </div>
-          </Card>
-        )}
-
-        {/* General Error State — gentle redirect instead of scary error */}
-        {error && mode === 'camera' && hasPermission !== false && (
-          <Card className="w-full max-w-md p-8 text-center space-y-6 bg-card border-2 border-border shadow-elder-lg">
-            <div className="w-24 h-24 bg-primary/20 rounded-3xl flex items-center justify-center mx-auto">
-              <Search className="w-14 h-14 text-primary" />
-            </div>
-            <div>
-              <h2 className="text-elder-xl font-bold text-foreground mb-2">Try Another Way</h2>
-              <p className="text-muted-foreground text-lg">You can search by drug name or enter the NDC code from your prescription label.</p>
-            </div>
-            <div className="flex flex-col gap-3">
-              <Button variant="default" size="xl" onClick={switchToNameSearch} className="w-full gap-3">
+              <Button variant="outline" size="xl" onClick={switchToNameSearch} className="w-full gap-3">
                 <Search className="w-6 h-6" />
                 Search by Drug Name
-              </Button>
-              <Button variant="outline" size="xl" onClick={switchToManualMode} className="w-full gap-3">
-                <Keyboard className="w-6 h-6" />
-                Enter NDC Code
               </Button>
             </div>
           </Card>
