@@ -76,7 +76,7 @@ export default function TermsOfService() {
         <ul>
           <li><strong>Camera:</strong> Required for prescription barcode scanning and AI pill identification. Images are processed in real-time and are not permanently stored on our servers.</li>
           <li><strong>Notifications:</strong> Required for dose reminders, missed-dose alerts, refill warnings, and caregiver notifications.</li>
-          <li><strong>Apple HealthKit:</strong> Optional integration to read health metrics (steps, heart rate) and write medication adherence data. HealthKit data is never used for advertising or sold to third parties.</li>
+          
           <li><strong>Siri &amp; Shortcuts:</strong> Optional voice control for logging doses hands-free. Voice processing occurs on-device via Apple's Siri framework — we do not receive or store audio recordings.</li>
         </ul>
 
