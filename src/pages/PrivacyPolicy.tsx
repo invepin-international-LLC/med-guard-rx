@@ -127,7 +127,7 @@ export default function PrivacyPolicy() {
           Your data may be processed and stored in the United States or other countries where our service providers operate. By using the app, you consent to the transfer of your data to these locations, which may have different data protection laws than your country of residence.
         </p>
 
-        <h2>13. Changes to This Policy</h2>
+        <h2>12. Changes to This Policy</h2>
         <p>
           We may update this Privacy Policy from time to time. We will notify you of significant changes through the app or via email. Continued use of the app after changes constitutes acceptance of the updated policy.
         </p>
