@@ -56,8 +56,7 @@ const getNativeScanner = async () => {
 };
 
 export function PrescriptionScanner({ onMedicationScanned, onClose }: PrescriptionScannerProps) {
-  // Default to name search on native iOS where camera plugins may not be available
-  const [mode, setMode] = useState<ScannerMode>(isNativeApp() ? 'name' : 'camera');
+  const [mode, setMode] = useState<ScannerMode>('camera');
   const [isScanning, setIsScanning] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [scannedResult, setScannedResult] = useState<ScannedMedication | null>(null);
@@ -137,13 +136,12 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       nativeScanner = await getNativeScanner();
     } catch (e) {
       console.error('Failed to load native scanner module:', e);
-      setMode('name');
+      setError('Barcode scanner not available. Try entering the code manually.');
       return;
     }
 
     if (!nativeScanner) {
-      // Silently redirect to name search
-      setMode('name');
+      setError('Barcode scanner not available. Try entering the code manually.');
       return;
     }
 
@@ -194,21 +192,12 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         setHasPermission(false);
         return;
       }
-      // Silently redirect to name search
-      setMode('name');
+      setError('Scanner encountered an issue. Try entering the code manually.');
     }
   }, [processBarcode]);
 
   // Web scanner fallback using html5-qrcode (only works in browser, NOT in native WKWebView)
   const startWebScanner = useCallback(async () => {
-    // getUserMedia does NOT work reliably in WKWebView on iOS
-    // Only use web scanner in actual browser contexts
-    if (isNativeApp()) {
-      // Silently redirect — no error messages
-      setMode('name');
-      return;
-    }
-
     setError(null);
     setScannedResult(null);
     
@@ -242,9 +231,8 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     } catch (err: any) {
       console.error('Scanner error:', err);
       setIsScanning(false);
-      // Gracefully redirect to name search — no error UI
-      toast.info('Camera is not available. Use search instead.');
-      setMode('name');
+      setHasPermission(false);
+      setError('Camera access is needed to scan barcodes. Please allow camera access in your device settings, or enter the code manually.');
     }
   }, [processBarcode]);
 
@@ -749,49 +737,28 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
           </Card>
         )}
 
-        {/* Permission Denied State — gentle redirect */}
-        {hasPermission === false && mode === 'camera' && (
+        {/* Error State */}
+        {error && mode === 'camera' && (
           <Card className="w-full max-w-md p-8 text-center space-y-6 bg-card border-2 border-border shadow-elder-lg">
-            <div className="w-24 h-24 bg-primary/20 rounded-3xl flex items-center justify-center mx-auto">
-              <Camera className="w-14 h-14 text-primary" />
+            <div className="w-24 h-24 bg-destructive/20 rounded-3xl flex items-center justify-center mx-auto">
+              <Camera className="w-14 h-14 text-destructive" />
             </div>
             <div className="space-y-2">
-              <h2 className="text-elder-xl font-bold text-foreground">Camera Access Needed</h2>
-              <p className="text-muted-foreground text-lg">
-                To scan barcodes, please allow camera access in your device settings. You can also search by name or enter the code manually.
-              </p>
+              <h2 className="text-elder-xl font-bold text-foreground">Camera Issue</h2>
+              <p className="text-muted-foreground text-lg">{error}</p>
             </div>
             <div className="flex flex-col gap-3">
-              <Button variant="default" size="xl" onClick={switchToNameSearch} className="w-full gap-3">
-                <Search className="w-6 h-6" />
-                Search by Drug Name
+              <Button variant="default" size="xl" onClick={handleRetry} className="w-full gap-3">
+                <RotateCcw className="w-6 h-6" />
+                Try Again
               </Button>
               <Button variant="outline" size="xl" onClick={switchToManualMode} className="w-full gap-3">
                 <Keyboard className="w-6 h-6" />
                 Enter NDC Code
               </Button>
-            </div>
-          </Card>
-        )}
-
-        {/* General Error State — gentle redirect instead of scary error */}
-        {error && mode === 'camera' && hasPermission !== false && (
-          <Card className="w-full max-w-md p-8 text-center space-y-6 bg-card border-2 border-border shadow-elder-lg">
-            <div className="w-24 h-24 bg-primary/20 rounded-3xl flex items-center justify-center mx-auto">
-              <Search className="w-14 h-14 text-primary" />
-            </div>
-            <div>
-              <h2 className="text-elder-xl font-bold text-foreground mb-2">Try Another Way</h2>
-              <p className="text-muted-foreground text-lg">You can search by drug name or enter the NDC code from your prescription label.</p>
-            </div>
-            <div className="flex flex-col gap-3">
-              <Button variant="default" size="xl" onClick={switchToNameSearch} className="w-full gap-3">
+              <Button variant="outline" size="xl" onClick={switchToNameSearch} className="w-full gap-3">
                 <Search className="w-6 h-6" />
                 Search by Drug Name
-              </Button>
-              <Button variant="outline" size="xl" onClick={switchToManualMode} className="w-full gap-3">
-                <Keyboard className="w-6 h-6" />
-                Enter NDC Code
               </Button>
             </div>
           </Card>
