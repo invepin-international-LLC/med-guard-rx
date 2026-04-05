@@ -132,7 +132,7 @@ export default function PrivacyPolicy() {
           We may update this Privacy Policy from time to time. We will notify you of significant changes through the app or via email. Continued use of the app after changes constitutes acceptance of the updated policy.
         </p>
 
-        <h2>14. Contact Us</h2>
+        <h2>13. Contact Us</h2>
         <p>
           If you have questions about this Privacy Policy or wish to exercise your data rights, contact us at:<br />
           <strong>support@medguardrx.com</strong>
