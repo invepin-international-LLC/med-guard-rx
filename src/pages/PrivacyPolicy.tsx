@@ -112,7 +112,7 @@ export default function PrivacyPolicy() {
           <li><strong>Data Portability:</strong> Adherence reports can be generated as PDF documents from within the app.</li>
         </ul>
 
-        <h2>10. Data Retention</h2>
+        <h2>9. Data Retention</h2>
         <p>
           We retain your data as long as your account is active. When you delete your account, all associated data — including medications, dose logs, health records, caregiver relationships, rewards, symptom logs, and push tokens — is permanently purged from our systems. No backup copies are retained.
         </p>
