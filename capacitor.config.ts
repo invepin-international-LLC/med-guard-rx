@@ -32,8 +32,6 @@ const config: CapacitorConfig = {
 };
 
 // iOS Entitlements needed for native build:
-// - com.apple.developer.healthkit (HealthKit)
-// - com.apple.developer.healthkit.background-delivery (Background health updates)
 // - com.apple.developer.siri (Siri Shortcuts)
 // 
 // Run scripts/patch-ios-plist.sh after `npx cap sync ios` to inject:
