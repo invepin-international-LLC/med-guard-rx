@@ -25,7 +25,7 @@ export default function PrivacyPolicy() {
           <li><strong>Account Information:</strong> Email address, name, and authentication credentials (encrypted PIN hash).</li>
           <li><strong>Health Data:</strong> Medications, dosage schedules, adherence history, symptom logs, allergies, medical conditions, HIPAA health records, and emergency contacts.</li>
           <li><strong>Device Information:</strong> Device type, operating system version, and push notification tokens.</li>
-          <li><strong>Apple HealthKit Data:</strong> When you grant permission, we read health metrics (steps, heart rate) and write medication adherence data to Apple HealthKit. See Section 5 for full details.</li>
+          
           <li><strong>Camera Data:</strong> When you grant camera permission, images are processed locally or sent to the FDA database to identify medications via barcode scanning and pill identification. Photos are not stored permanently on our servers.</li>
           <li><strong>Siri &amp; Voice Data:</strong> When you enable Siri Shortcuts, voice commands are processed by Apple's Siri framework on-device. We receive only the structured intent (e.g., "log morning meds") — we do not receive, store, or process raw audio recordings.</li>
           <li><strong>Push Notification Tokens:</strong> When you enable notifications, we store a device token to deliver medication reminders, missed-dose alerts, and refill warnings. See Section 6 for full details.</li>
