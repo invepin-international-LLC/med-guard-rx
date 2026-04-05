@@ -192,8 +192,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         setHasPermission(false);
         return;
       }
-      // Silently redirect to name search
-      setMode('name');
+      setError('Scanner encountered an issue. Try entering the code manually.');
     }
   }, [processBarcode]);
 
