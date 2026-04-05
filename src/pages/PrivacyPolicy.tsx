@@ -81,7 +81,7 @@ export default function PrivacyPolicy() {
           You can disable notifications at any time from the app's Notification Settings or from your device's system Settings. Disabling notifications will not affect your medication data.
         </p>
 
-        <h2>7. Camera &amp; Barcode Scanning</h2>
+        <h2>6. Camera &amp; Barcode Scanning</h2>
         <p>
           Med Guard Rx requests camera access to:
         </p>
