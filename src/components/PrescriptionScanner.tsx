@@ -56,8 +56,7 @@ const getNativeScanner = async () => {
 };
 
 export function PrescriptionScanner({ onMedicationScanned, onClose }: PrescriptionScannerProps) {
-  // Default to name search on native iOS where camera plugins may not be available
-  const [mode, setMode] = useState<ScannerMode>(isNativeApp() ? 'name' : 'camera');
+  const [mode, setMode] = useState<ScannerMode>('camera');
   const [isScanning, setIsScanning] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [scannedResult, setScannedResult] = useState<ScannedMedication | null>(null);
