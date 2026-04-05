@@ -135,7 +135,7 @@ export default function TermsOfService() {
 
         <h2>12. Privacy</h2>
         <p>
-          Your use of the App is also governed by our <strong>Privacy Policy</strong>, which describes how we collect, use, store, and protect your information, including health data, HealthKit data, camera data, and push notification tokens. By using the App, you consent to the practices described in the Privacy Policy.
+          Your use of the App is also governed by our <strong>Privacy Policy</strong>, which describes how we collect, use, store, and protect your information, including health data, camera data, and push notification tokens. By using the App, you consent to the practices described in the Privacy Policy.
         </p>
 
         <h2>13. Limitation of Liability</h2>
