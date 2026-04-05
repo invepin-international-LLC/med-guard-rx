@@ -198,14 +198,6 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
 
   // Web scanner fallback using html5-qrcode (only works in browser, NOT in native WKWebView)
   const startWebScanner = useCallback(async () => {
-    // getUserMedia does NOT work reliably in WKWebView on iOS
-    // Only use web scanner in actual browser contexts
-    if (isNativeApp()) {
-      // Silently redirect — no error messages
-      setMode('name');
-      return;
-    }
-
     setError(null);
     setScannedResult(null);
     
