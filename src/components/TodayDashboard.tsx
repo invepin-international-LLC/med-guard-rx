@@ -495,8 +495,6 @@ export function TodayDashboard() {
           {/* Sound Settings */}
           <SoundSettings />
 
-          {/* Apple Health & Siri */}
-          <AppleHealthSettings />
 
           {/* Family & Caregivers */}
           <CaregiverInviteManager />
