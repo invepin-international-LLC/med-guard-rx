@@ -34,7 +34,7 @@ export default function TermsOfService() {
           <li>Adherence history, streak tracking, and PDF report generation.</li>
           <li>A gamification rewards system with coins, slot machine spins, badges, and weekly challenges.</li>
           <li>Caregiver invite and monitoring features.</li>
-          <li>Apple HealthKit integration for reading/writing health metrics.</li>
+          
           <li>Siri Shortcuts for hands-free medication management.</li>
           <li>HIPAA health records vault with audit logging.</li>
           <li>Emergency contact management.</li>
