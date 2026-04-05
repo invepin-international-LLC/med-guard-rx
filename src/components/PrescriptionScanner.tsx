@@ -208,7 +208,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     // getUserMedia does NOT work reliably in WKWebView on iOS
     // Only use web scanner in actual browser contexts
     if (isNativeApp()) {
-      toast.error('Camera scanning is not available. Please use "Search by Name" instead.');
+      // Silently redirect — no error messages
       setMode('name');
       return;
     }
@@ -245,13 +245,10 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       );
     } catch (err: any) {
       console.error('Scanner error:', err);
-      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        setHasPermission(false);
-        setError('Camera permission denied.');
-      } else {
-        setError('Could not start camera. Please try entering the NDC code manually.');
-      }
       setIsScanning(false);
+      // Gracefully redirect to name search — no error UI
+      toast.info('Camera is not available. Use search instead.');
+      setMode('name');
     }
   }, [processBarcode]);
 
