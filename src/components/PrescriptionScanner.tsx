@@ -11,7 +11,6 @@ import {
   Check, 
   Loader2,
   Pill,
-  AlertTriangle,
   ScanLine,
   Keyboard,
   ArrowLeft,
