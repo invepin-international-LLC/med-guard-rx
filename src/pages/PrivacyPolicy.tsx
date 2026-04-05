@@ -108,7 +108,7 @@ export default function PrivacyPolicy() {
         <ul>
           <li><strong>Access &amp; Export:</strong> You can view all your data within the app at any time, including adherence history, HIPAA records, and access logs.</li>
           <li><strong>Deletion:</strong> You can permanently delete your account and all associated data (across 22+ data categories) from Profile → App Settings. Deletion is irreversible.</li>
-          <li><strong>Revoke Permissions:</strong> You can disconnect Apple Health, disable push notifications, revoke camera access, remove Siri Shortcuts, or remove caregivers at any time.</li>
+          <li><strong>Revoke Permissions:</strong> You can disable push notifications, revoke camera access, remove Siri Shortcuts, or remove caregivers at any time.</li>
           <li><strong>Data Portability:</strong> Adherence reports can be generated as PDF documents from within the app.</li>
         </ul>
 
