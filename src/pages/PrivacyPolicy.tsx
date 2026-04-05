@@ -104,7 +104,7 @@ export default function PrivacyPolicy() {
           <li>You can remove any Siri Shortcut at any time from the Shortcuts app or Siri Settings.</li>
         </ul>
 
-        <h2>9. Your Rights</h2>
+        <h2>8. Your Rights</h2>
         <ul>
           <li><strong>Access &amp; Export:</strong> You can view all your data within the app at any time, including adherence history, HIPAA records, and access logs.</li>
           <li><strong>Deletion:</strong> You can permanently delete your account and all associated data (across 22+ data categories) from Profile → App Settings. Deletion is irreversible.</li>
