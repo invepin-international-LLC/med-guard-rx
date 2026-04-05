@@ -11,7 +11,6 @@ import {
   Check, 
   Loader2,
   Pill,
-  AlertTriangle,
   ScanLine,
   Keyboard,
   ArrowLeft,
@@ -138,14 +137,12 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       nativeScanner = await getNativeScanner();
     } catch (e) {
       console.error('Failed to load native scanner module:', e);
-      toast.error('Camera scanning is not available. Please use "Search by Name" instead.');
       setMode('name');
       return;
     }
 
     if (!nativeScanner) {
-      // Gracefully redirect to name search instead of showing an error
-      toast.info('Camera scanner is not available on this device. Switching to search.');
+      // Silently redirect to name search
       setMode('name');
       return;
     }
@@ -195,10 +192,9 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       // Catch permission-related errors that may come from scan() itself
       if (err?.message?.includes('permission') || err?.message?.includes('denied') || err?.message?.includes('not authorized')) {
         setHasPermission(false);
-        setError('Camera permission denied.');
         return;
       }
-      toast.error('Could not start camera. Switching to search.');
+      // Silently redirect to name search
       setMode('name');
     }
   }, [processBarcode]);
@@ -208,7 +204,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     // getUserMedia does NOT work reliably in WKWebView on iOS
     // Only use web scanner in actual browser contexts
     if (isNativeApp()) {
-      toast.error('Camera scanning is not available. Please use "Search by Name" instead.');
+      // Silently redirect — no error messages
       setMode('name');
       return;
     }
@@ -245,13 +241,10 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       );
     } catch (err: any) {
       console.error('Scanner error:', err);
-      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        setHasPermission(false);
-        setError('Camera permission denied.');
-      } else {
-        setError('Could not start camera. Please try entering the NDC code manually.');
-      }
       setIsScanning(false);
+      // Gracefully redirect to name search — no error UI
+      toast.info('Camera is not available. Use search instead.');
+      setMode('name');
     }
   }, [processBarcode]);
 
@@ -756,47 +749,49 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
           </Card>
         )}
 
-        {/* Permission Denied State */}
+        {/* Permission Denied State — gentle redirect */}
         {hasPermission === false && mode === 'camera' && (
           <Card className="w-full max-w-md p-8 text-center space-y-6 bg-card border-2 border-border shadow-elder-lg">
-            <div className="w-24 h-24 bg-destructive/10 rounded-3xl flex items-center justify-center mx-auto">
-              <Camera className="w-14 h-14 text-destructive" />
+            <div className="w-24 h-24 bg-primary/20 rounded-3xl flex items-center justify-center mx-auto">
+              <Camera className="w-14 h-14 text-primary" />
             </div>
             <div className="space-y-2">
               <h2 className="text-elder-xl font-bold text-foreground">Camera Access Needed</h2>
               <p className="text-muted-foreground text-lg">
-                Med Guard Rx needs camera access to scan prescription barcodes. Please allow access when prompted.
+                To scan barcodes, please allow camera access in your device settings. You can also search by name or enter the code manually.
               </p>
             </div>
             <div className="flex flex-col gap-3">
-              <Button variant="default" size="xl" onClick={handleRetry} className="w-full gap-3">
-                <RotateCcw className="w-6 h-6" />
-                Try Again
+              <Button variant="default" size="xl" onClick={switchToNameSearch} className="w-full gap-3">
+                <Search className="w-6 h-6" />
+                Search by Drug Name
               </Button>
               <Button variant="outline" size="xl" onClick={switchToManualMode} className="w-full gap-3">
                 <Keyboard className="w-6 h-6" />
-                Enter Code Manually
+                Enter NDC Code
               </Button>
             </div>
           </Card>
         )}
 
-        {/* General Error State (not permission-related) */}
+        {/* General Error State — gentle redirect instead of scary error */}
         {error && mode === 'camera' && hasPermission !== false && (
-          <Card className="w-full max-w-md p-8 text-center space-y-6 bg-destructive/10 border-2 border-destructive/30">
-            <AlertTriangle className="w-16 h-16 text-destructive mx-auto" />
+          <Card className="w-full max-w-md p-8 text-center space-y-6 bg-card border-2 border-border shadow-elder-lg">
+            <div className="w-24 h-24 bg-primary/20 rounded-3xl flex items-center justify-center mx-auto">
+              <Search className="w-14 h-14 text-primary" />
+            </div>
             <div>
-              <h2 className="text-elder-xl text-destructive mb-2">Scan Failed</h2>
-              <p className="text-elder text-foreground">{error}</p>
+              <h2 className="text-elder-xl font-bold text-foreground mb-2">Try Another Way</h2>
+              <p className="text-muted-foreground text-lg">You can search by drug name or enter the NDC code from your prescription label.</p>
             </div>
             <div className="flex flex-col gap-3">
-              <Button variant="default" size="xl" onClick={handleRetry} className="w-full gap-3">
-                <RotateCcw className="w-6 h-6" />
-                Try Again
+              <Button variant="default" size="xl" onClick={switchToNameSearch} className="w-full gap-3">
+                <Search className="w-6 h-6" />
+                Search by Drug Name
               </Button>
               <Button variant="outline" size="xl" onClick={switchToManualMode} className="w-full gap-3">
                 <Keyboard className="w-6 h-6" />
-                Enter Code Manually
+                Enter NDC Code
               </Button>
             </div>
           </Card>
