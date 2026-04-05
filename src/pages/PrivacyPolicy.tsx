@@ -68,8 +68,6 @@ export default function PrivacyPolicy() {
         </ul>
 
         <h2>5. Push Notifications</h2>
-
-        <h2>6. Push Notifications</h2>
         <p>
           When you enable push notifications, Med Guard Rx uses Apple Push Notification service (APNs) and/or Firebase Cloud Messaging to deliver:
         </p>
