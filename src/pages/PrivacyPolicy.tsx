@@ -93,7 +93,7 @@ export default function PrivacyPolicy() {
           Camera images used for barcode scanning are processed in real-time and are <strong>not</strong> stored on our servers. Pill identification images may be sent to AI services for analysis and are not retained after processing. You can deny or revoke camera permission at any time from your device's system Settings.
         </p>
 
-        <h2>8. Siri &amp; Voice Shortcuts</h2>
+        <h2>7. Siri &amp; Voice Shortcuts</h2>
         <p>
           Med Guard Rx supports Siri Shortcuts for hands-free medication management. When you enable Siri integration:
         </p>
