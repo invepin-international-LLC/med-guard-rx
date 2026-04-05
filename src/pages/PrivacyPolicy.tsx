@@ -122,7 +122,7 @@ export default function PrivacyPolicy() {
           Med Guard Rx is intended for users aged 13 and older. We do not knowingly collect personal information from children under 13. If you believe a child under 13 has provided us with personal data, please contact us and we will promptly delete it.
         </p>
 
-        <h2>12. International Data</h2>
+        <h2>11. International Data</h2>
         <p>
           Your data may be processed and stored in the United States or other countries where our service providers operate. By using the app, you consent to the transfer of your data to these locations, which may have different data protection laws than your country of residence.
         </p>
