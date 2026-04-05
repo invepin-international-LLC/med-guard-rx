@@ -138,14 +138,12 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       nativeScanner = await getNativeScanner();
     } catch (e) {
       console.error('Failed to load native scanner module:', e);
-      toast.error('Camera scanning is not available. Please use "Search by Name" instead.');
       setMode('name');
       return;
     }
 
     if (!nativeScanner) {
-      // Gracefully redirect to name search instead of showing an error
-      toast.info('Camera scanner is not available on this device. Switching to search.');
+      // Silently redirect to name search
       setMode('name');
       return;
     }

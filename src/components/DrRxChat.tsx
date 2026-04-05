@@ -304,10 +304,9 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
       console.error('Speech recognition error:', event.error);
       setIsListening(false);
       if (event.error === 'not-allowed') {
-        toast.error('Microphone access was not granted. Please allow microphone access when prompted to use voice input.');
-      } else if (event.error !== 'aborted') {
-        toast.error('Voice input is not available right now.');
+        toast.info('Microphone access is needed for voice input. Please type your question instead.');
       }
+      // Silently handle other errors — no disruptive error messages
     };
 
     try {
@@ -315,7 +314,7 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
       setIsListening(true);
     } catch (e) {
       console.error('Failed to start speech recognition:', e);
-      toast.error('Voice input is not available on this device. Please type your question instead.');
+      // Silently fail — user can still type
       setIsListening(false);
     }
   };
