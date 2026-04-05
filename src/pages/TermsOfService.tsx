@@ -148,7 +148,7 @@ export default function TermsOfService() {
           <li>Data loss, unauthorized access, or security breaches.</li>
           <li>Interruption or unavailability of push notifications or other services.</li>
           <li>Actions taken or not taken based on information provided by the App.</li>
-          <li>Integration issues with Apple HealthKit, Siri, or other third-party services.</li>
+          <li>Integration issues with Siri or other third-party services.</li>
         </ul>
         <p>
           <strong>The App is provided "AS IS" and "AS AVAILABLE" without warranties of any kind, express or implied.</strong>
