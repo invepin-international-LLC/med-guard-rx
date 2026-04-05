@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSiriShortcuts } from '@/hooks/useSiriShortcuts';
 
-export function AppleHealthSettings() {
+export function SiriShortcutsSettings() {
   const {
     isAvailable: siriAvailable,
     openShortcutsSettings,
