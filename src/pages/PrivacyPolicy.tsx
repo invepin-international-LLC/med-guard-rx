@@ -38,7 +38,7 @@ export default function PrivacyPolicy() {
           <li>To send dose reminders, missed-dose alerts, and refill warnings via push notifications.</li>
           <li>To notify designated caregivers when you miss a dose (only with your explicit permission).</li>
           <li>To generate adherence reports and health insights.</li>
-          <li>To sync medication adherence data with Apple Health when you grant permission.</li>
+          
           <li>To identify medications by scanning prescription barcodes or pill images using the FDA's public database.</li>
           <li>To enable hands-free medication management via Siri voice commands.</li>
         </ul>
