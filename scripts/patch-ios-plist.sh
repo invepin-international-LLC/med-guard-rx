@@ -35,9 +35,9 @@ add_plist_key "NSMicrophoneUsageDescription" "Med Guard Rx uses your microphone 
 
 echo ""
 echo "✅ Info.plist patched successfully with all required privacy strings!"
-echo "   - NSHealthShareUsageDescription"
-echo "   - NSHealthUpdateUsageDescription"
 echo "   - NSCameraUsageDescription"
+echo "   - NSSiriUsageDescription"
+echo "   - NSMicrophoneUsageDescription"
 echo "   - NSSiriUsageDescription"
 echo "   - NSMicrophoneUsageDescription"
 echo ""

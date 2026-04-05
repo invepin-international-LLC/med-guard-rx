@@ -35,8 +35,6 @@ const config: CapacitorConfig = {
 // - com.apple.developer.siri (Siri Shortcuts)
 // 
 // Run scripts/patch-ios-plist.sh after `npx cap sync ios` to inject:
-// - NSHealthShareUsageDescription
-// - NSHealthUpdateUsageDescription
 // - NSCameraUsageDescription
 // - NSSiriUsageDescription
 // - NSMicrophoneUsageDescription
