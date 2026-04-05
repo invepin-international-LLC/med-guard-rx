@@ -206,7 +206,7 @@ export const es = {
     notifications: 'Notificaciones',
     sounds: 'Sonidos',
     display: 'Pantalla',
-    appleHealth: 'Apple Health',
+    siriShortcuts: 'Atajos de Siri',
     caregivers: 'Cuidadores',
     language: 'Idioma',
     languageIdioma: 'Idioma / Language',
