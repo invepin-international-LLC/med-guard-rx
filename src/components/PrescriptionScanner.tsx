@@ -231,9 +231,8 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     } catch (err: any) {
       console.error('Scanner error:', err);
       setIsScanning(false);
-      // Gracefully redirect to name search — no error UI
-      toast.info('Camera is not available. Use search instead.');
-      setMode('name');
+      setHasPermission(false);
+      setError('Camera access is needed to scan barcodes. Please allow camera access in your device settings, or enter the code manually.');
     }
   }, [processBarcode]);
 
