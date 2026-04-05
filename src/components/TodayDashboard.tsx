@@ -597,7 +597,7 @@ export function TodayDashboard() {
               <DisplaySettings />
               <NotificationSettings />
               <SoundSettings />
-              <AppleHealthSettings />
+              
               <div className="bg-card rounded-2xl p-4 border-2 border-border">
                 <h3 className="text-lg font-semibold text-foreground mb-3">{t('profile.languageIdioma')}</h3>
                 <LanguageSelector />

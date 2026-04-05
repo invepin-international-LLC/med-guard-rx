@@ -168,7 +168,7 @@ export default function TermsOfService() {
 
         <h2>16. Third-Party Services</h2>
         <p>
-          The App integrates with third-party services including Apple HealthKit, Apple Siri, Apple Push Notification service (APNs), Firebase Cloud Messaging, and the U.S. FDA OpenFDA database. These services are governed by their own terms and privacy policies. We are not responsible for the availability, accuracy, or practices of third-party services.
+          The App integrates with third-party services including Apple Siri, Apple Push Notification service (APNs), Firebase Cloud Messaging, and the U.S. FDA OpenFDA database. These services are governed by their own terms and privacy policies. We are not responsible for the availability, accuracy, or practices of third-party services.
         </p>
 
         <h2>17. Updates &amp; Modifications</h2>
