@@ -117,7 +117,7 @@ export default function PrivacyPolicy() {
           We retain your data as long as your account is active. When you delete your account, all associated data — including medications, dose logs, health records, caregiver relationships, rewards, symptom logs, and push tokens — is permanently purged from our systems. No backup copies are retained.
         </p>
 
-        <h2>11. Children's Privacy</h2>
+        <h2>10. Children's Privacy</h2>
         <p>
           Med Guard Rx is intended for users aged 13 and older. We do not knowingly collect personal information from children under 13. If you believe a child under 13 has provided us with personal data, please contact us and we will promptly delete it.
         </p>
