@@ -193,10 +193,9 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       // Catch permission-related errors that may come from scan() itself
       if (err?.message?.includes('permission') || err?.message?.includes('denied') || err?.message?.includes('not authorized')) {
         setHasPermission(false);
-        setError('Camera permission denied.');
         return;
       }
-      toast.error('Could not start camera. Switching to search.');
+      // Silently redirect to name search
       setMode('name');
     }
   }, [processBarcode]);
