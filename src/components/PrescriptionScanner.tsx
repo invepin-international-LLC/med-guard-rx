@@ -759,6 +759,13 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
             <div className="space-y-2">
               <h2 className="text-elder-xl font-bold text-foreground">Camera Issue</h2>
               <p className="text-muted-foreground text-lg">{error}</p>
+              {debugError && (
+                <div className="mt-3 p-3 bg-muted rounded-lg text-left">
+                  <p className="text-xs font-mono text-muted-foreground break-all">
+                    <span className="font-bold">Debug:</span> {debugError}
+                  </p>
+                </div>
+              )}
             </div>
             <div className="flex flex-col gap-3">
               <Button variant="default" size="xl" onClick={handleRetry} className="w-full gap-3">
