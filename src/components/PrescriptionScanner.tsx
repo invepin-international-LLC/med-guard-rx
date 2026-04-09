@@ -130,19 +130,26 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   // Native scanner using ML Kit
   const startNativeScanner = useCallback(async () => {
     setError(null);
+    setDebugError(null);
     setScannedResult(null);
+
+    const isNative = isNativeApp();
+    console.log(`[Scanner] isNativeApp=${isNative}, platform=${(window as any).Capacitor?.getPlatform?.()}`);
 
     let nativeScanner;
     try {
       nativeScanner = await getNativeScanner();
-    } catch (e) {
+      console.log(`[Scanner] getNativeScanner returned: ${nativeScanner ? 'module loaded' : 'null'}`);
+    } catch (e: any) {
       console.error('Failed to load native scanner module:', e);
       setError('Barcode scanner not available. Try entering the code manually.');
+      setDebugError(`Module load failed: ${e?.message || String(e)}`);
       return;
     }
 
     if (!nativeScanner) {
       setError('Barcode scanner not available. Try entering the code manually.');
+      setDebugError(`getNativeScanner() returned null. isNative=${isNative}`);
       return;
     }
 
