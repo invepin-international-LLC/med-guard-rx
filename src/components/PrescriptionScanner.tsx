@@ -61,6 +61,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   const [isLoading, setIsLoading] = useState(false);
   const [scannedResult, setScannedResult] = useState<ScannedMedication | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [debugError, setDebugError] = useState<string | null>(null);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [torchOn, setTorchOn] = useState(false);
   const [manualNdc, setManualNdc] = useState('');
