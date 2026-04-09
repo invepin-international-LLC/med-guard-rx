@@ -247,7 +247,6 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       setError('Camera access is needed to scan barcodes. Please allow camera access in your device settings, or enter the code manually.');
       setDebugError(`Web scanner error: ${errMsg} | name: ${err?.name}`);
     }
-    }
   }, [processBarcode]);
 
   // Start scanner - picks native or web
