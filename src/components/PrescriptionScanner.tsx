@@ -156,24 +156,48 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     const { BarcodeScanner, BarcodeFormat } = nativeScanner;
 
     try {
-      // Check/request permissions
+      const { supported } = await BarcodeScanner.isSupported();
+      if (!supported) {
+        setHasPermission(false);
+        setError('Camera is not available on this device.');
+        setDebugError('BarcodeScanner.isSupported() returned false.');
+        return;
+      }
+
       const permResult = await BarcodeScanner.checkPermissions();
       if (permResult.camera !== 'granted') {
         const requestResult = await BarcodeScanner.requestPermissions();
         if (requestResult.camera !== 'granted') {
           setHasPermission(false);
           setError('Camera permission is required to scan barcodes. Please allow access when prompted, or enter the code manually.');
+          setDebugError(`Permission not granted. check=${permResult.camera} request=${requestResult.camera}`);
           return;
         }
       }
+
       setHasPermission(true);
       setUsingNativeScanner(true);
       setIsScanning(true);
 
-      // Use the scan() method which provides a ready-to-use UI
-      const result = await BarcodeScanner.scan({
-        formats: [BarcodeFormat.Code128, BarcodeFormat.Code39, BarcodeFormat.Ean13, BarcodeFormat.Ean8, BarcodeFormat.UpcA, BarcodeFormat.UpcE, BarcodeFormat.Itf, BarcodeFormat.DataMatrix],
-      });
+      const scanOptions = {
+        formats: [
+          BarcodeFormat.Code128,
+          BarcodeFormat.Code39,
+          BarcodeFormat.Ean13,
+          BarcodeFormat.Ean8,
+          BarcodeFormat.UpcA,
+          BarcodeFormat.UpcE,
+          BarcodeFormat.Itf,
+          BarcodeFormat.DataMatrix,
+        ],
+        autoZoom: true,
+        lensFacing: 'BACK',
+        resolution: 1,
+        enableMultitaskingCameraAccess: true,
+      } as any;
+
+      console.log('[Scanner] Starting native scan with options:', scanOptions);
+      const result = await BarcodeScanner.scan(scanOptions);
 
       setIsScanning(false);
       setUsingNativeScanner(false);
@@ -192,12 +216,12 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       setUsingNativeScanner(false);
       
       if (err?.message?.includes('canceled') || err?.message?.includes('cancelled')) {
-        // User cancelled - no error
         return;
       }
-      // Catch permission-related errors that may come from scan() itself
       if (err?.message?.includes('permission') || err?.message?.includes('denied') || err?.message?.includes('not authorized')) {
         setHasPermission(false);
+        setError('Camera permission is required to scan barcodes. Please allow access and try again.');
+        setDebugError(`Native permission error: ${err?.message || String(err)}`);
         return;
       }
       const errMsg = err?.message || err?.code || String(err);
