@@ -243,7 +243,10 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       console.error('Scanner error:', err);
       setIsScanning(false);
       setHasPermission(false);
+      const errMsg = err?.message || err?.name || String(err);
       setError('Camera access is needed to scan barcodes. Please allow camera access in your device settings, or enter the code manually.');
+      setDebugError(`Web scanner error: ${errMsg} | name: ${err?.name}`);
+    }
     }
   }, [processBarcode]);
 
