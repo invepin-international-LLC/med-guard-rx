@@ -61,6 +61,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   const [isLoading, setIsLoading] = useState(false);
   const [scannedResult, setScannedResult] = useState<ScannedMedication | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [debugError, setDebugError] = useState<string | null>(null);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [torchOn, setTorchOn] = useState(false);
   const [manualNdc, setManualNdc] = useState('');
@@ -129,19 +130,26 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   // Native scanner using ML Kit
   const startNativeScanner = useCallback(async () => {
     setError(null);
+    setDebugError(null);
     setScannedResult(null);
+
+    const isNative = isNativeApp();
+    console.log(`[Scanner] isNativeApp=${isNative}, platform=${(window as any).Capacitor?.getPlatform?.()}`);
 
     let nativeScanner;
     try {
       nativeScanner = await getNativeScanner();
-    } catch (e) {
+      console.log(`[Scanner] getNativeScanner returned: ${nativeScanner ? 'module loaded' : 'null'}`);
+    } catch (e: any) {
       console.error('Failed to load native scanner module:', e);
       setError('Barcode scanner not available. Try entering the code manually.');
+      setDebugError(`Module load failed: ${e?.message || String(e)}`);
       return;
     }
 
     if (!nativeScanner) {
       setError('Barcode scanner not available. Try entering the code manually.');
+      setDebugError(`getNativeScanner() returned null. isNative=${isNative}`);
       return;
     }
 
@@ -192,7 +200,10 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         setHasPermission(false);
         return;
       }
+      const errMsg = err?.message || err?.code || String(err);
+      console.error('[Scanner] Native error details:', JSON.stringify(err, Object.getOwnPropertyNames(err || {})));
       setError('Scanner encountered an issue. Try entering the code manually.');
+      setDebugError(`Native error: ${errMsg} | type: ${err?.constructor?.name} | code: ${err?.code || 'none'}`);
     }
   }, [processBarcode]);
 
@@ -232,7 +243,9 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       console.error('Scanner error:', err);
       setIsScanning(false);
       setHasPermission(false);
+      const errMsg = err?.message || err?.name || String(err);
       setError('Camera access is needed to scan barcodes. Please allow camera access in your device settings, or enter the code manually.');
+      setDebugError(`Web scanner error: ${errMsg} | name: ${err?.name}`);
     }
   }, [processBarcode]);
 
@@ -313,6 +326,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   const handleRetry = useCallback(() => {
     setScannedResult(null);
     setError(null);
+    setDebugError(null);
     setHasPermission(null);
     setScannerStarted(false);
   }, []);
@@ -746,6 +760,13 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
             <div className="space-y-2">
               <h2 className="text-elder-xl font-bold text-foreground">Camera Issue</h2>
               <p className="text-muted-foreground text-lg">{error}</p>
+              {debugError && (
+                <div className="mt-3 p-3 bg-muted rounded-lg text-left">
+                  <p className="text-xs font-mono text-muted-foreground break-all">
+                    <span className="font-bold">Debug:</span> {debugError}
+                  </p>
+                </div>
+              )}
             </div>
             <div className="flex flex-col gap-3">
               <Button variant="default" size="xl" onClick={handleRetry} className="w-full gap-3">
