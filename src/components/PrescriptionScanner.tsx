@@ -326,6 +326,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   const handleRetry = useCallback(() => {
     setScannedResult(null);
     setError(null);
+    setDebugError(null);
     setHasPermission(null);
     setScannerStarted(false);
   }, []);
