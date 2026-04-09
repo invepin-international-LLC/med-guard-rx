@@ -200,7 +200,10 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         setHasPermission(false);
         return;
       }
+      const errMsg = err?.message || err?.code || String(err);
+      console.error('[Scanner] Native error details:', JSON.stringify(err, Object.getOwnPropertyNames(err || {})));
       setError('Scanner encountered an issue. Try entering the code manually.');
+      setDebugError(`Native error: ${errMsg} | type: ${err?.constructor?.name} | code: ${err?.code || 'none'}`);
     }
   }, [processBarcode]);
 
