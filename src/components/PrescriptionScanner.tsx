@@ -43,6 +43,11 @@ const isNativeApp = () => {
   return typeof window !== 'undefined' && !!(window as any).Capacitor?.isNativePlatform?.();
 };
 
+const getNativePlatform = () => {
+  if (typeof window === 'undefined') return null;
+  return (window as any).Capacitor?.getPlatform?.() ?? null;
+};
+
 // Dynamic import of ML Kit barcode scanner
 const getNativeScanner = async () => {
   if (!isNativeApp()) return null;
@@ -275,9 +280,14 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
 
   // Start scanner - picks native or web
   const startScanner = useCallback(async () => {
-    if (isNativeApp()) {
+    const nativePlatform = getNativePlatform();
+
+    // iOS native builds use the web camera path because the installed ML Kit plugin
+    // requires CocoaPods on iOS, while this project is currently synced with SPM.
+    if (isNativeApp() && nativePlatform !== 'ios') {
       await startNativeScanner();
     } else {
+      console.log(`[Scanner] Using web scanner. nativePlatform=${nativePlatform ?? 'web'}`);
       await startWebScanner();
     }
   }, [startNativeScanner, startWebScanner]);
