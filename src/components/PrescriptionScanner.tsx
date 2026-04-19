@@ -633,20 +633,20 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
 
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
-      <header className="flex items-center justify-between p-4 bg-card border-b-2 border-border">
+      <header className="flex items-center gap-3 p-4 bg-card border-b border-border">
         <Button
           variant="ghost"
-          size="lg"
+          size="icon"
           onClick={() => {
             void stopScanner();
             onClose();
           }}
-          className="gap-2"
+          aria-label="Cancel"
+          className="shrink-0 h-11 w-11 rounded-full"
         >
           <X className="w-6 h-6" />
-          <span className="text-lg">Cancel</span>
         </Button>
-        <h1 className="text-elder-xl font-bold">
+        <h1 className="flex-1 text-xl font-bold text-center truncate">
           {mode === 'camera'
             ? 'Scan Prescription'
             : mode === 'manual'
@@ -655,7 +655,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
                 ? 'Search Drug'
                 : 'Scan Bottle Label'}
         </h1>
-        <div className="w-24" />
+        <div className="w-11 shrink-0" />
       </header>
 
       <div className="flex-1 flex flex-col items-center justify-center p-6 bg-muted overflow-auto">
