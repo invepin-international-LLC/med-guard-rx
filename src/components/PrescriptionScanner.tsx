@@ -1184,12 +1184,13 @@ type ModeSwitcherProps = {
 };
 
 function ModeSwitcher({ current, onCamera, onLabel, onManual, onSearch }: ModeSwitcherProps) {
-  const items: { key: ModeSwitcherProps['current']; label: string; Icon: typeof Camera; onClick: () => void }[] = [
+  const allItems: { key: ModeSwitcherProps['current']; label: string; Icon: typeof Camera; onClick: () => void }[] = [
     { key: 'camera', label: 'Barcode', Icon: Camera, onClick: onCamera },
     { key: 'label', label: 'Label', Icon: ScanLine, onClick: onLabel },
     { key: 'manual', label: 'NDC', Icon: Keyboard, onClick: onManual },
     { key: 'name', label: 'Search', Icon: Search, onClick: onSearch },
-  ].filter((i) => i.key !== current);
+  ];
+  const items = allItems.filter((i) => i.key !== current);
 
   return (
     <div className="w-full max-w-md mt-6">
