@@ -1142,55 +1142,72 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         )}
 
         {mode === 'manual' && !scannedResult && (
-          <div className="grid grid-cols-3 gap-2">
-            <Button variant="ghost" size="lg" className="gap-2 text-muted-foreground" onClick={() => void switchToCameraMode()}>
-              <Camera className="w-5 h-5" />
-              Camera
-            </Button>
-            <Button variant="ghost" size="lg" className="gap-2 text-muted-foreground" onClick={() => void switchToLabelMode()}>
-              <ScanLine className="w-5 h-5" />
-              Label
-            </Button>
-            <Button variant="ghost" size="lg" className="gap-2 text-muted-foreground" onClick={() => void switchToNameSearch()}>
-              <Search className="w-5 h-5" />
-              Search
-            </Button>
-          </div>
+          <ModeSwitcher
+            current="manual"
+            onCamera={() => void switchToCameraMode()}
+            onLabel={() => void switchToLabelMode()}
+            onManual={() => void switchToManualMode()}
+            onSearch={() => void switchToNameSearch()}
+          />
         )}
 
         {mode === 'name' && !scannedResult && (
-          <div className="grid grid-cols-3 gap-2">
-            <Button variant="ghost" size="lg" className="gap-2 text-muted-foreground" onClick={() => void switchToCameraMode()}>
-              <Camera className="w-5 h-5" />
-              Camera
-            </Button>
-            <Button variant="ghost" size="lg" className="gap-2 text-muted-foreground" onClick={() => void switchToLabelMode()}>
-              <ScanLine className="w-5 h-5" />
-              Label
-            </Button>
-            <Button variant="ghost" size="lg" className="gap-2 text-muted-foreground" onClick={() => void switchToManualMode()}>
-              <Keyboard className="w-5 h-5" />
-              NDC Code
-            </Button>
-          </div>
+          <ModeSwitcher
+            current="name"
+            onCamera={() => void switchToCameraMode()}
+            onLabel={() => void switchToLabelMode()}
+            onManual={() => void switchToManualMode()}
+            onSearch={() => void switchToNameSearch()}
+          />
         )}
 
         {mode === 'label' && !scannedResult && (
-          <div className="grid grid-cols-3 gap-2">
-            <Button variant="ghost" size="lg" className="gap-2 text-muted-foreground" onClick={() => void switchToCameraMode()}>
-              <Camera className="w-5 h-5" />
-              Camera
-            </Button>
-            <Button variant="ghost" size="lg" className="gap-2 text-muted-foreground" onClick={() => void switchToManualMode()}>
-              <Keyboard className="w-5 h-5" />
-              NDC Code
-            </Button>
-            <Button variant="ghost" size="lg" className="gap-2 text-muted-foreground" onClick={() => void switchToNameSearch()}>
-              <Search className="w-5 h-5" />
-              Search
-            </Button>
-          </div>
+          <ModeSwitcher
+            current="label"
+            onCamera={() => void switchToCameraMode()}
+            onLabel={() => void switchToLabelMode()}
+            onManual={() => void switchToManualMode()}
+            onSearch={() => void switchToNameSearch()}
+          />
         )}
+      </div>
+    </div>
+  );
+}
+
+type ModeSwitcherProps = {
+  current: 'camera' | 'manual' | 'name' | 'label';
+  onCamera: () => void;
+  onLabel: () => void;
+  onManual: () => void;
+  onSearch: () => void;
+};
+
+function ModeSwitcher({ current, onCamera, onLabel, onManual, onSearch }: ModeSwitcherProps) {
+  const items: { key: ModeSwitcherProps['current']; label: string; Icon: typeof Camera; onClick: () => void }[] = [
+    { key: 'camera', label: 'Barcode', Icon: Camera, onClick: onCamera },
+    { key: 'label', label: 'Label', Icon: ScanLine, onClick: onLabel },
+    { key: 'manual', label: 'NDC', Icon: Keyboard, onClick: onManual },
+    { key: 'name', label: 'Search', Icon: Search, onClick: onSearch },
+  ].filter((i) => i.key !== current);
+
+  return (
+    <div className="w-full max-w-md mt-6">
+      <p className="text-xs uppercase tracking-wider text-muted-foreground text-center mb-3">
+        Try another way
+      </p>
+      <div className="grid grid-cols-3 gap-3">
+        {items.map(({ key, label, Icon, onClick }) => (
+          <button
+            key={key}
+            type="button"
+            onClick={onClick}
+            className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-card border border-border hover:bg-accent hover:border-primary/40 transition-colors min-h-[88px]"
+          >
+            <Icon className="w-6 h-6 text-primary" />
+            <span className="text-sm font-medium text-foreground">{label}</span>
+          </button>
+        ))}
       </div>
     </div>
   );
