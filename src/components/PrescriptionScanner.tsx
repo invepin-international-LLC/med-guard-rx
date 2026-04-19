@@ -1,20 +1,20 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, type ChangeEvent } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { 
-  Camera, 
-  X, 
-  Flashlight, 
-  RotateCcw, 
-  Check, 
+import { Badge } from '@/components/ui/badge';
+import {
+  Camera,
+  X,
+  Flashlight,
+  RotateCcw,
+  Check,
   Loader2,
   Pill,
   ScanLine,
   Keyboard,
-  ArrowLeft,
-  Search
+  Search,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,6 +28,11 @@ interface ScannedMedication {
   manufacturer?: string;
   route?: string;
   productType?: string;
+  instructions?: string;
+  purpose?: string;
+  prescriber?: string;
+  confidence?: 'high' | 'medium' | 'low';
+  source?: 'barcode' | 'label';
 }
 
 interface PrescriptionScannerProps {
@@ -35,10 +40,8 @@ interface PrescriptionScannerProps {
   onClose: () => void;
 }
 
+type ScannerMode = 'camera' | 'manual' | 'name' | 'label';
 
-type ScannerMode = 'camera' | 'manual' | 'name';
-
-// Check if running in native Capacitor
 const isNativeApp = () => {
   return typeof window !== 'undefined' && !!(window as any).Capacitor?.isNativePlatform?.();
 };
@@ -48,7 +51,6 @@ const getNativePlatform = () => {
   return (window as any).Capacitor?.getPlatform?.() ?? null;
 };
 
-// Dynamic import of ML Kit barcode scanner
 const getNativeScanner = async () => {
   if (!isNativeApp()) return null;
   try {
@@ -60,6 +62,12 @@ const getNativeScanner = async () => {
   }
 };
 
+const labelConfidenceStyles: Record<'high' | 'medium' | 'low', string> = {
+  high: 'border-border bg-success/10 text-success',
+  medium: 'border-border bg-primary/10 text-primary',
+  low: 'border-border bg-muted text-muted-foreground',
+};
+
 export function PrescriptionScanner({ onMedicationScanned, onClose }: PrescriptionScannerProps) {
   const [mode, setMode] = useState<ScannerMode>('camera');
   const [isScanning, setIsScanning] = useState(false);
@@ -67,36 +75,49 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   const [scannedResult, setScannedResult] = useState<ScannedMedication | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [debugError, setDebugError] = useState<string | null>(null);
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [, setHasPermission] = useState<boolean | null>(null);
   const [torchOn, setTorchOn] = useState(false);
   const [manualNdc, setManualNdc] = useState('');
   const [drugNameQuery, setDrugNameQuery] = useState('');
   const [nameSearchResults, setNameSearchResults] = useState<ScannedMedication[]>([]);
   const [isNameSearching, setIsNameSearching] = useState(false);
-  const nameSearchAbortRef = useRef<AbortController | null>(null);
   const [usingNativeScanner, setUsingNativeScanner] = useState(false);
-  
+  const [scannerStarted, setScannerStarted] = useState(false);
+  const [labelPhoto, setLabelPhoto] = useState<string | null>(null);
+  const [labelNotes, setLabelNotes] = useState<string[]>([]);
+
+  const nameSearchAbortRef = useRef<AbortController | null>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
+  const labelFileInputRef = useRef<HTMLInputElement | null>(null);
   const scannerContainerId = 'ndc-scanner';
 
   const lookupNdc = useCallback(async (ndcCode: string): Promise<ScannedMedication | null> => {
     try {
       console.log(`Looking up NDC: ${ndcCode}`);
-      
+
       const { data, error } = await supabase.functions.invoke('ndc-lookup', {
-        body: { ndc: ndcCode }
+        body: { ndc: ndcCode },
       });
-      
+
+      const status = (error as any)?.context?.status ?? (error as any)?.status;
       if (error) {
+        if (status === 404 || error.message?.includes('404')) {
+          console.log('Medication not found in FDA database');
+          return null;
+        }
+
         console.error('Edge function error:', error);
         throw new Error(error.message || 'Failed to lookup medication');
       }
-      
+
       if (data?.success && data?.medication) {
         console.log('Found medication:', data.medication);
-        return data.medication as ScannedMedication;
+        return {
+          ...data.medication,
+          source: 'barcode',
+        } as ScannedMedication;
       }
-      
+
       console.log('Medication not found in FDA database');
       return null;
     } catch (err) {
@@ -105,34 +126,69 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     }
   }, []);
 
+  const readPrescriptionLabel = useCallback(async (imageBase64: string) => {
+    setError(null);
+    setDebugError(null);
+    setIsLoading(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('scan-prescription-label', {
+        body: { imageBase64 },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data?.success && data?.medication) {
+        setLabelNotes(Array.isArray(data.notes) ? data.notes : []);
+        setScannedResult(data.medication as ScannedMedication);
+        toast.success(`Found: ${data.medication.name} ${data.medication.strength}`);
+        return;
+      }
+
+      setLabelNotes(Array.isArray(data?.notes) ? data.notes : []);
+      setError(data?.error || 'Could not read the bottle label. Try a closer, brighter photo.');
+    } catch (err: any) {
+      console.error('Prescription label read error:', err);
+      setError('Could not read the bottle label. Try a closer, brighter photo or search by name.');
+      setDebugError(`Label scan error: ${err?.message || String(err)}`);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   const processBarcode = useCallback(async (decodedText: string) => {
     setIsScanning(false);
     setIsLoading(true);
-    
+    setError(null);
+    setDebugError(null);
+
     if (navigator.vibrate) {
       navigator.vibrate([100, 50, 100]);
     }
-    
+
     toast.info('Barcode detected! Looking up medication in FDA database...');
-    
+
     try {
       const medication = await lookupNdc(decodedText);
-      
+
       if (medication) {
         setScannedResult(medication);
         toast.success(`Found: ${medication.name} ${medication.strength}`);
       } else {
-        setError('Medication not found in FDA database. Try entering the NDC manually.');
+        setError('That barcode was scanned, but it looks like a pharmacy or prescription code instead of an FDA medication code. Try Scan Bottle Label instead.');
+        setDebugError(`Scanned barcode: ${decodedText}`);
       }
     } catch (err) {
       console.error('Scan lookup error:', err);
-      setError('Error looking up medication. Please try again.');
+      setError('We scanned the barcode, but could not look up the medication. Try Scan Bottle Label instead.');
+      setDebugError(`Barcode lookup failed for: ${decodedText}`);
     } finally {
       setIsLoading(false);
     }
   }, [lookupNdc]);
 
-  // Native scanner using ML Kit
   const startNativeScanner = useCallback(async () => {
     setError(null);
     setDebugError(null);
@@ -147,13 +203,13 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       console.log(`[Scanner] getNativeScanner returned: ${nativeScanner ? 'module loaded' : 'null'}`);
     } catch (e: any) {
       console.error('Failed to load native scanner module:', e);
-      setError('Barcode scanner not available. Try entering the code manually.');
+      setError('Barcode scanner not available. Try scanning the bottle label instead.');
       setDebugError(`Module load failed: ${e?.message || String(e)}`);
       return;
     }
 
     if (!nativeScanner) {
-      setError('Barcode scanner not available. Try entering the code manually.');
+      setError('Barcode scanner not available. Try scanning the bottle label instead.');
       setDebugError(`getNativeScanner() returned null. isNative=${isNative}`);
       return;
     }
@@ -174,7 +230,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         const requestResult = await BarcodeScanner.requestPermissions();
         if (requestResult.camera !== 'granted') {
           setHasPermission(false);
-          setError('Camera permission is required to scan barcodes. Please allow access when prompted, or enter the code manually.');
+          setError('Camera permission is required to scan barcodes. Please allow access when prompted, or scan the bottle label instead.');
           setDebugError(`Permission not granted. check=${permResult.camera} request=${requestResult.camera}`);
           return;
         }
@@ -213,13 +269,13 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
           await processBarcode(barcodeValue);
         }
       } else {
-        setError('No barcode detected. Try again or enter the code manually.');
+        setError('No barcode detected. Try again or scan the bottle label instead.');
       }
     } catch (err: any) {
       console.error('Native scanner error:', err);
       setIsScanning(false);
       setUsingNativeScanner(false);
-      
+
       if (err?.message?.includes('canceled') || err?.message?.includes('cancelled')) {
         return;
       }
@@ -231,27 +287,26 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       }
       const errMsg = err?.message || err?.code || String(err);
       console.error('[Scanner] Native error details:', JSON.stringify(err, Object.getOwnPropertyNames(err || {})));
-      setError('Scanner encountered an issue. Try entering the code manually.');
+      setError('Scanner encountered an issue. Try Scan Bottle Label instead.');
       setDebugError(`Native error: ${errMsg} | type: ${err?.constructor?.name} | code: ${err?.code || 'none'}`);
     }
   }, [processBarcode]);
 
-  // Web scanner fallback using html5-qrcode (only works in browser, NOT in native WKWebView)
   const startWebScanner = useCallback(async () => {
     setError(null);
+    setDebugError(null);
     setScannedResult(null);
-    
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } 
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' },
       });
-      stream.getTracks().forEach(track => track.stop());
+      stream.getTracks().forEach((track) => track.stop());
       setHasPermission(true);
-      
+
       scannerRef.current = new Html5Qrcode(scannerContainerId);
-      
       setIsScanning(true);
-      
+
       await scannerRef.current.start(
         { facingMode: 'environment' },
         {
@@ -260,30 +315,30 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
           aspectRatio: 1.5,
         },
         async (decodedText) => {
-          // Stop scanning immediately
           if (scannerRef.current) {
-            try { await scannerRef.current.stop(); } catch (e) {}
+            try {
+              await scannerRef.current.stop();
+            } catch (e) {
+              console.error('Error stopping scanner after decode:', e);
+            }
           }
           await processBarcode(decodedText);
         },
-        () => {} // Ignore scan errors
+        () => {}
       );
     } catch (err: any) {
       console.error('Scanner error:', err);
       setIsScanning(false);
       setHasPermission(false);
       const errMsg = err?.message || err?.name || String(err);
-      setError('Camera access is needed to scan barcodes. Please allow camera access in your device settings, or enter the code manually.');
+      setError('Camera access is needed to scan barcodes. Please allow camera access or scan the bottle label instead.');
       setDebugError(`Web scanner error: ${errMsg} | name: ${err?.name}`);
     }
   }, [processBarcode]);
 
-  // Start scanner - picks native or web
   const startScanner = useCallback(async () => {
     const nativePlatform = getNativePlatform();
 
-    // iOS native builds use the web camera path because the installed ML Kit plugin
-    // requires CocoaPods on iOS, while this project is currently synced with SPM.
     if (isNativeApp() && nativePlatform !== 'ios') {
       await startNativeScanner();
     } else {
@@ -304,14 +359,17 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       }
       setUsingNativeScanner(false);
     }
+
     if (scannerRef.current && isScanning) {
       try {
         await scannerRef.current.stop();
-        scannerRef.current = null;
       } catch (e) {
         console.error('Error stopping scanner:', e);
       }
     }
+
+    scannerRef.current = null;
+    setTorchOn(false);
     setIsScanning(false);
   }, [isScanning, usingNativeScanner]);
 
@@ -327,7 +385,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
           }
           setTorchOn(!torchOn);
         }
-      } catch (e) {
+      } catch {
         toast.info('Flashlight not available');
       }
       return;
@@ -344,7 +402,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         } else {
           toast.info('Flashlight not available on this device');
         }
-      } catch (e) {
+      } catch {
         toast.info('Flashlight not available');
       }
     }
@@ -357,52 +415,82 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     }
   }, [scannedResult, onMedicationScanned]);
 
-  const handleRetry = useCallback(() => {
+  const handleRetry = useCallback(async () => {
+    await stopScanner();
     setScannedResult(null);
     setError(null);
     setDebugError(null);
-    setHasPermission(null);
+    setLabelPhoto(null);
+    setLabelNotes([]);
     setScannerStarted(false);
-  }, []);
+    if (labelFileInputRef.current) {
+      labelFileInputRef.current.value = '';
+    }
+  }, [stopScanner]);
 
   const switchToManualMode = useCallback(async () => {
     await stopScanner();
     setMode('manual');
     setError(null);
+    setDebugError(null);
     setScannedResult(null);
+    setScannerStarted(false);
+    setLabelPhoto(null);
+    setLabelNotes([]);
   }, [stopScanner]);
 
   const switchToNameSearch = useCallback(async () => {
     await stopScanner();
     setMode('name');
     setError(null);
+    setDebugError(null);
     setScannedResult(null);
     setNameSearchResults([]);
     setDrugNameQuery('');
+    setScannerStarted(false);
+    setLabelPhoto(null);
+    setLabelNotes([]);
   }, [stopScanner]);
 
-  const switchToCameraMode = useCallback(() => {
+  const switchToLabelMode = useCallback(async () => {
+    await stopScanner();
+    setMode('label');
+    setError(null);
+    setDebugError(null);
+    setScannedResult(null);
+    setScannerStarted(false);
+    setLabelNotes([]);
+  }, [stopScanner]);
+
+  const switchToCameraMode = useCallback(async () => {
+    await stopScanner();
     setMode('camera');
     setError(null);
+    setDebugError(null);
     setScannedResult(null);
     setManualNdc('');
     setDrugNameQuery('');
     setNameSearchResults([]);
+    setLabelPhoto(null);
+    setLabelNotes([]);
     setScannerStarted(false);
-  }, []);
+    if (labelFileInputRef.current) {
+      labelFileInputRef.current.value = '';
+    }
+  }, [stopScanner]);
 
   const formatNdcInput = (value: string): string => {
     const numbers = value.replace(/\D/g, '');
     if (numbers.length <= 5) {
       return numbers;
-    } else if (numbers.length <= 9) {
-      return `${numbers.slice(0, 5)}-${numbers.slice(5)}`;
-    } else {
-      return `${numbers.slice(0, 5)}-${numbers.slice(5, 9)}-${numbers.slice(9, 11)}`;
     }
+    if (numbers.length <= 9) {
+      return `${numbers.slice(0, 5)}-${numbers.slice(5)}`;
+    }
+    return `${numbers.slice(0, 5)}-${numbers.slice(5, 9)}-${numbers.slice(9, 11)}`;
   };
 
-  const handleManualNdcChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleManualNdcChange = (e: ChangeEvent<HTMLInputElement>) => {
     const formatted = formatNdcInput(e.target.value);
     setManualNdc(formatted);
   };
@@ -422,12 +510,12 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
 
     try {
       const medication = await lookupNdc(manualNdc);
-      
+
       if (medication) {
         setScannedResult(medication);
         toast.success(`Found: ${medication.name} ${medication.strength}`);
       } else {
-        setError('Medication not found in FDA database. Please verify the NDC code.');
+        setError('Medication not found in FDA database. This may be a pharmacy-only code from the bottle label.');
       }
     } catch (err) {
       console.error('Manual lookup error:', err);
@@ -436,9 +524,45 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       setIsLoading(false);
     }
   };
-  // Debounced typeahead search for drug name
+
+  const handleLabelCapture = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setLabelPhoto(event.target?.result as string);
+      setLabelNotes([]);
+      setError(null);
+      setDebugError(null);
+      setScannedResult(null);
+    };
+    reader.readAsDataURL(file);
+  }, []);
+
+  const handleAnalyzeLabel = useCallback(async () => {
+    if (!labelPhoto) return;
+    await readPrescriptionLabel(labelPhoto);
+  }, [labelPhoto, readPrescriptionLabel]);
+
+  const handleRetakeLabel = useCallback(() => {
+    setLabelPhoto(null);
+    setLabelNotes([]);
+    setError(null);
+    setDebugError(null);
+    if (labelFileInputRef.current) {
+      labelFileInputRef.current.value = '';
+    }
+  }, []);
+
+  const handleUserStartScanner = useCallback(async () => {
+    setScannerStarted(true);
+    await startScanner();
+  }, [startScanner]);
+
   useEffect(() => {
     if (mode !== 'name') return;
+
     const query = drugNameQuery.trim();
     if (query.length < 2) {
       setNameSearchResults([]);
@@ -450,7 +574,6 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     setIsNameSearching(true);
     setError(null);
 
-    // Cancel previous in-flight request
     if (nameSearchAbortRef.current) {
       nameSearchAbortRef.current.abort();
     }
@@ -458,23 +581,31 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     const abortController = new AbortController();
     nameSearchAbortRef.current = abortController;
 
-    const timer = setTimeout(async () => {
+    const timer = window.setTimeout(async () => {
       try {
         const { data, error } = await supabase.functions.invoke('ndc-lookup', {
-          body: { name: query }
+          body: { name: query },
         });
 
         if (abortController.signal.aborted) return;
 
-        if (error) throw error;
+        const status = (error as any)?.context?.status ?? (error as any)?.status;
+        if (error) {
+          if (status === 404 || error.message?.includes('404')) {
+            setNameSearchResults([]);
+            setError('No medications found. Try a different spelling.');
+            return;
+          }
+          throw error;
+        }
 
         if (data?.success && data?.medications?.length) {
-          setNameSearchResults(data.medications);
+          setNameSearchResults(data.medications.map((med: ScannedMedication) => ({ ...med, source: 'label' })));
         } else {
           setNameSearchResults([]);
           setError('No medications found. Try a different spelling.');
         }
-      } catch (err: any) {
+      } catch (err) {
         if (abortController.signal.aborted) return;
         console.error('Name search error:', err);
         setError('Error searching medications. Please try again.');
@@ -486,36 +617,28 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     }, 400);
 
     return () => {
-      clearTimeout(timer);
+      window.clearTimeout(timer);
       abortController.abort();
     };
   }, [drugNameQuery, mode]);
 
-
   useEffect(() => {
     return () => {
-      stopScanner();
+      if (nameSearchAbortRef.current) {
+        nameSearchAbortRef.current.abort();
+      }
+      void stopScanner();
     };
   }, [stopScanner]);
 
-  // Track if scanner has been started by user gesture
-  const [scannerStarted, setScannerStarted] = useState(false);
-
-  // Start scanner only via explicit user tap (iOS requires user gesture for camera)
-  const handleUserStartScanner = useCallback(async () => {
-    setScannerStarted(true);
-    await startScanner();
-  }, [startScanner]);
-
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
-      {/* Header */}
       <header className="flex items-center justify-between p-4 bg-card border-b-2 border-border">
-        <Button 
-          variant="ghost" 
-          size="lg" 
+        <Button
+          variant="ghost"
+          size="lg"
           onClick={() => {
-            stopScanner();
+            void stopScanner();
             onClose();
           }}
           className="gap-2"
@@ -524,45 +647,48 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
           <span className="text-lg">Cancel</span>
         </Button>
         <h1 className="text-elder-xl font-bold">
-          {mode === 'camera' ? 'Scan Prescription' : mode === 'manual' ? 'Enter NDC Code' : 'Search Drug'}
+          {mode === 'camera'
+            ? 'Scan Prescription'
+            : mode === 'manual'
+              ? 'Enter NDC Code'
+              : mode === 'name'
+                ? 'Search Drug'
+                : 'Scan Bottle Label'}
         </h1>
         <div className="w-24" />
       </header>
 
-      {/* Scanner Area */}
       <div className="flex-1 flex flex-col items-center justify-center p-6 bg-muted overflow-auto">
-        {/* Camera Mode */}
         {mode === 'camera' && !scannedResult && !error && (
           <>
-            {/* Show start button if scanner hasn't been started by user gesture */}
             {!scannerStarted && !isScanning && !usingNativeScanner && (
-              <div className="text-center space-y-6">
+              <div className="text-center space-y-6 w-full max-w-md">
                 <div className="w-24 h-24 bg-primary/20 rounded-3xl flex items-center justify-center mx-auto">
                   <Camera className="w-14 h-14 text-primary" />
                 </div>
                 <div className="space-y-2">
                   <h2 className="text-elder-xl font-bold text-foreground">Scan Prescription Barcode</h2>
                   <p className="text-muted-foreground text-lg">
-                    Point your camera at the barcode on your prescription label to look up medication details.
+                    Use barcode scan for a real NDC code, or scan the printed bottle label directly if the bottle uses a pharmacy barcode.
                   </p>
                 </div>
-                <Button 
-                  variant="default" 
-                  size="xl" 
-                  onClick={handleUserStartScanner}
-                  className="w-full max-w-xs mx-auto gap-3"
-                >
-                  <Camera className="w-6 h-6" />
-                  Open Camera
-                </Button>
+                <div className="space-y-3">
+                  <Button variant="default" size="xl" onClick={handleUserStartScanner} className="w-full gap-3">
+                    <Camera className="w-6 h-6" />
+                    Open Barcode Scanner
+                  </Button>
+                  <Button variant="outline" size="xl" onClick={() => void switchToLabelMode()} className="w-full gap-3">
+                    <ScanLine className="w-6 h-6" />
+                    Scan Bottle Label Instead
+                  </Button>
+                </div>
               </div>
             )}
 
-            {/* Scanner viewport - only shown after user taps to start */}
             {scannerStarted && !usingNativeScanner && (
               <div className="relative w-full max-w-md aspect-[4/3] bg-black rounded-3xl overflow-hidden shadow-elder-lg">
                 <div id={scannerContainerId} className="w-full h-full" />
-                
+
                 {isScanning && (
                   <div className="absolute inset-0 pointer-events-none">
                     <div className="absolute top-8 left-8 w-12 h-12 border-t-4 border-l-4 border-primary rounded-tl-lg" />
@@ -572,7 +698,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
                     <div className="absolute top-1/2 left-8 right-8 h-1 bg-primary/50 animate-pulse" />
                   </div>
                 )}
-                
+
                 {isLoading && (
                   <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-4">
                     <Loader2 className="w-16 h-16 text-primary animate-spin" />
@@ -582,7 +708,6 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
               </div>
             )}
 
-            {/* Native scanner shows its own UI, show a loading state */}
             {usingNativeScanner && isScanning && (
               <div className="text-center space-y-4">
                 <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto" />
@@ -591,37 +716,33 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
               </div>
             )}
 
-            {/* Instructions */}
             {scannerStarted && !usingNativeScanner && (
-              <div className="mt-8 text-center space-y-4">
+              <div className="mt-8 text-center space-y-4 max-w-md">
                 <div className="flex items-center justify-center gap-3 text-foreground">
                   <ScanLine className="w-8 h-8 text-primary" />
                   <p className="text-elder-lg">Point camera at barcode on prescription label</p>
                 </div>
                 <p className="text-muted-foreground text-lg">
-                  The barcode contains the NDC number for your medication
+                  If this bottle uses a pharmacy barcode instead of an FDA NDC, switch to Scan Bottle Label.
                 </p>
               </div>
             )}
 
-            {/* Controls */}
             {isScanning && !usingNativeScanner && (
               <div className="mt-8 flex gap-4">
-                <Button 
-                  variant="outline" 
-                  size="xl" 
-                  onClick={toggleTorch}
-                  className="gap-3"
-                >
+                <Button variant="outline" size="xl" onClick={toggleTorch} className="gap-3">
                   <Flashlight className={`w-6 h-6 ${torchOn ? 'text-primary' : ''}`} />
                   Light
+                </Button>
+                <Button variant="outline" size="xl" onClick={() => void switchToLabelMode()} className="gap-3">
+                  <ScanLine className="w-6 h-6" />
+                  Bottle Label
                 </Button>
               </div>
             )}
           </>
         )}
 
-        {/* Manual Entry Mode */}
         {mode === 'manual' && !scannedResult && (
           <Card className="w-full max-w-md p-8 space-y-6 bg-card border-2 border-border shadow-elder-lg">
             <div className="text-center space-y-2">
@@ -630,7 +751,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
               </div>
               <h2 className="text-elder-xl font-bold text-foreground">Enter NDC Code</h2>
               <p className="text-muted-foreground text-lg">
-                Find the 10 or 11 digit NDC code on your prescription label
+                Find the 10 or 11 digit NDC code on your prescription label.
               </p>
             </div>
 
@@ -658,9 +779,9 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
                 </div>
               )}
 
-              <Button 
-                variant="default" 
-                size="xl" 
+              <Button
+                variant="default"
+                size="xl"
                 onClick={handleManualLookup}
                 disabled={isLoading || manualNdc.replace(/-/g, '').length < 7}
                 className="w-full gap-3"
@@ -678,22 +799,9 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
                 )}
               </Button>
             </div>
-
-            <div className="pt-2">
-              <Button 
-                variant="outline" 
-                size="lg" 
-                onClick={switchToNameSearch}
-                className="w-full gap-3"
-              >
-                <Search className="w-5 h-5" />
-                Search by Drug Name Instead
-              </Button>
-            </div>
           </Card>
         )}
 
-        {/* Name Search Mode */}
         {mode === 'name' && !scannedResult && (
           <Card className="w-full max-w-md p-8 space-y-6 bg-card border-2 border-border shadow-elder-lg">
             <div className="text-center space-y-2">
@@ -702,7 +810,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
               </div>
               <h2 className="text-elder-xl font-bold text-foreground">Search by Drug Name</h2>
               <p className="text-muted-foreground text-lg">
-                Enter the brand or generic name of your medication
+                Enter the brand or generic name of your medication.
               </p>
             </div>
 
@@ -719,7 +827,6 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
                 />
               </div>
 
-              {/* Quick-select common medications */}
               {!drugNameQuery && nameSearchResults.length === 0 && (
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground font-medium">Common medications:</p>
@@ -751,15 +858,14 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
               )}
             </div>
 
-            {/* Name Search Results */}
             {nameSearchResults.length > 0 && (
               <div className="space-y-3 max-h-64 overflow-y-auto">
                 <p className="text-sm text-muted-foreground font-medium">
                   {nameSearchResults.length} result(s) found — tap to select:
                 </p>
-                {nameSearchResults.map((med, i) => (
+                {nameSearchResults.map((med, index) => (
                   <button
-                    key={`${med.ndcCode}-${i}`}
+                    key={`${med.ndcCode || med.name}-${index}`}
                     onClick={() => {
                       setScannedResult(med);
                       setNameSearchResults([]);
@@ -785,7 +891,97 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
           </Card>
         )}
 
-        {/* Error State */}
+        {mode === 'label' && !scannedResult && (
+          <Card className="w-full max-w-md p-8 space-y-6 bg-card border-2 border-border shadow-elder-lg">
+            <div className="text-center space-y-2">
+              <div className="w-20 h-20 bg-primary/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <ScanLine className="w-12 h-12 text-primary" />
+              </div>
+              <h2 className="text-elder-xl font-bold text-foreground">Scan Bottle Label</h2>
+              <p className="text-muted-foreground text-lg">
+                Take a clear photo of the printed prescription label on the bottle and we’ll read the medication details for you.
+              </p>
+            </div>
+
+            <input
+              ref={labelFileInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleLabelCapture}
+              className="hidden"
+            />
+
+            {!labelPhoto ? (
+              <div className="space-y-3">
+                <Button variant="default" size="xl" onClick={() => labelFileInputRef.current?.click()} className="w-full gap-3">
+                  <Camera className="w-6 h-6" />
+                  Open Camera
+                </Button>
+                <Button
+                  variant="outline"
+                  size="xl"
+                  onClick={() => {
+                    if (labelFileInputRef.current) {
+                      labelFileInputRef.current.removeAttribute('capture');
+                      labelFileInputRef.current.click();
+                      window.setTimeout(() => labelFileInputRef.current?.setAttribute('capture', 'environment'), 500);
+                    }
+                  }}
+                  className="w-full gap-3"
+                >
+                  <Search className="w-6 h-6" />
+                  Upload Photo
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="rounded-2xl overflow-hidden border-2 border-border bg-muted">
+                  <img src={labelPhoto} alt="Prescription bottle label" className="w-full h-64 object-cover" />
+                </div>
+
+                {labelNotes.length > 0 && !error && (
+                  <div className="bg-muted rounded-xl p-4 space-y-2">
+                    <p className="text-sm font-semibold text-foreground">Tips from the label read</p>
+                    <ul className="space-y-1 text-sm text-muted-foreground list-disc pl-4">
+                      {labelNotes.map((note, index) => (
+                        <li key={`${note}-${index}`}>{note}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {error && (
+                  <div className="bg-destructive/10 border-2 border-destructive/30 rounded-xl p-4">
+                    <p className="text-destructive text-center">{error}</p>
+                    {debugError && (
+                      <p className="text-xs font-mono text-muted-foreground mt-2 break-all">{debugError}</p>
+                    )}
+                  </div>
+                )}
+
+                <Button variant="default" size="xl" onClick={handleAnalyzeLabel} disabled={isLoading} className="w-full gap-3">
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-6 h-6 animate-spin" />
+                      Reading Label...
+                    </>
+                  ) : (
+                    <>
+                      <ScanLine className="w-6 h-6" />
+                      Read Bottle Label
+                    </>
+                  )}
+                </Button>
+                <Button variant="outline" size="xl" onClick={handleRetakeLabel} className="w-full gap-3">
+                  <RotateCcw className="w-6 h-6" />
+                  Retake Photo
+                </Button>
+              </div>
+            )}
+          </Card>
+        )}
+
         {error && mode === 'camera' && (
           <Card className="w-full max-w-md p-8 text-center space-y-6 bg-card border-2 border-border shadow-elder-lg">
             <div className="w-24 h-24 bg-destructive/20 rounded-3xl flex items-center justify-center mx-auto">
@@ -803,15 +999,19 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
               )}
             </div>
             <div className="flex flex-col gap-3">
-              <Button variant="default" size="xl" onClick={handleRetry} className="w-full gap-3">
+              <Button variant="default" size="xl" onClick={() => void handleRetry()} className="w-full gap-3">
                 <RotateCcw className="w-6 h-6" />
                 Try Again
               </Button>
-              <Button variant="outline" size="xl" onClick={switchToManualMode} className="w-full gap-3">
+              <Button variant="outline" size="xl" onClick={() => void switchToLabelMode()} className="w-full gap-3">
+                <ScanLine className="w-6 h-6" />
+                Scan Bottle Label
+              </Button>
+              <Button variant="outline" size="xl" onClick={() => void switchToManualMode()} className="w-full gap-3">
                 <Keyboard className="w-6 h-6" />
                 Enter NDC Code
               </Button>
-              <Button variant="outline" size="xl" onClick={switchToNameSearch} className="w-full gap-3">
+              <Button variant="outline" size="xl" onClick={() => void switchToNameSearch()} className="w-full gap-3">
                 <Search className="w-6 h-6" />
                 Search by Drug Name
               </Button>
@@ -819,21 +1019,30 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
           </Card>
         )}
 
-        {/* Result State */}
         {scannedResult && (
           <Card className="w-full max-w-md p-8 space-y-6 bg-card border-3 border-success shadow-elder-lg">
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 bg-success/20 rounded-2xl flex items-center justify-center">
                 <Pill className="w-12 h-12 text-success" />
               </div>
-              <div className="flex-1">
+              <div className="flex-1 space-y-2">
                 <h2 className="text-elder-xl text-foreground">{scannedResult.name}</h2>
                 {scannedResult.genericName && (
                   <p className="text-muted-foreground text-lg">{scannedResult.genericName}</p>
                 )}
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="outline">
+                    {scannedResult.source === 'label' ? 'Bottle label match' : 'Barcode match'}
+                  </Badge>
+                  {scannedResult.source === 'label' && scannedResult.confidence && (
+                    <Badge variant="outline" className={labelConfidenceStyles[scannedResult.confidence]}>
+                      {scannedResult.confidence} confidence
+                    </Badge>
+                  )}
+                </div>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-muted rounded-xl p-4">
                 <p className="text-sm text-muted-foreground uppercase tracking-wide">Strength</p>
@@ -845,15 +1054,24 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
               </div>
             </div>
 
-            <div className="bg-muted rounded-xl p-4">
-              <p className="text-sm text-muted-foreground uppercase tracking-wide">NDC Code</p>
-              <p className="text-lg font-mono text-foreground">{scannedResult.ndcCode}</p>
-            </div>
+            {scannedResult.ndcCode && (
+              <div className="bg-muted rounded-xl p-4">
+                <p className="text-sm text-muted-foreground uppercase tracking-wide">NDC Code</p>
+                <p className="text-lg font-mono text-foreground">{scannedResult.ndcCode}</p>
+              </div>
+            )}
 
             {scannedResult.manufacturer && (
               <div className="bg-muted rounded-xl p-4">
                 <p className="text-sm text-muted-foreground uppercase tracking-wide">Manufacturer</p>
                 <p className="text-elder text-foreground">{scannedResult.manufacturer}</p>
+              </div>
+            )}
+
+            {scannedResult.prescriber && (
+              <div className="bg-muted rounded-xl p-4">
+                <p className="text-sm text-muted-foreground uppercase tracking-wide">Prescriber</p>
+                <p className="text-elder text-foreground">{scannedResult.prescriber}</p>
               </div>
             )}
 
@@ -864,22 +1082,37 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
               </div>
             )}
 
+            {scannedResult.instructions && (
+              <div className="bg-muted rounded-xl p-4">
+                <p className="text-sm text-muted-foreground uppercase tracking-wide">Instructions</p>
+                <p className="text-elder text-foreground">{scannedResult.instructions}</p>
+              </div>
+            )}
+
+            {scannedResult.purpose && (
+              <div className="bg-muted rounded-xl p-4">
+                <p className="text-sm text-muted-foreground uppercase tracking-wide">Purpose</p>
+                <p className="text-elder text-foreground">{scannedResult.purpose}</p>
+              </div>
+            )}
+
+            {labelNotes.length > 0 && scannedResult.source === 'label' && (
+              <div className="bg-muted rounded-xl p-4 space-y-2">
+                <p className="text-sm text-muted-foreground uppercase tracking-wide">Label Notes</p>
+                <ul className="space-y-1 text-sm text-foreground list-disc pl-4">
+                  {labelNotes.map((note, index) => (
+                    <li key={`${note}-${index}`}>{note}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             <div className="flex gap-4 pt-4">
-              <Button 
-                variant="outline" 
-                size="xl" 
-                onClick={handleRetry}
-                className="flex-1 gap-3"
-              >
+              <Button variant="outline" size="xl" onClick={() => void handleRetry()} className="flex-1 gap-3">
                 <RotateCcw className="w-6 h-6" />
                 {mode === 'camera' ? 'Scan Again' : 'Try Another'}
               </Button>
-              <Button 
-                variant="default" 
-                size="xl" 
-                onClick={handleConfirmMedication}
-                className="flex-1 gap-3"
-              >
+              <Button variant="default" size="xl" onClick={handleConfirmMedication} className="flex-1 gap-3">
                 <Check className="w-6 h-6" />
                 Add Medication
               </Button>
@@ -888,71 +1121,73 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         )}
       </div>
 
-      {/* Footer / Mode Toggle */}
       <div className="p-4 bg-card border-t-2 border-border space-y-2">
         {mode === 'camera' && !scannedResult && (
           <div className="flex flex-col items-center gap-2">
             <p className="text-center text-muted-foreground text-lg">
-              Can't scan?{' '}
-              <Button 
-                variant="link" 
-                className="text-lg p-0 h-auto text-primary font-semibold"
-                onClick={switchToManualMode}
-              >
-                Enter NDC code
+              Can&apos;t scan?{' '}
+              <Button variant="link" className="text-lg p-0 h-auto text-primary font-semibold" onClick={() => void switchToLabelMode()}>
+                Scan bottle label
               </Button>
-              {' or '}
-              <Button 
-                variant="link" 
-                className="text-lg p-0 h-auto text-primary font-semibold"
-                onClick={switchToNameSearch}
-              >
+              ,{' '}
+              <Button variant="link" className="text-lg p-0 h-auto text-primary font-semibold" onClick={() => void switchToManualMode()}>
+                enter NDC code
+              </Button>
+              {' '}or{' '}
+              <Button variant="link" className="text-lg p-0 h-auto text-primary font-semibold" onClick={() => void switchToNameSearch()}>
                 search by name
               </Button>
             </p>
           </div>
         )}
+
         {mode === 'manual' && !scannedResult && (
-          <div className="flex gap-2">
-            <Button 
-              variant="ghost" 
-              size="lg" 
-              className="flex-1 gap-2 text-muted-foreground"
-              onClick={switchToCameraMode}
-            >
+          <div className="grid grid-cols-3 gap-2">
+            <Button variant="ghost" size="lg" className="gap-2 text-muted-foreground" onClick={() => void switchToCameraMode()}>
               <Camera className="w-5 h-5" />
               Camera
             </Button>
-            <Button 
-              variant="ghost" 
-              size="lg" 
-              className="flex-1 gap-2 text-muted-foreground"
-              onClick={switchToNameSearch}
-            >
+            <Button variant="ghost" size="lg" className="gap-2 text-muted-foreground" onClick={() => void switchToLabelMode()}>
+              <ScanLine className="w-5 h-5" />
+              Label
+            </Button>
+            <Button variant="ghost" size="lg" className="gap-2 text-muted-foreground" onClick={() => void switchToNameSearch()}>
               <Search className="w-5 h-5" />
-              Search by Name
+              Search
             </Button>
           </div>
         )}
+
         {mode === 'name' && !scannedResult && (
-          <div className="flex gap-2">
-            <Button 
-              variant="ghost" 
-              size="lg" 
-              className="flex-1 gap-2 text-muted-foreground"
-              onClick={switchToCameraMode}
-            >
+          <div className="grid grid-cols-3 gap-2">
+            <Button variant="ghost" size="lg" className="gap-2 text-muted-foreground" onClick={() => void switchToCameraMode()}>
               <Camera className="w-5 h-5" />
               Camera
             </Button>
-            <Button 
-              variant="ghost" 
-              size="lg" 
-              className="flex-1 gap-2 text-muted-foreground"
-              onClick={switchToManualMode}
-            >
+            <Button variant="ghost" size="lg" className="gap-2 text-muted-foreground" onClick={() => void switchToLabelMode()}>
+              <ScanLine className="w-5 h-5" />
+              Label
+            </Button>
+            <Button variant="ghost" size="lg" className="gap-2 text-muted-foreground" onClick={() => void switchToManualMode()}>
               <Keyboard className="w-5 h-5" />
               NDC Code
+            </Button>
+          </div>
+        )}
+
+        {mode === 'label' && !scannedResult && (
+          <div className="grid grid-cols-3 gap-2">
+            <Button variant="ghost" size="lg" className="gap-2 text-muted-foreground" onClick={() => void switchToCameraMode()}>
+              <Camera className="w-5 h-5" />
+              Camera
+            </Button>
+            <Button variant="ghost" size="lg" className="gap-2 text-muted-foreground" onClick={() => void switchToManualMode()}>
+              <Keyboard className="w-5 h-5" />
+              NDC Code
+            </Button>
+            <Button variant="ghost" size="lg" className="gap-2 text-muted-foreground" onClick={() => void switchToNameSearch()}>
+              <Search className="w-5 h-5" />
+              Search
             </Button>
           </div>
         )}
