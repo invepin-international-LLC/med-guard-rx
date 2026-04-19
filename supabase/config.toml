@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.identify-pill]
 verify_jwt = false
+
+[functions.scan-prescription-label]
+verify_jwt = false
