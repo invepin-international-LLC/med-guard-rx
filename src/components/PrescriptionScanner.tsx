@@ -54,8 +54,8 @@ const getNativePlatform = () => {
 const getNativeScanner = async () => {
   if (!isNativeApp()) return null;
   try {
-    const { BarcodeScanner, BarcodeFormat } = await import('@capacitor-mlkit/barcode-scanning');
-    return { BarcodeScanner, BarcodeFormat };
+    const { BarcodeScanner, BarcodeFormat, Resolution } = await import('@capacitor-mlkit/barcode-scanning');
+    return { BarcodeScanner, BarcodeFormat, Resolution };
   } catch (e) {
     console.log('Native barcode scanner not available:', e);
     return null;
@@ -90,16 +90,18 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const labelFileInputRef = useRef<HTMLInputElement | null>(null);
   const nativeBarcodesListenerRef = useRef<{ remove: () => Promise<void> } | null>(null);
+  const nativeSingleBarcodeListenerRef = useRef<{ remove: () => Promise<void> } | null>(null);
   const nativeScanErrorListenerRef = useRef<{ remove: () => Promise<void> } | null>(null);
   const nativeScanHandledRef = useRef(false);
   const scannerContainerId = 'ndc-scanner';
 
   const clearNativeListeners = useCallback(async () => {
-    const listeners = [nativeBarcodesListenerRef.current, nativeScanErrorListenerRef.current].filter(Boolean) as {
+    const listeners = [nativeBarcodesListenerRef.current, nativeSingleBarcodeListenerRef.current, nativeScanErrorListenerRef.current].filter(Boolean) as {
       remove: () => Promise<void>;
     }[];
 
     nativeBarcodesListenerRef.current = null;
+    nativeSingleBarcodeListenerRef.current = null;
     nativeScanErrorListenerRef.current = null;
 
     if (listeners.length === 0) return;
