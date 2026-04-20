@@ -89,7 +89,23 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   const nameSearchAbortRef = useRef<AbortController | null>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const labelFileInputRef = useRef<HTMLInputElement | null>(null);
+  const nativeBarcodesListenerRef = useRef<{ remove: () => Promise<void> } | null>(null);
+  const nativeScanErrorListenerRef = useRef<{ remove: () => Promise<void> } | null>(null);
+  const nativeScanHandledRef = useRef(false);
   const scannerContainerId = 'ndc-scanner';
+
+  const clearNativeListeners = useCallback(async () => {
+    const listeners = [nativeBarcodesListenerRef.current, nativeScanErrorListenerRef.current].filter(Boolean) as {
+      remove: () => Promise<void>;
+    }[];
+
+    nativeBarcodesListenerRef.current = null;
+    nativeScanErrorListenerRef.current = null;
+
+    if (listeners.length === 0) return;
+
+    await Promise.allSettled(listeners.map((listener) => listener.remove()));
+  }, []);
 
   const lookupNdc = useCallback(async (ndcCode: string): Promise<ScannedMedication | null> => {
     try {
@@ -193,6 +209,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     setError(null);
     setDebugError(null);
     setScannedResult(null);
+    nativeScanHandledRef.current = false;
 
     const isNative = isNativeApp();
     console.log(`[Scanner] isNativeApp=${isNative}, platform=${(window as any).Capacitor?.getPlatform?.()}`);
@@ -240,16 +257,11 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       setUsingNativeScanner(true);
       setIsScanning(true);
 
-      // NOTE: Only pass `formats` to scan(). Options like autoZoom, lensFacing,
-      // resolution, and enableMultitaskingCameraAccess are Android-only for
-      // startScan() — passing them to scan() on iOS can cause the native UI
-      // to open but never fire detection callbacks.
-      // PDF417 is critical: most US prescription labels use it.
       const scanOptions = {
         formats: [
-          BarcodeFormat.Pdf417,      // most US Rx labels
-          BarcodeFormat.Code128,     // pharmacy barcodes
-          BarcodeFormat.DataMatrix,  // GS1 DataMatrix on newer Rx
+          BarcodeFormat.Pdf417,
+          BarcodeFormat.Code128,
+          BarcodeFormat.DataMatrix,
           BarcodeFormat.Code39,
           BarcodeFormat.Ean13,
           BarcodeFormat.Ean8,
@@ -258,24 +270,54 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
           BarcodeFormat.Itf,
           BarcodeFormat.QrCode,
         ],
-      } as any;
+      } as const;
 
-      console.log('[Scanner] Starting native scan with options:', scanOptions);
-      const result = await BarcodeScanner.scan(scanOptions);
+      await clearNativeListeners();
 
-      setIsScanning(false);
-      setUsingNativeScanner(false);
+      nativeBarcodesListenerRef.current = await BarcodeScanner.addListener('barcodesScanned', async (event: any) => {
+        const firstBarcode = Array.isArray(event?.barcodes)
+          ? event.barcodes.find((barcode: any) => typeof barcode?.rawValue === 'string' && barcode.rawValue.trim().length > 0)
+          : null;
 
-      if (result.barcodes.length > 0) {
-        const barcodeValue = result.barcodes[0].rawValue;
-        if (barcodeValue) {
-          await processBarcode(barcodeValue);
+        if (!firstBarcode) {
+          console.log('[Scanner] Native scan event fired without a usable rawValue.', event);
+          return;
         }
-      } else {
-        setError('No barcode detected. Try again or scan the bottle label instead.');
-      }
+
+        if (nativeScanHandledRef.current) {
+          return;
+        }
+        nativeScanHandledRef.current = true;
+
+        console.log('[Scanner] Native barcode detected:', {
+          format: firstBarcode.format,
+          rawValue: firstBarcode.rawValue,
+          displayValue: firstBarcode.displayValue,
+        });
+
+        try {
+          await BarcodeScanner.stopScan();
+        } catch (stopError) {
+          console.error('Error stopping native scanner after detection:', stopError);
+        }
+
+        await clearNativeListeners();
+        setUsingNativeScanner(false);
+        setIsScanning(false);
+        await processBarcode(firstBarcode.rawValue);
+      });
+
+      nativeScanErrorListenerRef.current = await BarcodeScanner.addListener('scanError', async (event: any) => {
+        console.error('[Scanner] Native scanError event:', event);
+        setDebugError(`Native scan error: ${event?.message || 'unknown error'}`);
+      });
+
+      console.log('[Scanner] Starting native live scan with options:', scanOptions);
+      await BarcodeScanner.startScan(scanOptions as any);
     } catch (err: any) {
       console.error('Native scanner error:', err);
+      await clearNativeListeners();
+      nativeScanHandledRef.current = false;
       setIsScanning(false);
       setUsingNativeScanner(false);
 
@@ -293,7 +335,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       setError('Scanner encountered an issue. Try Scan Bottle Label instead.');
       setDebugError(`Native error: ${errMsg} | type: ${err?.constructor?.name} | code: ${err?.code || 'none'}`);
     }
-  }, [processBarcode]);
+  }, [clearNativeListeners, processBarcode]);
 
   const startWebScanner = useCallback(async () => {
     setError(null);
@@ -352,6 +394,8 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   }, [startNativeScanner, startWebScanner]);
 
   const stopScanner = useCallback(async () => {
+    nativeScanHandledRef.current = false;
+
     if (usingNativeScanner) {
       try {
         const nativeScanner = await getNativeScanner();
@@ -361,6 +405,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       } catch (e) {
         console.error('Error stopping native scanner:', e);
       }
+      await clearNativeListeners();
       setUsingNativeScanner(false);
     }
 
@@ -375,7 +420,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     scannerRef.current = null;
     setTorchOn(false);
     setIsScanning(false);
-  }, [isScanning, usingNativeScanner]);
+  }, [clearNativeListeners, isScanning, usingNativeScanner]);
 
   const toggleTorch = useCallback(async () => {
     if (usingNativeScanner) {
@@ -636,7 +681,9 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   }, [stopScanner]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-background flex flex-col">
+    <div
+      className={`fixed inset-0 z-50 flex flex-col ${usingNativeScanner && isScanning && mode === 'camera' ? 'bg-transparent' : 'bg-background'}`}
+    >
       <header className="flex items-center gap-3 p-4 bg-card border-b border-border">
         <Button
           variant="ghost"
@@ -662,7 +709,9 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         <div className="w-11 shrink-0" />
       </header>
 
-      <div className="flex-1 flex flex-col items-center justify-center p-6 bg-muted overflow-auto">
+      <div
+        className={`flex-1 flex flex-col items-center justify-center p-6 overflow-auto ${usingNativeScanner && isScanning && mode === 'camera' ? 'bg-transparent' : 'bg-muted'}`}
+      >
         {mode === 'camera' && !scannedResult && !error && (
           <>
             {!scannerStarted && !isScanning && !usingNativeScanner && (
@@ -713,10 +762,28 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
             )}
 
             {usingNativeScanner && isScanning && (
-              <div className="text-center space-y-4">
-                <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto" />
-                <p className="text-elder-lg text-foreground">Scanner is open...</p>
-                <p className="text-muted-foreground">Point your camera at the barcode</p>
+              <div className="w-full max-w-md mt-auto">
+                <Card className="border-border bg-card/95 shadow-elder-lg backdrop-blur supports-[backdrop-filter]:bg-card/85">
+                  <div className="p-5 text-center space-y-4">
+                    <div className="flex items-center justify-center gap-3 text-foreground">
+                      <ScanLine className="w-7 h-7 text-primary" />
+                      <p className="text-elder-lg font-semibold">Point camera at the barcode</p>
+                    </div>
+                    <p className="text-muted-foreground">
+                      Hold the bottle steady about 4–6 inches away and center the printed code inside the view.
+                    </p>
+                    <div className="flex gap-3 pt-1">
+                      <Button variant="outline" size="lg" onClick={toggleTorch} className="flex-1 gap-2">
+                        <Flashlight className={`w-5 h-5 ${torchOn ? 'text-primary' : ''}`} />
+                        Light
+                      </Button>
+                      <Button variant="outline" size="lg" onClick={() => void switchToLabelMode()} className="flex-1 gap-2">
+                        <ScanLine className="w-5 h-5" />
+                        Bottle Label
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
               </div>
             )}
 
