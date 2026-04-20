@@ -1004,7 +1004,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
               </div>
             )}
 
-            {usingNativeScanner && isScanning && (
+            {usingNativeScanner && isScanning && nativePlatform !== 'ios' && (
               <>
                 {/* Tap-to-focus overlay over the native camera feed */}
                 <div
