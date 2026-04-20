@@ -107,9 +107,19 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     await Promise.allSettled(listeners.map((listener) => listener.remove()));
   }, []);
 
+  const debugScanner = useCallback((message: string, details?: unknown) => {
+    if (typeof details === 'undefined') {
+      console.log(`[ScannerDebug] ${message}`);
+      return;
+    }
+
+    console.log(`[ScannerDebug] ${message}`, details);
+  }, []);
+
   const lookupNdc = useCallback(async (ndcCode: string): Promise<ScannedMedication | null> => {
     try {
       console.log(`Looking up NDC: ${ndcCode}`);
+      debugScanner('Lookup started', { ndcCode });
 
       const { data, error } = await supabase.functions.invoke('ndc-lookup', {
         body: { ndc: ndcCode },
@@ -119,15 +129,28 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       if (error) {
         if (status === 404 || error.message?.includes('404')) {
           console.log('Medication not found in FDA database');
+          debugScanner('Lookup returned 404/not found', { ndcCode, status, message: error.message });
           return null;
         }
 
         console.error('Edge function error:', error);
+        debugScanner('Lookup edge function error', {
+          ndcCode,
+          status,
+          message: error.message,
+          context: (error as any)?.context,
+        });
         throw new Error(error.message || 'Failed to lookup medication');
       }
 
       if (data?.success && data?.medication) {
         console.log('Found medication:', data.medication);
+        debugScanner('Lookup success', {
+          ndcCode,
+          name: data.medication.name,
+          strength: data.medication.strength,
+          form: data.medication.form,
+        });
         return {
           ...data.medication,
           source: 'barcode',
@@ -135,12 +158,14 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       }
 
       console.log('Medication not found in FDA database');
+      debugScanner('Lookup returned empty result', { ndcCode, data });
       return null;
     } catch (err) {
       console.error('NDC lookup error:', err);
+      debugScanner('Lookup threw exception', err);
       throw err;
     }
-  }, []);
+  }, [debugScanner]);
 
   const readPrescriptionLabel = useCallback(async (imageBase64: string) => {
     setError(null);
@@ -179,6 +204,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     setIsLoading(true);
     setError(null);
     setDebugError(null);
+    debugScanner('Processing decoded barcode', { decodedText });
 
     if (navigator.vibrate) {
       navigator.vibrate([100, 50, 100]);
@@ -191,19 +217,26 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
 
       if (medication) {
         setScannedResult(medication);
+        debugScanner('Decoded barcode matched medication', {
+          decodedText,
+          name: medication.name,
+          strength: medication.strength,
+        });
         toast.success(`Found: ${medication.name} ${medication.strength}`);
       } else {
+        debugScanner('Decoded barcode did not match FDA medication', { decodedText });
         setError('That barcode was scanned, but it looks like a pharmacy or prescription code instead of an FDA medication code. Try Scan Bottle Label instead.');
         setDebugError(`Scanned barcode: ${decodedText}`);
       }
     } catch (err) {
       console.error('Scan lookup error:', err);
+      debugScanner('Barcode processing failed', err);
       setError('We scanned the barcode, but could not look up the medication. Try Scan Bottle Label instead.');
       setDebugError(`Barcode lookup failed for: ${decodedText}`);
     } finally {
       setIsLoading(false);
     }
-  }, [lookupNdc]);
+  }, [debugScanner, lookupNdc]);
 
   const startNativeScanner = useCallback(async () => {
     setError(null);
@@ -212,20 +245,25 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     nativeScanHandledRef.current = false;
 
     const isNative = isNativeApp();
-    console.log(`[Scanner] isNativeApp=${isNative}, platform=${(window as any).Capacitor?.getPlatform?.()}`);
+    const platform = (window as any).Capacitor?.getPlatform?.();
+    console.log(`[Scanner] isNativeApp=${isNative}, platform=${platform}`);
+    debugScanner('Starting native scanner', { isNative, platform });
 
     let nativeScanner;
     try {
       nativeScanner = await getNativeScanner();
       console.log(`[Scanner] getNativeScanner returned: ${nativeScanner ? 'module loaded' : 'null'}`);
+      debugScanner('Native scanner module load result', nativeScanner ? 'module loaded' : 'null');
     } catch (e: any) {
       console.error('Failed to load native scanner module:', e);
+      debugScanner('Native scanner module load failed', e);
       setError('Barcode scanner not available. Try scanning the bottle label instead.');
       setDebugError(`Module load failed: ${e?.message || String(e)}`);
       return;
     }
 
     if (!nativeScanner) {
+      debugScanner('Native scanner module missing after load');
       setError('Barcode scanner not available. Try scanning the bottle label instead.');
       setDebugError(`getNativeScanner() returned null. isNative=${isNative}`);
       return;
@@ -235,6 +273,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
 
     try {
       const { supported } = await BarcodeScanner.isSupported();
+      debugScanner('Native support check', { supported });
       if (!supported) {
         setHasPermission(false);
         setError('Camera is not available on this device.');
@@ -243,8 +282,10 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       }
 
       const permResult = await BarcodeScanner.checkPermissions();
+      debugScanner('Native permissions before request', permResult);
       if (permResult.camera !== 'granted') {
         const requestResult = await BarcodeScanner.requestPermissions();
+        debugScanner('Native permissions after request', requestResult);
         if (requestResult.camera !== 'granted') {
           setHasPermission(false);
           setError('Camera permission is required to scan barcodes. Please allow access when prompted, or scan the bottle label instead.');
@@ -272,19 +313,34 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         ],
       } as const;
 
+      debugScanner('Native scan options', scanOptions);
       await clearNativeListeners();
+      debugScanner('Cleared old native listeners');
 
       nativeBarcodesListenerRef.current = await BarcodeScanner.addListener('barcodesScanned', async (event: any) => {
+        debugScanner('Native barcodesScanned event', {
+          count: Array.isArray(event?.barcodes) ? event.barcodes.length : 0,
+          barcodes: Array.isArray(event?.barcodes)
+            ? event.barcodes.map((barcode: any) => ({
+                format: barcode?.format,
+                rawValue: barcode?.rawValue,
+                displayValue: barcode?.displayValue,
+              }))
+            : [],
+        });
+
         const firstBarcode = Array.isArray(event?.barcodes)
           ? event.barcodes.find((barcode: any) => typeof barcode?.rawValue === 'string' && barcode.rawValue.trim().length > 0)
           : null;
 
         if (!firstBarcode) {
           console.log('[Scanner] Native scan event fired without a usable rawValue.', event);
+          debugScanner('Native event had no usable rawValue', event);
           return;
         }
 
         if (nativeScanHandledRef.current) {
+          debugScanner('Ignored duplicate native barcode event');
           return;
         }
         nativeScanHandledRef.current = true;
@@ -294,11 +350,18 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
           rawValue: firstBarcode.rawValue,
           displayValue: firstBarcode.displayValue,
         });
+        debugScanner('Native barcode selected for processing', {
+          format: firstBarcode.format,
+          rawValue: firstBarcode.rawValue,
+          displayValue: firstBarcode.displayValue,
+        });
 
         try {
           await BarcodeScanner.stopScan();
+          debugScanner('Native stopScan succeeded after detection');
         } catch (stopError) {
           console.error('Error stopping native scanner after detection:', stopError);
+          debugScanner('Native stopScan failed after detection', stopError);
         }
 
         await clearNativeListeners();
@@ -309,13 +372,22 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
 
       nativeScanErrorListenerRef.current = await BarcodeScanner.addListener('scanError', async (event: any) => {
         console.error('[Scanner] Native scanError event:', event);
+        debugScanner('Native scanError event', event);
         setDebugError(`Native scan error: ${event?.message || 'unknown error'}`);
       });
 
+      debugScanner('Native listeners attached');
       console.log('[Scanner] Starting native live scan with options:', scanOptions);
       await BarcodeScanner.startScan(scanOptions as any);
+      debugScanner('Native startScan resolved');
     } catch (err: any) {
       console.error('Native scanner error:', err);
+      debugScanner('Native scanner threw error', {
+        message: err?.message,
+        code: err?.code,
+        name: err?.constructor?.name,
+        raw: err,
+      });
       await clearNativeListeners();
       nativeScanHandledRef.current = false;
       setIsScanning(false);
@@ -335,17 +407,19 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       setError('Scanner encountered an issue. Try Scan Bottle Label instead.');
       setDebugError(`Native error: ${errMsg} | type: ${err?.constructor?.name} | code: ${err?.code || 'none'}`);
     }
-  }, [clearNativeListeners, processBarcode]);
+  }, [clearNativeListeners, debugScanner, processBarcode]);
 
   const startWebScanner = useCallback(async () => {
     setError(null);
     setDebugError(null);
     setScannedResult(null);
+    debugScanner('Starting web scanner');
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment' },
       });
+      debugScanner('Web camera permission granted');
       stream.getTracks().forEach((track) => track.stop());
       setHasPermission(true);
 
@@ -360,26 +434,38 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
           aspectRatio: 1.5,
         },
         async (decodedText) => {
+          debugScanner('Web scanner decoded barcode', { decodedText });
           if (scannerRef.current) {
             try {
               await scannerRef.current.stop();
             } catch (e) {
               console.error('Error stopping scanner after decode:', e);
+              debugScanner('Web scanner stop after decode failed', e);
             }
           }
           await processBarcode(decodedText);
         },
-        () => {}
+        (decodeError) => {
+          if (decodeError) {
+            console.debug('[ScannerDebug] Web frame decode miss', decodeError);
+          }
+        }
       );
+      debugScanner('Web scanner start resolved');
     } catch (err: any) {
       console.error('Scanner error:', err);
+      debugScanner('Web scanner error', {
+        message: err?.message,
+        name: err?.name,
+        raw: err,
+      });
       setIsScanning(false);
       setHasPermission(false);
       const errMsg = err?.message || err?.name || String(err);
       setError('Camera access is needed to scan barcodes. Please allow camera access or scan the bottle label instead.');
       setDebugError(`Web scanner error: ${errMsg} | name: ${err?.name}`);
     }
-  }, [processBarcode]);
+  }, [debugScanner, processBarcode]);
 
   const startScanner = useCallback(async () => {
     const nativePlatform = getNativePlatform();
@@ -394,6 +480,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   }, [startNativeScanner, startWebScanner]);
 
   const stopScanner = useCallback(async () => {
+    debugScanner('Stopping scanner', { usingNativeScanner, isScanning });
     nativeScanHandledRef.current = false;
 
     if (usingNativeScanner) {
@@ -401,9 +488,11 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         const nativeScanner = await getNativeScanner();
         if (nativeScanner) {
           await nativeScanner.BarcodeScanner.stopScan();
+          debugScanner('Native stopScan succeeded from stopScanner');
         }
       } catch (e) {
         console.error('Error stopping native scanner:', e);
+        debugScanner('Native stopScan failed from stopScanner', e);
       }
       await clearNativeListeners();
       setUsingNativeScanner(false);
@@ -412,15 +501,18 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     if (scannerRef.current && isScanning) {
       try {
         await scannerRef.current.stop();
+        debugScanner('Web scanner stop succeeded');
       } catch (e) {
         console.error('Error stopping scanner:', e);
+        debugScanner('Web scanner stop failed', e);
       }
     }
 
     scannerRef.current = null;
     setTorchOn(false);
     setIsScanning(false);
-  }, [clearNativeListeners, isScanning, usingNativeScanner]);
+    debugScanner('Scanner stopped');
+  }, [clearNativeListeners, debugScanner, isScanning, usingNativeScanner]);
 
   const toggleTorch = useCallback(async () => {
     if (usingNativeScanner) {
