@@ -240,21 +240,24 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       setUsingNativeScanner(true);
       setIsScanning(true);
 
+      // NOTE: Only pass `formats` to scan(). Options like autoZoom, lensFacing,
+      // resolution, and enableMultitaskingCameraAccess are Android-only for
+      // startScan() — passing them to scan() on iOS can cause the native UI
+      // to open but never fire detection callbacks.
+      // PDF417 is critical: most US prescription labels use it.
       const scanOptions = {
         formats: [
-          BarcodeFormat.Code128,
+          BarcodeFormat.Pdf417,      // most US Rx labels
+          BarcodeFormat.Code128,     // pharmacy barcodes
+          BarcodeFormat.DataMatrix,  // GS1 DataMatrix on newer Rx
           BarcodeFormat.Code39,
           BarcodeFormat.Ean13,
           BarcodeFormat.Ean8,
           BarcodeFormat.UpcA,
           BarcodeFormat.UpcE,
           BarcodeFormat.Itf,
-          BarcodeFormat.DataMatrix,
+          BarcodeFormat.QrCode,
         ],
-        autoZoom: true,
-        lensFacing: 'BACK',
-        resolution: 1,
-        enableMultitaskingCameraAccess: true,
       } as any;
 
       console.log('[Scanner] Starting native scan with options:', scanOptions);
