@@ -89,6 +89,8 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   const [labelNotes, setLabelNotes] = useState<string[]>([]);
   const [zoomRatio, setZoomRatio] = useState<number>(1);
   const [zoomLimits, setZoomLimits] = useState<{ min: number; max: number }>({ min: 1, max: 5 });
+  const [focusPoint, setFocusPoint] = useState<{ x: number; y: number; key: number } | null>(null);
+  const focusBusyRef = useRef(false);
 
   const nameSearchAbortRef = useRef<AbortController | null>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
@@ -564,6 +566,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     scannerRef.current = null;
     setTorchOn(false);
     setZoomRatio(1);
+    setFocusPoint(null);
     setIsScanning(false);
     debugScanner('Scanner stopped');
   }, [clearNativeListeners, debugScanner, isScanning, usingNativeScanner]);
@@ -617,6 +620,35 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       toast.info('Zoom not available on this device');
     }
   }, [debugScanner, usingNativeScanner, zoomLimits.max, zoomLimits.min]);
+
+  // Tap-to-focus: the @capacitor-mlkit plugin doesn't expose setFocusPoint,
+  // so we trigger a tiny zoom nudge which forces iOS AVCaptureDevice to
+  // re-run continuous autofocus, while showing a focus ring at the tap point.
+  const handleTapToFocus = useCallback(async (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!usingNativeScanner) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    setFocusPoint({ x, y, key: Date.now() });
+    debugScanner('Tap-to-focus', { x: Math.round(x), y: Math.round(y) });
+
+    if (focusBusyRef.current) return;
+    focusBusyRef.current = true;
+    try {
+      const nativeScanner = await getNativeScanner();
+      if (!nativeScanner?.BarcodeScanner?.setZoomRatio) return;
+      const current = zoomRatio;
+      const nudge = current + (current >= zoomLimits.max - 0.05 ? -0.05 : 0.05);
+      const clampedNudge = Math.max(zoomLimits.min, Math.min(zoomLimits.max, nudge));
+      await nativeScanner.BarcodeScanner.setZoomRatio({ zoomRatio: clampedNudge });
+      await new Promise((r) => setTimeout(r, 120));
+      await nativeScanner.BarcodeScanner.setZoomRatio({ zoomRatio: current });
+    } catch (err) {
+      debugScanner('Tap-to-focus nudge failed', err);
+    } finally {
+      focusBusyRef.current = false;
+    }
+  }, [debugScanner, usingNativeScanner, zoomLimits.max, zoomLimits.min, zoomRatio]);
 
   const handleConfirmMedication = useCallback(() => {
     if (scannedResult) {
@@ -924,15 +956,33 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
 
             {usingNativeScanner && isScanning && (
               <>
-                {/* Centered focus/framing guide overlaid on the native camera feed */}
-                <div className="pointer-events-none fixed inset-0 z-10 flex items-center justify-center">
-                  <div className="relative w-[78vw] max-w-md aspect-[2/1]">
-                    <div className="absolute -top-1 -left-1 w-12 h-12 border-t-4 border-l-4 border-primary rounded-tl-xl" />
-                    <div className="absolute -top-1 -right-1 w-12 h-12 border-t-4 border-r-4 border-primary rounded-tr-xl" />
-                    <div className="absolute -bottom-1 -left-1 w-12 h-12 border-b-4 border-l-4 border-primary rounded-bl-xl" />
-                    <div className="absolute -bottom-1 -right-1 w-12 h-12 border-b-4 border-r-4 border-primary rounded-br-xl" />
-                    <div className="absolute top-1/2 left-2 right-2 h-0.5 bg-primary/70 animate-pulse" />
+                {/* Tap-to-focus overlay over the native camera feed */}
+                <div
+                  className="fixed inset-0 z-10"
+                  onPointerDown={handleTapToFocus}
+                  role="button"
+                  aria-label="Tap to focus camera"
+                >
+                  {/* Centered framing guide */}
+                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                    <div className="relative w-[78vw] max-w-md aspect-[2/1]">
+                      <div className="absolute -top-1 -left-1 w-12 h-12 border-t-4 border-l-4 border-primary rounded-tl-xl" />
+                      <div className="absolute -top-1 -right-1 w-12 h-12 border-t-4 border-r-4 border-primary rounded-tr-xl" />
+                      <div className="absolute -bottom-1 -left-1 w-12 h-12 border-b-4 border-l-4 border-primary rounded-bl-xl" />
+                      <div className="absolute -bottom-1 -right-1 w-12 h-12 border-b-4 border-r-4 border-primary rounded-br-xl" />
+                      <div className="absolute top-1/2 left-2 right-2 h-0.5 bg-primary/70 animate-pulse" />
+                    </div>
                   </div>
+
+                  {/* Focus ring at tap point */}
+                  {focusPoint && (
+                    <div
+                      key={focusPoint.key}
+                      className="pointer-events-none absolute w-20 h-20 -ml-10 -mt-10 rounded-full border-4 border-primary animate-ping-once"
+                      style={{ left: focusPoint.x, top: focusPoint.y, animation: 'focus-ring 700ms ease-out forwards' }}
+                      onAnimationEnd={() => setFocusPoint(null)}
+                    />
+                  )}
                 </div>
 
                 <div className="w-full max-w-md mt-auto relative z-20">
