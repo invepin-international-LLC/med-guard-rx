@@ -602,6 +602,21 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     }
   }, [torchOn, usingNativeScanner]);
 
+  const setNativeZoom = useCallback(async (target: number) => {
+    if (!usingNativeScanner) return;
+    const clamped = Math.max(zoomLimits.min, Math.min(zoomLimits.max, Number(target.toFixed(2))));
+    try {
+      const nativeScanner = await getNativeScanner();
+      if (!nativeScanner) return;
+      await nativeScanner.BarcodeScanner.setZoomRatio?.({ zoomRatio: clamped });
+      setZoomRatio(clamped);
+      debugScanner('Native zoom changed', { requested: target, applied: clamped });
+    } catch (err) {
+      debugScanner('Native setZoomRatio failed', err);
+      toast.info('Zoom not available on this device');
+    }
+  }, [debugScanner, usingNativeScanner, zoomLimits.max, zoomLimits.min]);
+
   const handleConfirmMedication = useCallback(() => {
     if (scannedResult) {
       onMedicationScanned(scannedResult);
