@@ -1232,6 +1232,18 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
                   </div>
                 )}
 
+                {error && isPharmacyBarcodeError(error) && (
+                  <div className="bg-muted/60 border-2 border-border rounded-xl p-4 text-sm text-foreground">
+                    <p>
+                      <span className="font-bold">Heads up:</span> Some pharmacy bottle barcodes aren't FDA NDC barcodes. Try a clearer photo of the full label, or{' '}
+                      <button type="button" onClick={() => void switchToNameSearch()} className="underline font-semibold text-primary">
+                        search by name
+                      </button>
+                      .
+                    </p>
+                  </div>
+                )}
+
                 <Button variant="default" size="xl" onClick={handleAnalyzeLabel} disabled={isLoading} className="w-full gap-3">
                   {isLoading ? (
                     <>
@@ -1263,6 +1275,13 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
               <h2 className="text-elder-xl font-bold text-foreground">Camera Issue</h2>
               <p className="text-muted-foreground text-lg">{error}</p>
             </div>
+            {isPharmacyBarcodeError(error) && (
+              <div className="bg-muted/60 border-2 border-border rounded-xl p-4 text-sm text-foreground text-left">
+                <p>
+                  <span className="font-bold">Heads up:</span> Some pharmacy bottle barcodes aren't FDA NDC barcodes and can't be looked up. Use <span className="font-semibold">Scan Bottle Label</span> or <span className="font-semibold">Search by Drug Name</span> below.
+                </p>
+              </div>
+            )}
             <div className="flex flex-col gap-3">
               <Button variant="default" size="xl" onClick={() => void handleRetry()} className="w-full gap-3">
                 <RotateCcw className="w-6 h-6" />
