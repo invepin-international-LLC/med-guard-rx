@@ -1,4 +1,15 @@
 import { useState, useEffect, useRef, useCallback, type ChangeEvent } from 'react';
+
+const isPharmacyBarcodeError = (msg: string | null | undefined): boolean => {
+  if (!msg) return false;
+  const lower = msg.toLowerCase();
+  return (
+    lower.includes('pharmacy') ||
+    lower.includes('fda medication code') ||
+    lower.includes('fda database') ||
+    lower.includes('could not look up')
+  );
+};
 import { Html5Qrcode } from 'html5-qrcode';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
