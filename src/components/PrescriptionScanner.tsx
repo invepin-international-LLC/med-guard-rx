@@ -620,6 +620,35 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     }
   }, [debugScanner, usingNativeScanner, zoomLimits.max, zoomLimits.min]);
 
+  // Tap-to-focus: the @capacitor-mlkit plugin doesn't expose setFocusPoint,
+  // so we trigger a tiny zoom nudge which forces iOS AVCaptureDevice to
+  // re-run continuous autofocus, while showing a focus ring at the tap point.
+  const handleTapToFocus = useCallback(async (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!usingNativeScanner) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    setFocusPoint({ x, y, key: Date.now() });
+    debugScanner('Tap-to-focus', { x: Math.round(x), y: Math.round(y) });
+
+    if (focusBusyRef.current) return;
+    focusBusyRef.current = true;
+    try {
+      const nativeScanner = await getNativeScanner();
+      if (!nativeScanner?.BarcodeScanner?.setZoomRatio) return;
+      const current = zoomRatio;
+      const nudge = current + (current >= zoomLimits.max - 0.05 ? -0.05 : 0.05);
+      const clampedNudge = Math.max(zoomLimits.min, Math.min(zoomLimits.max, nudge));
+      await nativeScanner.BarcodeScanner.setZoomRatio({ zoomRatio: clampedNudge });
+      await new Promise((r) => setTimeout(r, 120));
+      await nativeScanner.BarcodeScanner.setZoomRatio({ zoomRatio: current });
+    } catch (err) {
+      debugScanner('Tap-to-focus nudge failed', err);
+    } finally {
+      focusBusyRef.current = false;
+    }
+  }, [debugScanner, usingNativeScanner, zoomLimits.max, zoomLimits.min, zoomRatio]);
+
   const handleConfirmMedication = useCallback(() => {
     if (scannedResult) {
       onMedicationScanned(scannedResult);
