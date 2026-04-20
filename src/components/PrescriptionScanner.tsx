@@ -149,7 +149,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       console.error('NDC lookup error:', err);
       throw err;
     }
-  }, [debugScanner]);
+  }, []);
 
   const readPrescriptionLabel = useCallback(async (imageBase64: string) => {
     setError(null);
