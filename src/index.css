@@ -1003,3 +1003,9 @@
     display: none;
   }
 }
+
+@keyframes focus-ring {
+  0% { transform: scale(1.6); opacity: 0; }
+  30% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0.85); opacity: 0; }
+}
