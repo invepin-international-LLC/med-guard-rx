@@ -955,15 +955,33 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
 
             {usingNativeScanner && isScanning && (
               <>
-                {/* Centered focus/framing guide overlaid on the native camera feed */}
-                <div className="pointer-events-none fixed inset-0 z-10 flex items-center justify-center">
-                  <div className="relative w-[78vw] max-w-md aspect-[2/1]">
-                    <div className="absolute -top-1 -left-1 w-12 h-12 border-t-4 border-l-4 border-primary rounded-tl-xl" />
-                    <div className="absolute -top-1 -right-1 w-12 h-12 border-t-4 border-r-4 border-primary rounded-tr-xl" />
-                    <div className="absolute -bottom-1 -left-1 w-12 h-12 border-b-4 border-l-4 border-primary rounded-bl-xl" />
-                    <div className="absolute -bottom-1 -right-1 w-12 h-12 border-b-4 border-r-4 border-primary rounded-br-xl" />
-                    <div className="absolute top-1/2 left-2 right-2 h-0.5 bg-primary/70 animate-pulse" />
+                {/* Tap-to-focus overlay over the native camera feed */}
+                <div
+                  className="fixed inset-0 z-10"
+                  onPointerDown={handleTapToFocus}
+                  role="button"
+                  aria-label="Tap to focus camera"
+                >
+                  {/* Centered framing guide */}
+                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                    <div className="relative w-[78vw] max-w-md aspect-[2/1]">
+                      <div className="absolute -top-1 -left-1 w-12 h-12 border-t-4 border-l-4 border-primary rounded-tl-xl" />
+                      <div className="absolute -top-1 -right-1 w-12 h-12 border-t-4 border-r-4 border-primary rounded-tr-xl" />
+                      <div className="absolute -bottom-1 -left-1 w-12 h-12 border-b-4 border-l-4 border-primary rounded-bl-xl" />
+                      <div className="absolute -bottom-1 -right-1 w-12 h-12 border-b-4 border-r-4 border-primary rounded-br-xl" />
+                      <div className="absolute top-1/2 left-2 right-2 h-0.5 bg-primary/70 animate-pulse" />
+                    </div>
                   </div>
+
+                  {/* Focus ring at tap point */}
+                  {focusPoint && (
+                    <div
+                      key={focusPoint.key}
+                      className="pointer-events-none absolute w-20 h-20 -ml-10 -mt-10 rounded-full border-4 border-primary animate-ping-once"
+                      style={{ left: focusPoint.x, top: focusPoint.y, animation: 'focus-ring 700ms ease-out forwards' }}
+                      onAnimationEnd={() => setFocusPoint(null)}
+                    />
+                  )}
                 </div>
 
                 <div className="w-full max-w-md mt-auto relative z-20">
