@@ -922,29 +922,91 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
             )}
 
             {usingNativeScanner && isScanning && (
-              <div className="w-full max-w-md mt-auto">
-                <Card className="border-border bg-card/95 shadow-elder-lg backdrop-blur supports-[backdrop-filter]:bg-card/85">
-                  <div className="p-5 text-center space-y-4">
-                    <div className="flex items-center justify-center gap-3 text-foreground">
-                      <ScanLine className="w-7 h-7 text-primary" />
-                      <p className="text-elder-lg font-semibold">Point camera at the barcode</p>
-                    </div>
-                    <p className="text-muted-foreground">
-                      Hold the bottle steady about 4–6 inches away and center the printed code inside the view.
-                    </p>
-                    <div className="flex gap-3 pt-1">
-                      <Button variant="outline" size="lg" onClick={toggleTorch} className="flex-1 gap-2">
-                        <Flashlight className={`w-5 h-5 ${torchOn ? 'text-primary' : ''}`} />
-                        Light
-                      </Button>
-                      <Button variant="outline" size="lg" onClick={() => void switchToLabelMode()} className="flex-1 gap-2">
-                        <ScanLine className="w-5 h-5" />
-                        Bottle Label
-                      </Button>
-                    </div>
+              <>
+                {/* Centered focus/framing guide overlaid on the native camera feed */}
+                <div className="pointer-events-none fixed inset-0 z-10 flex items-center justify-center">
+                  <div className="relative w-[78vw] max-w-md aspect-[2/1]">
+                    <div className="absolute -top-1 -left-1 w-12 h-12 border-t-4 border-l-4 border-primary rounded-tl-xl" />
+                    <div className="absolute -top-1 -right-1 w-12 h-12 border-t-4 border-r-4 border-primary rounded-tr-xl" />
+                    <div className="absolute -bottom-1 -left-1 w-12 h-12 border-b-4 border-l-4 border-primary rounded-bl-xl" />
+                    <div className="absolute -bottom-1 -right-1 w-12 h-12 border-b-4 border-r-4 border-primary rounded-br-xl" />
+                    <div className="absolute top-1/2 left-2 right-2 h-0.5 bg-primary/70 animate-pulse" />
                   </div>
-                </Card>
-              </div>
+                </div>
+
+                <div className="w-full max-w-md mt-auto relative z-20">
+                  <Card className="border-border bg-card/95 shadow-elder-lg backdrop-blur supports-[backdrop-filter]:bg-card/85">
+                    <div className="p-5 text-center space-y-4">
+                      <div className="flex items-center justify-center gap-3 text-foreground">
+                        <ScanLine className="w-7 h-7 text-primary" />
+                        <p className="text-elder-lg font-semibold">Hold steady — center the barcode</p>
+                      </div>
+                      <p className="text-muted-foreground">
+                        Move closer (about 4–6 inches), keep the bottle steady, and use zoom if the code is small.
+                      </p>
+
+                      {/* Zoom assist controls */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm font-semibold text-foreground">
+                          <span>Zoom</span>
+                          <span className="text-primary">{zoomRatio.toFixed(1)}×</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="lg"
+                            onClick={() => void setNativeZoom(zoomRatio - 0.5)}
+                            disabled={zoomRatio <= zoomLimits.min + 0.01}
+                            aria-label="Zoom out"
+                            className="h-12 w-12 p-0"
+                          >
+                            <ZoomOut className="w-5 h-5" />
+                          </Button>
+                          <div className="flex-1 grid grid-cols-3 gap-2">
+                            {[1, 2, 3].map((preset) => {
+                              const disabled = preset < zoomLimits.min || preset > zoomLimits.max;
+                              const active = Math.abs(zoomRatio - preset) < 0.05;
+                              return (
+                                <Button
+                                  key={preset}
+                                  variant={active ? 'default' : 'outline'}
+                                  size="lg"
+                                  disabled={disabled}
+                                  onClick={() => void setNativeZoom(preset)}
+                                  className="h-12"
+                                >
+                                  {preset}×
+                                </Button>
+                              );
+                            })}
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="lg"
+                            onClick={() => void setNativeZoom(zoomRatio + 0.5)}
+                            disabled={zoomRatio >= zoomLimits.max - 0.01}
+                            aria-label="Zoom in"
+                            className="h-12 w-12 p-0"
+                          >
+                            <ZoomIn className="w-5 h-5" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3 pt-1">
+                        <Button variant="outline" size="lg" onClick={toggleTorch} className="flex-1 gap-2">
+                          <Flashlight className={`w-5 h-5 ${torchOn ? 'text-primary' : ''}`} />
+                          Light
+                        </Button>
+                        <Button variant="outline" size="lg" onClick={() => void switchToLabelMode()} className="flex-1 gap-2">
+                          <ScanLine className="w-5 h-5" />
+                          Bottle Label
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+              </>
             )}
 
             {scannerStarted && !usingNativeScanner && (
