@@ -89,6 +89,8 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   const [labelNotes, setLabelNotes] = useState<string[]>([]);
   const [zoomRatio, setZoomRatio] = useState<number>(1);
   const [zoomLimits, setZoomLimits] = useState<{ min: number; max: number }>({ min: 1, max: 5 });
+  const [focusPoint, setFocusPoint] = useState<{ x: number; y: number; key: number } | null>(null);
+  const focusBusyRef = useRef(false);
 
   const nameSearchAbortRef = useRef<AbortController | null>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
