@@ -339,7 +339,8 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   const startScanner = useCallback(async () => {
     const nativePlatform = getNativePlatform();
 
-    if (isNativeApp() && nativePlatform !== 'ios') {
+    if (isNativeApp()) {
+      console.log(`[Scanner] Using native MLKit auto-scanner. platform=${nativePlatform}`);
       await startNativeScanner();
     } else {
       console.log(`[Scanner] Using web scanner. nativePlatform=${nativePlatform ?? 'web'}`);
