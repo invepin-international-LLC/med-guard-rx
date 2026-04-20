@@ -1027,6 +1027,22 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
                 </div>
               )}
 
+              {error && isPharmacyBarcodeError(error) && (
+                <div className="bg-muted/60 border-2 border-border rounded-xl p-4 text-sm text-foreground">
+                  <p>
+                    <span className="font-bold">Heads up:</span> Some pharmacy bottle barcodes aren't FDA NDC barcodes and can't be looked up. Try{' '}
+                    <button type="button" onClick={() => void switchToLabelMode()} className="underline font-semibold text-primary">
+                      Scan Bottle Label
+                    </button>{' '}
+                    or{' '}
+                    <button type="button" onClick={() => void switchToNameSearch()} className="underline font-semibold text-primary">
+                      search by name
+                    </button>
+                    .
+                  </p>
+                </div>
+              )}
+
               <Button
                 variant="default"
                 size="xl"
