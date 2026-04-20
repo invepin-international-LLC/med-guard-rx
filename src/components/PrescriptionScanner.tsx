@@ -825,6 +825,13 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
                     Scan Bottle Label Instead
                   </Button>
                 </div>
+                <div className="bg-muted/60 border border-border rounded-xl p-4 text-left">
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    <span className="font-semibold text-foreground">Heads up:</span> Some pharmacy bottle barcodes
+                    aren&apos;t FDA NDC barcodes and can&apos;t be looked up. If the scan doesn&apos;t find your
+                    medication, tap <span className="font-semibold text-foreground">Scan Bottle Label</span> instead.
+                  </p>
+                </div>
               </div>
             )}
 
