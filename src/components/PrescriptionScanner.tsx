@@ -411,6 +411,28 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       console.log('[Scanner] Starting native live scan with options:', scanOptions);
       await BarcodeScanner.startScan(scanOptions as any);
       debugScanner('Native startScan resolved');
+
+      // Initialize zoom limits + start at modest zoom to help focus on small bottle barcodes.
+      try {
+        const [minRes, maxRes] = await Promise.all([
+          BarcodeScanner.getMinZoomRatio?.(),
+          BarcodeScanner.getMaxZoomRatio?.(),
+        ]);
+        const min = typeof minRes?.zoomRatio === 'number' ? minRes.zoomRatio : 1;
+        const max = typeof maxRes?.zoomRatio === 'number' ? maxRes.zoomRatio : 5;
+        const safeMax = Math.max(min, Math.min(max, 8));
+        setZoomLimits({ min, max: safeMax });
+        const initial = Math.min(Math.max(1.5, min), safeMax);
+        try {
+          await BarcodeScanner.setZoomRatio?.({ zoomRatio: initial });
+          setZoomRatio(initial);
+          debugScanner('Native zoom initialized', { min, max: safeMax, initial });
+        } catch (zoomErr) {
+          debugScanner('Native setZoomRatio failed on init', zoomErr);
+        }
+      } catch (limitErr) {
+        debugScanner('Native zoom limits unavailable', limitErr);
+      }
     } catch (err: any) {
       console.error('Native scanner error:', err);
       debugScanner('Native scanner threw error', {
