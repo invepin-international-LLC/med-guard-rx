@@ -100,6 +100,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   const nativeScanErrorListenerRef = useRef<{ remove: () => Promise<void> } | null>(null);
   const nativeScanHandledRef = useRef(false);
   const scannerContainerId = 'ndc-scanner';
+  const nativePlatform = getNativePlatform();
 
   const clearNativeListeners = useCallback(async () => {
     const listeners = [nativeBarcodesListenerRef.current, nativeSingleBarcodeListenerRef.current, nativeScanErrorListenerRef.current].filter(Boolean) as {
@@ -302,10 +303,6 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         }
       }
 
-      setHasPermission(true);
-      setUsingNativeScanner(true);
-      setIsScanning(true);
-
       const scanOptions = {
         lensFacing: 'BACK',
         resolution: Resolution['1920x1080'],
@@ -325,6 +322,59 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
           BarcodeFormat.Aztec,
         ],
       } as const;
+
+      setHasPermission(true);
+      setUsingNativeScanner(true);
+      setIsScanning(true);
+
+      if (platform === 'ios' && typeof BarcodeScanner.scan === 'function') {
+        debugScanner('Using native scan() UI on iPhone with autoZoom', { formats: scanOptions.formats });
+
+        try {
+          const result = await BarcodeScanner.scan({
+            formats: scanOptions.formats,
+            autoZoom: true,
+          } as any);
+
+          const firstBarcode = Array.isArray(result?.barcodes)
+            ? result.barcodes.find((barcode: any) => typeof barcode?.rawValue === 'string' && barcode.rawValue.trim().length > 0)
+            : null;
+
+          debugScanner('iPhone native scan() resolved', {
+            count: Array.isArray(result?.barcodes) ? result.barcodes.length : 0,
+            barcodes: Array.isArray(result?.barcodes)
+              ? result.barcodes.map((barcode: any) => ({
+                  format: barcode?.format,
+                  rawValue: barcode?.rawValue,
+                  displayValue: barcode?.displayValue,
+                }))
+              : [],
+          });
+
+          setUsingNativeScanner(false);
+          setIsScanning(false);
+
+          if (firstBarcode?.rawValue) {
+            await processBarcode(firstBarcode.rawValue);
+            return;
+          }
+
+          setScannerStarted(false);
+          debugScanner('iPhone native scan() completed without a usable barcode');
+          return;
+        } catch (scanErr: any) {
+          setUsingNativeScanner(false);
+          setIsScanning(false);
+
+          if (scanErr?.message?.includes('canceled') || scanErr?.message?.includes('cancelled')) {
+            setScannerStarted(false);
+            debugScanner('iPhone native scan() canceled by user');
+            return;
+          }
+
+          throw scanErr;
+        }
+      }
 
       debugScanner('Native scan options', scanOptions);
       await clearNativeListeners();
@@ -954,7 +1004,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
               </div>
             )}
 
-            {usingNativeScanner && isScanning && (
+            {usingNativeScanner && isScanning && nativePlatform !== 'ios' && (
               <>
                 {/* Tap-to-focus overlay over the native camera feed */}
                 <div
