@@ -563,6 +563,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
 
     scannerRef.current = null;
     setTorchOn(false);
+    setZoomRatio(1);
     setIsScanning(false);
     debugScanner('Scanner stopped');
   }, [clearNativeListeners, debugScanner, isScanning, usingNativeScanner]);
