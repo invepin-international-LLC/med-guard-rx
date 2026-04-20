@@ -15,6 +15,8 @@ import {
   ScanLine,
   Keyboard,
   Search,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -85,6 +87,8 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   const [scannerStarted, setScannerStarted] = useState(false);
   const [labelPhoto, setLabelPhoto] = useState<string | null>(null);
   const [labelNotes, setLabelNotes] = useState<string[]>([]);
+  const [zoomRatio, setZoomRatio] = useState<number>(1);
+  const [zoomLimits, setZoomLimits] = useState<{ min: number; max: number }>({ min: 1, max: 5 });
 
   const nameSearchAbortRef = useRef<AbortController | null>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
