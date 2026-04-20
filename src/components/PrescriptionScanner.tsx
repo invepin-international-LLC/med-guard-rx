@@ -54,8 +54,8 @@ const getNativePlatform = () => {
 const getNativeScanner = async () => {
   if (!isNativeApp()) return null;
   try {
-    const { BarcodeScanner, BarcodeFormat } = await import('@capacitor-mlkit/barcode-scanning');
-    return { BarcodeScanner, BarcodeFormat };
+    const { BarcodeScanner, BarcodeFormat, Resolution } = await import('@capacitor-mlkit/barcode-scanning');
+    return { BarcodeScanner, BarcodeFormat, Resolution };
   } catch (e) {
     console.log('Native barcode scanner not available:', e);
     return null;
@@ -90,16 +90,18 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const labelFileInputRef = useRef<HTMLInputElement | null>(null);
   const nativeBarcodesListenerRef = useRef<{ remove: () => Promise<void> } | null>(null);
+  const nativeSingleBarcodeListenerRef = useRef<{ remove: () => Promise<void> } | null>(null);
   const nativeScanErrorListenerRef = useRef<{ remove: () => Promise<void> } | null>(null);
   const nativeScanHandledRef = useRef(false);
   const scannerContainerId = 'ndc-scanner';
 
   const clearNativeListeners = useCallback(async () => {
-    const listeners = [nativeBarcodesListenerRef.current, nativeScanErrorListenerRef.current].filter(Boolean) as {
+    const listeners = [nativeBarcodesListenerRef.current, nativeSingleBarcodeListenerRef.current, nativeScanErrorListenerRef.current].filter(Boolean) as {
       remove: () => Promise<void>;
     }[];
 
     nativeBarcodesListenerRef.current = null;
+    nativeSingleBarcodeListenerRef.current = null;
     nativeScanErrorListenerRef.current = null;
 
     if (listeners.length === 0) return;
@@ -269,7 +271,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       return;
     }
 
-    const { BarcodeScanner, BarcodeFormat } = nativeScanner;
+    const { BarcodeScanner, BarcodeFormat, Resolution } = nativeScanner;
 
     try {
       const { supported } = await BarcodeScanner.isSupported();
@@ -299,23 +301,82 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       setIsScanning(true);
 
       const scanOptions = {
+        lensFacing: 'BACK',
+        resolution: Resolution['1920x1080'],
         formats: [
           BarcodeFormat.Pdf417,
           BarcodeFormat.Code128,
-          BarcodeFormat.DataMatrix,
           BarcodeFormat.Code39,
+          BarcodeFormat.Code93,
+          BarcodeFormat.Codabar,
+          BarcodeFormat.Itf,
+          BarcodeFormat.DataMatrix,
           BarcodeFormat.Ean13,
           BarcodeFormat.Ean8,
           BarcodeFormat.UpcA,
           BarcodeFormat.UpcE,
-          BarcodeFormat.Itf,
           BarcodeFormat.QrCode,
+          BarcodeFormat.Aztec,
         ],
       } as const;
 
       debugScanner('Native scan options', scanOptions);
       await clearNativeListeners();
       debugScanner('Cleared old native listeners');
+
+      const handleNativeBarcode = async (barcode: any, sourceEvent: string) => {
+        if (!barcode || typeof barcode?.rawValue !== 'string' || barcode.rawValue.trim().length === 0) {
+          console.log('[Scanner] Native scan event fired without a usable rawValue.', { sourceEvent, barcode });
+          debugScanner('Native event had no usable rawValue', { sourceEvent, barcode });
+          return;
+        }
+
+        if (nativeScanHandledRef.current) {
+          debugScanner('Ignored duplicate native barcode event', { sourceEvent });
+          return;
+        }
+        nativeScanHandledRef.current = true;
+
+        console.log('[Scanner] Native barcode detected:', {
+          sourceEvent,
+          format: barcode.format,
+          rawValue: barcode.rawValue,
+          displayValue: barcode.displayValue,
+        });
+        debugScanner('Native barcode selected for processing', {
+          sourceEvent,
+          format: barcode.format,
+          rawValue: barcode.rawValue,
+          displayValue: barcode.displayValue,
+        });
+
+        try {
+          await BarcodeScanner.stopScan();
+          debugScanner('Native stopScan succeeded after detection');
+        } catch (stopError) {
+          console.error('Error stopping native scanner after detection:', stopError);
+          debugScanner('Native stopScan failed after detection', stopError);
+        }
+
+        await clearNativeListeners();
+        setUsingNativeScanner(false);
+        setIsScanning(false);
+        await processBarcode(barcode.rawValue);
+      };
+
+      nativeSingleBarcodeListenerRef.current = await BarcodeScanner.addListener('barcodeScanned' as any, async (event: any) => {
+        debugScanner('Native barcodeScanned event', {
+          barcode: event?.barcode
+            ? {
+                format: event.barcode?.format,
+                rawValue: event.barcode?.rawValue,
+                displayValue: event.barcode?.displayValue,
+              }
+            : null,
+        });
+
+        await handleNativeBarcode(event?.barcode, 'barcodeScanned');
+      });
 
       nativeBarcodesListenerRef.current = await BarcodeScanner.addListener('barcodesScanned', async (event: any) => {
         debugScanner('Native barcodesScanned event', {
@@ -333,41 +394,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
           ? event.barcodes.find((barcode: any) => typeof barcode?.rawValue === 'string' && barcode.rawValue.trim().length > 0)
           : null;
 
-        if (!firstBarcode) {
-          console.log('[Scanner] Native scan event fired without a usable rawValue.', event);
-          debugScanner('Native event had no usable rawValue', event);
-          return;
-        }
-
-        if (nativeScanHandledRef.current) {
-          debugScanner('Ignored duplicate native barcode event');
-          return;
-        }
-        nativeScanHandledRef.current = true;
-
-        console.log('[Scanner] Native barcode detected:', {
-          format: firstBarcode.format,
-          rawValue: firstBarcode.rawValue,
-          displayValue: firstBarcode.displayValue,
-        });
-        debugScanner('Native barcode selected for processing', {
-          format: firstBarcode.format,
-          rawValue: firstBarcode.rawValue,
-          displayValue: firstBarcode.displayValue,
-        });
-
-        try {
-          await BarcodeScanner.stopScan();
-          debugScanner('Native stopScan succeeded after detection');
-        } catch (stopError) {
-          console.error('Error stopping native scanner after detection:', stopError);
-          debugScanner('Native stopScan failed after detection', stopError);
-        }
-
-        await clearNativeListeners();
-        setUsingNativeScanner(false);
-        setIsScanning(false);
-        await processBarcode(firstBarcode.rawValue);
+        await handleNativeBarcode(firstBarcode, 'barcodesScanned');
       });
 
       nativeScanErrorListenerRef.current = await BarcodeScanner.addListener('scanError', async (event: any) => {
