@@ -530,6 +530,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         console.error('Error stopping native scanner:', e);
       }
       await clearNativeListeners();
+      setScannerBodyActive(false);
       setUsingNativeScanner(false);
     }
 
@@ -546,7 +547,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     setZoomRatio(1);
     setFocusPoint(null);
     setIsScanning(false);
-  }, [clearNativeListeners, isScanning, usingNativeScanner]);
+  }, [clearNativeListeners, isScanning, setScannerBodyActive, usingNativeScanner]);
 
   const toggleTorch = useCallback(async () => {
     if (usingNativeScanner) {
