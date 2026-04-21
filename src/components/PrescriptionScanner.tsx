@@ -378,6 +378,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         }
 
         await clearNativeListeners();
+        setScannerBodyActive(false);
         setUsingNativeScanner(false);
         setIsScanning(false);
         await processBarcode(barcode.rawValue);
