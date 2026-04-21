@@ -64,6 +64,28 @@ const getNativePlatform = () => {
   return (window as any).Capacitor?.getPlatform?.() ?? null;
 };
 
+// Capacitor injects window.Capacitor synchronously at app launch on iOS/Android,
+// but in some race-conditions (cold start, JIT compile delays on older iPhones)
+// the bridge can briefly be missing when our module evaluates. Poll for up to
+// ~500ms before falling back to the web scanner so real devices never get
+// mis-detected as a browser.
+const waitForCapacitorBridge = async (timeoutMs = 500): Promise<boolean> => {
+  if (typeof window === 'undefined') return false;
+  const cap = (window as any).Capacitor;
+  if (cap?.isNativePlatform?.()) return true;
+
+  // If we are clearly in a normal browser (no Capacitor stub at all AND there is
+  // a real document.referrer / window.parent, etc.), don't waste 500ms.
+  // We still poll briefly because the bridge can be late on real devices.
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    await new Promise((r) => setTimeout(r, 50));
+    const c = (window as any).Capacitor;
+    if (c?.isNativePlatform?.()) return true;
+  }
+  return false;
+};
+
 // Eagerly preload the native scanner module on app start so that when the user
 // taps "Open Barcode Scanner" we can call checkPermissions()/requestPermissions()
 // SYNCHRONOUSLY within the user-gesture tick. iOS will silently skip the system
