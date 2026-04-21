@@ -1454,7 +1454,12 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
                   Open in New Tab
                 </Button>
               )}
-              <Button variant="default" size="xl" onClick={() => void handleRetry()} className="w-full gap-3">
+              <Button
+                variant={typeof window !== 'undefined' && window.self !== window.top ? 'outline' : 'default'}
+                size="xl"
+                onClick={() => void handleRetry()}
+                className="w-full gap-3"
+              >
                 <RotateCcw className="w-6 h-6" />
                 Try Again
               </Button>
