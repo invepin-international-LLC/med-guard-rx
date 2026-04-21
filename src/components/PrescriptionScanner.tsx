@@ -525,7 +525,20 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       setIsScanning(false);
       setHasPermission(false);
       const errMsg = err?.message || err?.name || String(err);
-      setError('Camera access is needed to scan barcodes. Please allow camera access or scan the bottle label instead.');
+      const hasCap = !!(window as any).Capacitor;
+      const platform = getNativePlatform();
+      console.error('[Scanner] Web scanner failed. hasCapacitor=', hasCap, 'platform=', platform, 'err=', errMsg);
+
+      // If we ended up here on an actual device, the Capacitor bridge never
+      // loaded — surface that explicitly so the user/dev can see it instead
+      // of a generic "allow camera" message.
+      if (hasCap && platform && platform !== 'web') {
+        setError(
+          `Native camera bridge did not initialise (${platform}). Please fully close Med Guard Rx (swipe up from the app switcher) and reopen it, then try again.`
+        );
+      } else {
+        setError('Camera access is needed to scan barcodes. Please allow camera access or scan the bottle label instead.');
+      }
     }
   }, [processBarcode]);
 
