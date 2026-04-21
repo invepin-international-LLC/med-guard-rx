@@ -170,6 +170,24 @@
     font-size: 22px;
   }
 
+  /*
+   * When the native ML Kit barcode scanner is active on iOS/Android, the
+   * plugin makes the WKWebView transparent so the camera preview (inserted
+   * BELOW the webview by Swift) shows through. The <html> and <body>
+   * elements, however, are still painted opaque unless we clear them here.
+   * Without this rule the camera feed is completely hidden by the app's
+   * background color and the user only sees a black/empty viewport.
+   */
+  html.barcode-scanner-active,
+  html.barcode-scanner-active body {
+    background: transparent !important;
+  }
+  html.barcode-scanner-active body > #root > *:not(.barcode-scanner-keep) {
+    /* Components outside the scanner overlay don't need to be force-hidden —
+       the scanner overlay itself handles its own transparency. We keep the
+       rule narrow so the rest of the app behaves normally on resume. */
+  }
+
   /* High contrast focus states - Very visible */
   *:focus-visible {
     @apply outline-none ring-4 ring-accent ring-offset-4 ring-offset-background;
