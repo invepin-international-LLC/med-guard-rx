@@ -402,6 +402,9 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       });
 
       console.log('[Scanner] Calling startScan with options:', scanOptions);
+      // CRITICAL: make <html>/<body> transparent BEFORE startScan so the
+      // webview-behind-camera swap has no opaque surface hiding the feed.
+      setScannerBodyActive(true);
       await BarcodeScanner.startScan(scanOptions as any);
       console.log('[Scanner] startScan resolved — camera should be live');
 
