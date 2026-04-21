@@ -526,7 +526,33 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
           `Native camera bridge did not initialise (${platform}). Please fully close Med Guard Rx (swipe up from the app switcher) and reopen it, then try again.`
         );
       } else {
-        setError('Camera access is needed to scan barcodes. Please allow camera access or scan the bottle label instead.');
+        // Detect whether we are running inside an iframe (e.g. Lovable preview)
+        // where the parent doesn't pass through camera permission. In that
+        // case the browser instantly throws NotAllowedError without even
+        // showing the user a permission prompt — so telling them to "allow
+        // camera access" is misleading.
+        const inIframe = typeof window !== 'undefined' && window.self !== window.top;
+        const errName: string = err?.name || '';
+
+        if (inIframe && errName === 'NotAllowedError') {
+          setError(
+            'The preview window cannot access the camera. Open the preview in a new browser tab (top-right "Open in new tab" button), or use Scan Bottle Label / Enter NDC Code instead.'
+          );
+        } else if (errName === 'NotAllowedError') {
+          setError(
+            'Camera access was blocked. Click the camera icon in your browser address bar, set Camera to "Allow", then tap Try Again.'
+          );
+        } else if (errName === 'NotFoundError' || errName === 'OverconstrainedError') {
+          setError('No camera was found on this device. Try Scan Bottle Label or Enter NDC Code instead.');
+        } else if (errName === 'NotReadableError') {
+          setError('The camera is being used by another app. Close other camera apps and try again.');
+        } else {
+          setError(
+            errMsg
+              ? `Camera error: ${errMsg}. Try Scan Bottle Label or Enter NDC Code instead.`
+              : 'Camera access is needed to scan barcodes. Please allow camera access or scan the bottle label instead.'
+          );
+        }
       }
     }
   }, [processBarcode]);
