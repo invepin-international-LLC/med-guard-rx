@@ -728,6 +728,29 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     }
   }, []);
 
+  // Preload the native scanner plugin and check camera permission status on mount.
+  // This ensures that when the user taps "Open Barcode Scanner", the permission
+  // request happens instantly inside the user-gesture tick — which is required
+  // for iOS to show the system camera permission prompt on first use.
+  useEffect(() => {
+    if (!isNativeApp()) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const scanner = await loadNativeScanner();
+        if (cancelled || !scanner) return;
+        // Warm up: check current permission state. Does NOT prompt the user.
+        await scanner.BarcodeScanner.checkPermissions().catch(() => null);
+      } catch (e) {
+        // Non-fatal; the button tap will handle errors with UI feedback.
+        console.log('Scanner preload skipped:', e);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const handleUserStartScanner = useCallback(async () => {
     setScannerStarted(true);
     await startScanner();
