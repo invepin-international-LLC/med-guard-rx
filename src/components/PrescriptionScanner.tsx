@@ -64,26 +64,15 @@ const getNativePlatform = () => {
   return (window as any).Capacitor?.getPlatform?.() ?? null;
 };
 
-// Capacitor injects window.Capacitor synchronously at app launch on iOS/Android,
-// but in some race-conditions (cold start, JIT compile delays on older iPhones)
-// the bridge can briefly be missing when our module evaluates. Poll for up to
-// ~500ms before falling back to the web scanner so real devices never get
-// mis-detected as a browser.
-const waitForCapacitorBridge = async (timeoutMs = 500): Promise<boolean> => {
+// Synchronous native-app detection. We must NOT add async waits here, because
+// browsers (Chrome, Safari) require getUserMedia() to be reachable from the
+// user-gesture event without long promise delays — otherwise the gesture is
+// considered "consumed" and the camera request silently fails. If the
+// Capacitor stub isn't on `window` by the time the user taps the button, the
+// app isn't running natively.
+const detectNativeApp = (): boolean => {
   if (typeof window === 'undefined') return false;
-  const cap = (window as any).Capacitor;
-  if (cap?.isNativePlatform?.()) return true;
-
-  // If we are clearly in a normal browser (no Capacitor stub at all AND there is
-  // a real document.referrer / window.parent, etc.), don't waste 500ms.
-  // We still poll briefly because the bridge can be late on real devices.
-  const start = Date.now();
-  while (Date.now() - start < timeoutMs) {
-    await new Promise((r) => setTimeout(r, 50));
-    const c = (window as any).Capacitor;
-    if (c?.isNativePlatform?.()) return true;
-  }
-  return false;
+  return !!(window as any).Capacitor?.isNativePlatform?.();
 };
 
 // Eagerly preload the native scanner module on app start so that when the user
