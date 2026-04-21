@@ -28,6 +28,7 @@ import {
   Search,
   ZoomIn,
   ZoomOut,
+  ExternalLink,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -1436,7 +1437,29 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
               </div>
             )}
             <div className="flex flex-col gap-3">
-              <Button variant="default" size="xl" onClick={() => void handleRetry()} className="w-full gap-3">
+              {typeof window !== 'undefined' && window.self !== window.top && (
+                <Button
+                  variant="default"
+                  size="xl"
+                  onClick={() => {
+                    try {
+                      window.open(window.location.href, '_blank', 'noopener,noreferrer');
+                    } catch {
+                      window.open(window.location.href, '_blank');
+                    }
+                  }}
+                  className="w-full gap-3"
+                >
+                  <ExternalLink className="w-6 h-6" />
+                  Open in New Tab
+                </Button>
+              )}
+              <Button
+                variant={typeof window !== 'undefined' && window.self !== window.top ? 'outline' : 'default'}
+                size="xl"
+                onClick={() => void handleRetry()}
+                className="w-full gap-3"
+              >
                 <RotateCcw className="w-6 h-6" />
                 Try Again
               </Button>
