@@ -429,6 +429,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     } catch (err: any) {
       console.error('[Scanner] Native scanner error:', err, 'stack:', err?.stack);
       await clearNativeListeners();
+      setScannerBodyActive(false);
       nativeScanHandledRef.current = false;
       setIsScanning(false);
       setUsingNativeScanner(false);
