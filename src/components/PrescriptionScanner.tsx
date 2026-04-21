@@ -149,6 +149,20 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     await Promise.allSettled(listeners.map((listener) => listener.remove()));
   }, []);
 
+  // Toggle the global class the native ML Kit plugin relies on. When
+  // `startScan()` is running the camera preview is inserted BEHIND the
+  // webview, so <html>/<body> must become transparent — otherwise the app
+  // background completely hides the camera feed.
+  const setScannerBodyActive = useCallback((active: boolean) => {
+    if (typeof document === 'undefined') return;
+    const root = document.documentElement;
+    if (active) {
+      root.classList.add('barcode-scanner-active');
+    } else {
+      root.classList.remove('barcode-scanner-active');
+    }
+  }, []);
+
 
   const lookupNdc = useCallback(async (ndcCode: string): Promise<ScannedMedication | null> => {
     try {
