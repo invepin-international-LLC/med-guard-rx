@@ -869,9 +869,15 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex flex-col ${usingNativeScanner && isScanning && mode === 'camera' ? 'bg-transparent' : 'bg-background'}`}
+      className={`barcode-scanner-modal fixed inset-0 z-50 flex flex-col ${usingNativeScanner && isScanning && mode === 'camera' ? 'bg-transparent' : 'bg-background'}`}
     >
-      <header className="flex items-center gap-3 p-4 bg-card border-b border-border">
+      <header
+        className={`flex items-center gap-3 p-4 border-b ${
+          usingNativeScanner && isScanning && mode === 'camera'
+            ? 'bg-black/50 border-transparent backdrop-blur-sm'
+            : 'bg-card border-border'
+        }`}
+      >
         <Button
           variant="ghost"
           size="icon"
@@ -880,11 +886,17 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
             onClose();
           }}
           aria-label="Cancel"
-          className="shrink-0 h-11 w-11 rounded-full"
+          className={`shrink-0 h-11 w-11 rounded-full ${
+            usingNativeScanner && isScanning && mode === 'camera' ? 'text-white hover:bg-white/20' : ''
+          }`}
         >
           <X className="w-6 h-6" />
         </Button>
-        <h1 className="flex-1 text-xl font-bold text-center truncate">
+        <h1
+          className={`flex-1 text-xl font-bold text-center truncate ${
+            usingNativeScanner && isScanning && mode === 'camera' ? 'text-white' : ''
+          }`}
+        >
           {mode === 'camera'
             ? 'Scan Prescription'
             : mode === 'manual'
