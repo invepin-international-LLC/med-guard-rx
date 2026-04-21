@@ -532,9 +532,10 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   }, [processBarcode]);
 
   const startScanner = useCallback(async () => {
-    // Poll briefly so cold-started iOS apps don't fall through to the web
-    // scanner just because the Capacitor bridge hasn't finished injecting yet.
-    const isNative = await waitForCapacitorBridge(500);
+    // CRITICAL: detection must be synchronous so the user-gesture chain stays
+    // intact for the browser's getUserMedia() call. Any async wait here causes
+    // Safari/Chrome to silently deny camera access.
+    const isNative = detectNativeApp();
     const platform = getNativePlatform();
     console.log('[Scanner] startScanner — isNative:', isNative, 'platform:', platform, 'hasCapacitor:', !!(window as any).Capacitor);
 
