@@ -64,16 +64,39 @@ const getNativePlatform = () => {
   return (window as any).Capacitor?.getPlatform?.() ?? null;
 };
 
-const getNativeScanner = async () => {
-  if (!isNativeApp()) return null;
-  try {
-    const { BarcodeScanner, BarcodeFormat, Resolution } = await import('@capacitor-mlkit/barcode-scanning');
-    return { BarcodeScanner, BarcodeFormat, Resolution };
-  } catch (e) {
-    console.log('Native barcode scanner not available:', e);
-    return null;
-  }
+// Eagerly preload the native scanner module on app start so that when the user
+// taps "Open Barcode Scanner" we can call checkPermissions()/requestPermissions()
+// SYNCHRONOUSLY within the user-gesture tick. iOS will silently skip the system
+// permission prompt if the first native call happens after an `await import(...)`.
+let nativeScannerCache: {
+  BarcodeScanner: any;
+  BarcodeFormat: any;
+  Resolution: any;
+} | null = null;
+let nativeScannerLoadPromise: Promise<typeof nativeScannerCache> | null = null;
+
+const loadNativeScanner = () => {
+  if (!isNativeApp()) return Promise.resolve(null);
+  if (nativeScannerCache) return Promise.resolve(nativeScannerCache);
+  if (nativeScannerLoadPromise) return nativeScannerLoadPromise;
+  nativeScannerLoadPromise = import('@capacitor-mlkit/barcode-scanning')
+    .then(({ BarcodeScanner, BarcodeFormat, Resolution }) => {
+      nativeScannerCache = { BarcodeScanner, BarcodeFormat, Resolution };
+      return nativeScannerCache;
+    })
+    .catch((e) => {
+      console.log('Native barcode scanner not available:', e);
+      return null;
+    });
+  return nativeScannerLoadPromise;
 };
+
+// Kick off the import immediately on module load (native only).
+if (isNativeApp()) {
+  loadNativeScanner();
+}
+
+const getNativeScanner = async () => loadNativeScanner();
 
 const labelConfidenceStyles: Record<'high' | 'medium' | 'low', string> = {
   high: 'border-border bg-success/10 text-success',
