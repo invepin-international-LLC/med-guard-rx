@@ -460,7 +460,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
           : 'Scanner encountered an issue. Try Scan Bottle Label instead.'
       );
     }
-  }, [clearNativeListeners, processBarcode]);
+  }, [clearNativeListeners, processBarcode, setScannerBodyActive]);
 
   const startWebScanner = useCallback(async () => {
     setError(null);
