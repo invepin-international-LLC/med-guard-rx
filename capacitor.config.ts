@@ -7,7 +7,11 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: 'automatic',
     allowsLinkPreview: false,
-    backgroundColor: '#f5f7fa',
+    // IMPORTANT: keep the WKWebView background TRANSPARENT so the native
+    // ML Kit barcode scanner can render the camera preview behind the
+    // webview. Setting an opaque color here makes the camera feed
+    // invisible during scanning, and users see only the app UI.
+    backgroundColor: '#00000000',
     preferredContentMode: 'mobile'
   },
   plugins: {
