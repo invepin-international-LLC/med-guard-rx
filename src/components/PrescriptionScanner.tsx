@@ -860,6 +860,10 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         nameSearchAbortRef.current.abort();
       }
       void stopScanner();
+      // Safety net: always clear the global transparent-body class on unmount.
+      if (typeof document !== 'undefined') {
+        document.documentElement.classList.remove('barcode-scanner-active');
+      }
     };
   }, [stopScanner]);
 
