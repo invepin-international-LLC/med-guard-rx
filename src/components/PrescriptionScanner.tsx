@@ -149,6 +149,20 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     await Promise.allSettled(listeners.map((listener) => listener.remove()));
   }, []);
 
+  // Toggle the global class the native ML Kit plugin relies on. When
+  // `startScan()` is running the camera preview is inserted BEHIND the
+  // webview, so <html>/<body> must become transparent — otherwise the app
+  // background completely hides the camera feed.
+  const setScannerBodyActive = useCallback((active: boolean) => {
+    if (typeof document === 'undefined') return;
+    const root = document.documentElement;
+    if (active) {
+      root.classList.add('barcode-scanner-active');
+    } else {
+      root.classList.remove('barcode-scanner-active');
+    }
+  }, []);
+
 
   const lookupNdc = useCallback(async (ndcCode: string): Promise<ScannedMedication | null> => {
     try {
@@ -276,11 +290,36 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       }
 
       const permResult = await BarcodeScanner.checkPermissions();
+      console.log('[Scanner] Initial permission state:', permResult);
+
+      if (permResult.camera === 'denied') {
+        // User previously tapped "Don't Allow". iOS will NOT re-prompt.
+        // We must send them to Settings to re-enable the camera.
+        setHasPermission(false);
+        setError(
+          'Camera access is blocked. Open iPhone Settings → Med Guard Rx → turn on Camera, then come back and try again.'
+        );
+        return;
+      }
+
       if (permResult.camera !== 'granted') {
+        // 'prompt' or 'prompt-with-rationale' — this is the first-time ask.
+        // MUST be called directly within this user-gesture turn so iOS shows the prompt.
+        console.log('[Scanner] Requesting camera permission...');
         const requestResult = await BarcodeScanner.requestPermissions();
+        console.log('[Scanner] Permission request result:', requestResult);
+
         if (requestResult.camera !== 'granted') {
           setHasPermission(false);
-          setError('Camera permission is required to scan barcodes. Please allow access when prompted, or scan the bottle label instead.');
+          if (requestResult.camera === 'denied') {
+            setError(
+              'Camera access is blocked. Open iPhone Settings → Med Guard Rx → turn on Camera, then come back and try again.'
+            );
+          } else {
+            setError(
+              'Camera permission is required to scan barcodes. Please tap Try Again and allow access when prompted.'
+            );
+          }
           return;
         }
       }
@@ -310,39 +349,13 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       setIsScanning(true);
 
       if (platform === 'ios' && typeof BarcodeScanner.scan === 'function') {
-
-        try {
-          const result = await BarcodeScanner.scan({
-            formats: scanOptions.formats,
-            autoZoom: true,
-          } as any);
-
-          const firstBarcode = Array.isArray(result?.barcodes)
-            ? result.barcodes.find((barcode: any) => typeof barcode?.rawValue === 'string' && barcode.rawValue.trim().length > 0)
-            : null;
-
-
-          setUsingNativeScanner(false);
-          setIsScanning(false);
-
-          if (firstBarcode?.rawValue) {
-            await processBarcode(firstBarcode.rawValue);
-            return;
-          }
-
-          setScannerStarted(false);
-          return;
-        } catch (scanErr: any) {
-          setUsingNativeScanner(false);
-          setIsScanning(false);
-
-          if (scanErr?.message?.includes('canceled') || scanErr?.message?.includes('cancelled')) {
-            setScannerStarted(false);
-            return;
-          }
-
-          throw scanErr;
-        }
+        // Use the continuous startScan() flow on iOS as well. The single-shot
+        // scan() never resolves when the user taps Cancel on the plugin's
+        // built-in UI, which strands the scanner in a "loading" state. The
+        // listener-based startScan() approach works reliably on every iOS
+        // version supported by the plugin (iOS 15.5+) and gives us full
+        // control over Cancel/torch/zoom via our own UI.
+        console.log('[Scanner] iOS: falling through to startScan() listener flow');
       }
 
       await clearNativeListeners();
@@ -365,6 +378,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         }
 
         await clearNativeListeners();
+        setScannerBodyActive(false);
         setUsingNativeScanner(false);
         setIsScanning(false);
         await processBarcode(barcode.rawValue);
@@ -385,9 +399,15 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       });
 
       nativeScanErrorListenerRef.current = await BarcodeScanner.addListener('scanError', async (event: any) => {
+        console.error('[Scanner] scanError event:', event);
       });
 
+      console.log('[Scanner] Calling startScan with options:', scanOptions);
+      // CRITICAL: make <html>/<body> transparent BEFORE startScan so the
+      // webview-behind-camera swap has no opaque surface hiding the feed.
+      setScannerBodyActive(true);
       await BarcodeScanner.startScan(scanOptions as any);
+      console.log('[Scanner] startScan resolved — camera should be live');
 
       // Initialize zoom limits + start at modest zoom to help focus on small bottle barcodes.
       try {
@@ -408,24 +428,39 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       } catch (limitErr) {
       }
     } catch (err: any) {
-      console.error('Native scanner error:', err);
+      console.error('[Scanner] Native scanner error:', err, 'stack:', err?.stack);
       await clearNativeListeners();
+      setScannerBodyActive(false);
       nativeScanHandledRef.current = false;
       setIsScanning(false);
       setUsingNativeScanner(false);
 
-      if (err?.message?.includes('canceled') || err?.message?.includes('cancelled')) {
+      const errMsg: string = err?.message || err?.code || String(err || '');
+      const lowerMsg = errMsg.toLowerCase();
+
+      if (lowerMsg.includes('canceled') || lowerMsg.includes('cancelled')) {
         return;
       }
-      if (err?.message?.includes('permission') || err?.message?.includes('denied') || err?.message?.includes('not authorized')) {
+      if (
+        lowerMsg.includes('permission') ||
+        lowerMsg.includes('denied') ||
+        lowerMsg.includes('not authorized')
+      ) {
         setHasPermission(false);
-        setError('Camera permission is required to scan barcodes. Please allow access and try again.');
+        setError(
+          'Camera access is blocked. Open iPhone Settings → Med Guard Rx → turn on Camera, then come back and try again.'
+        );
         return;
       }
-      const errMsg = err?.message || err?.code || String(err);
-      setError('Scanner encountered an issue. Try Scan Bottle Label instead.');
+      // Surface the real error so the user (and logs) can see what's wrong
+      // instead of a generic "Scanner encountered an issue" screen.
+      setError(
+        errMsg
+          ? `Scanner error: ${errMsg}. Try Scan Bottle Label instead.`
+          : 'Scanner encountered an issue. Try Scan Bottle Label instead.'
+      );
     }
-  }, [clearNativeListeners, processBarcode]);
+  }, [clearNativeListeners, processBarcode, setScannerBodyActive]);
 
   const startWebScanner = useCallback(async () => {
     setError(null);
@@ -495,6 +530,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         console.error('Error stopping native scanner:', e);
       }
       await clearNativeListeners();
+      setScannerBodyActive(false);
       setUsingNativeScanner(false);
     }
 
@@ -511,7 +547,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     setZoomRatio(1);
     setFocusPoint(null);
     setIsScanning(false);
-  }, [clearNativeListeners, isScanning, usingNativeScanner]);
+  }, [clearNativeListeners, isScanning, setScannerBodyActive, usingNativeScanner]);
 
   const toggleTorch = useCallback(async () => {
     if (usingNativeScanner) {
@@ -824,6 +860,10 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         nameSearchAbortRef.current.abort();
       }
       void stopScanner();
+      // Safety net: always clear the global transparent-body class on unmount.
+      if (typeof document !== 'undefined') {
+        document.documentElement.classList.remove('barcode-scanner-active');
+      }
     };
   }, [stopScanner]);
 
