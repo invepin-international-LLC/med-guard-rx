@@ -64,6 +64,28 @@ const getNativePlatform = () => {
   return (window as any).Capacitor?.getPlatform?.() ?? null;
 };
 
+// Capacitor injects window.Capacitor synchronously at app launch on iOS/Android,
+// but in some race-conditions (cold start, JIT compile delays on older iPhones)
+// the bridge can briefly be missing when our module evaluates. Poll for up to
+// ~500ms before falling back to the web scanner so real devices never get
+// mis-detected as a browser.
+const waitForCapacitorBridge = async (timeoutMs = 500): Promise<boolean> => {
+  if (typeof window === 'undefined') return false;
+  const cap = (window as any).Capacitor;
+  if (cap?.isNativePlatform?.()) return true;
+
+  // If we are clearly in a normal browser (no Capacitor stub at all AND there is
+  // a real document.referrer / window.parent, etc.), don't waste 500ms.
+  // We still poll briefly because the bridge can be late on real devices.
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    await new Promise((r) => setTimeout(r, 50));
+    const c = (window as any).Capacitor;
+    if (c?.isNativePlatform?.()) return true;
+  }
+  return false;
+};
+
 // Eagerly preload the native scanner module on app start so that when the user
 // taps "Open Barcode Scanner" we can call checkPermissions()/requestPermissions()
 // SYNCHRONOUSLY within the user-gesture tick. iOS will silently skip the system
@@ -503,14 +525,31 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       setIsScanning(false);
       setHasPermission(false);
       const errMsg = err?.message || err?.name || String(err);
-      setError('Camera access is needed to scan barcodes. Please allow camera access or scan the bottle label instead.');
+      const hasCap = !!(window as any).Capacitor;
+      const platform = getNativePlatform();
+      console.error('[Scanner] Web scanner failed. hasCapacitor=', hasCap, 'platform=', platform, 'err=', errMsg);
+
+      // If we ended up here on an actual device, the Capacitor bridge never
+      // loaded — surface that explicitly so the user/dev can see it instead
+      // of a generic "allow camera" message.
+      if (hasCap && platform && platform !== 'web') {
+        setError(
+          `Native camera bridge did not initialise (${platform}). Please fully close Med Guard Rx (swipe up from the app switcher) and reopen it, then try again.`
+        );
+      } else {
+        setError('Camera access is needed to scan barcodes. Please allow camera access or scan the bottle label instead.');
+      }
     }
   }, [processBarcode]);
 
   const startScanner = useCallback(async () => {
-    const nativePlatform = getNativePlatform();
+    // Poll briefly so cold-started iOS apps don't fall through to the web
+    // scanner just because the Capacitor bridge hasn't finished injecting yet.
+    const isNative = await waitForCapacitorBridge(500);
+    const platform = getNativePlatform();
+    console.log('[Scanner] startScanner — isNative:', isNative, 'platform:', platform, 'hasCapacitor:', !!(window as any).Capacitor);
 
-    if (isNativeApp()) {
+    if (isNative) {
       await startNativeScanner();
     } else {
       await startWebScanner();
