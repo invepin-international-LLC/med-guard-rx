@@ -172,20 +172,28 @@
 
   /*
    * When the native ML Kit barcode scanner is active on iOS/Android, the
-   * plugin makes the WKWebView transparent so the camera preview (inserted
-   * BELOW the webview by Swift) shows through. The <html> and <body>
-   * elements, however, are still painted opaque unless we clear them here.
-   * Without this rule the camera feed is completely hidden by the app's
-   * background color and the user only sees a black/empty viewport.
+   * native plugin inserts the camera preview BEHIND the WKWebView and
+   * expects the webview to be visually transparent so the camera shows
+   * through. Per the official @capacitor-mlkit/barcode-scanning docs
+   * (https://github.com/capawesome-team/capacitor-mlkit), the recommended
+   * approach is to hide every DOM element via `visibility: hidden` and
+   * then re-show only the scanner overlay. Backgrounds alone are NOT
+   * enough because every opaque <div> in the React tree (cards, headers,
+   * bottom nav, etc.) will still paint over the camera feed.
    */
   html.barcode-scanner-active,
   html.barcode-scanner-active body {
     background: transparent !important;
   }
-  html.barcode-scanner-active body > #root > *:not(.barcode-scanner-keep) {
-    /* Components outside the scanner overlay don't need to be force-hidden —
-       the scanner overlay itself handles its own transparency. We keep the
-       rule narrow so the rest of the app behaves normally on resume. */
+  html.barcode-scanner-active body {
+    visibility: hidden;
+  }
+  html.barcode-scanner-active .barcode-scanner-modal,
+  html.barcode-scanner-active .barcode-scanner-modal * {
+    visibility: visible;
+  }
+  html.barcode-scanner-active .barcode-scanner-modal {
+    background: transparent !important;
   }
 
   /* High contrast focus states - Very visible */
