@@ -600,14 +600,15 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         // camera access" is misleading.
         const inIframe = typeof window !== 'undefined' && window.self !== window.top;
         const errName: string = err?.name || '';
+        const permissionDenied = isPermissionDeniedError(err);
 
-        if (inIframe && errName === 'NotAllowedError') {
+        if (inIframe && permissionDenied) {
           setError(
-            'Camera permission was blocked by the browser preview before the app could show a prompt. Please allow camera access in the browser, then tap Try Again.'
+            'Camera permission is blocked in this preview. Open the site in Safari/Chrome, allow Camera when prompted, then tap Try Again.'
           );
-        } else if (errName === 'NotAllowedError') {
+        } else if (permissionDenied) {
           setError(
-            'Camera access was blocked. Click the camera icon in your browser address bar, set Camera to "Allow", then tap Try Again.'
+            'Camera access was blocked. In your browser site settings, set Camera to Allow, then tap Try Again.'
           );
         } else if (errName === 'NotFoundError' || errName === 'OverconstrainedError') {
           setError('No camera was found on this device. Try Scan Bottle Label or Enter NDC Code instead.');
