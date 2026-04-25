@@ -1004,6 +1004,15 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     <div
       className={`barcode-scanner-modal fixed inset-0 z-50 flex flex-col ${usingNativeScanner && isScanning && mode === 'camera' ? 'bg-transparent' : 'bg-background'}`}
     >
+      <input
+        ref={labelFileInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleLabelCapture}
+        className="hidden"
+      />
+
       <header
         className={`flex items-center gap-3 p-4 border-b ${
           usingNativeScanner && isScanning && mode === 'camera'
@@ -1408,15 +1417,6 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
                 Take a clear photo of the printed prescription label on the bottle and we’ll read the medication details for you.
               </p>
             </div>
-
-            <input
-              ref={labelFileInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handleLabelCapture}
-              className="hidden"
-            />
 
             {!labelPhoto ? (
               <div className="space-y-3">
