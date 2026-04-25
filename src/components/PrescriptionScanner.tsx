@@ -511,6 +511,20 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       await scanner.start(constraints, scanConfig, onDecoded, onDecodeError);
     };
 
+    const requestCameraAccess = async () => {
+      try {
+        return await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: { facingMode: { ideal: 'environment' } },
+        });
+      } catch (rearErr) {
+        if (isPermissionDeniedError(rearErr)) {
+          throw rearErr;
+        }
+        return navigator.mediaDevices.getUserMedia({ audio: false, video: true });
+      }
+    };
+
     try {
       if (!navigator.mediaDevices?.getUserMedia) {
         throw new Error('Camera access is not supported by this browser.');
@@ -519,11 +533,18 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       setIsScanning(true);
       setHasPermission(null);
 
+      // Force the real browser camera permission prompt directly from the tap
+      // handler before html5-qrcode's async internals run. If the user allows
+      // it, reuse that device id so the scanner opens the same camera.
+      const permissionStream = await requestCameraAccess();
+      const preferredDeviceId = permissionStream.getVideoTracks()[0]?.getSettings().deviceId;
+      permissionStream.getTracks().forEach((track) => track.stop());
+
       // html5-qrcode only accepts `{ facingMode: 'environment' }` or
       // `{ facingMode: { exact: 'environment' } }`. Passing `{ ideal: ... }`
       // throws synchronously before the camera permission prompt is shown.
       try {
-        await startNewScanner({ facingMode: 'environment' });
+        await startNewScanner(preferredDeviceId ? { deviceId: { exact: preferredDeviceId } } : { facingMode: 'environment' });
       } catch (rearErr: any) {
         // If the user (or browser preview) denied camera permission, do NOT
         // retry with the front camera — the same denial will fire and the
@@ -579,14 +600,15 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         // camera access" is misleading.
         const inIframe = typeof window !== 'undefined' && window.self !== window.top;
         const errName: string = err?.name || '';
+        const permissionDenied = isPermissionDeniedError(err);
 
-        if (inIframe && errName === 'NotAllowedError') {
+        if (inIframe && permissionDenied) {
           setError(
-            'Camera permission was blocked by the browser preview before the app could show a prompt. Please allow camera access in the browser, then tap Try Again.'
+            'Camera permission is blocked in this preview. Open the site in Safari/Chrome, allow Camera when prompted, then tap Try Again.'
           );
-        } else if (errName === 'NotAllowedError') {
+        } else if (permissionDenied) {
           setError(
-            'Camera access was blocked. Click the camera icon in your browser address bar, set Camera to "Allow", then tap Try Again.'
+            'Camera access was blocked. In your browser site settings, set Camera to Allow, then tap Try Again.'
           );
         } else if (errName === 'NotFoundError' || errName === 'OverconstrainedError') {
           setError('No camera was found on this device. Try Scan Bottle Label or Enter NDC Code instead.');
