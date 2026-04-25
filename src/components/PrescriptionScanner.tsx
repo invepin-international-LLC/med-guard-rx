@@ -770,11 +770,6 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     setLabelNotes([]);
   }, [stopScanner]);
 
-  const switchToLabelMode = useCallback(async () => {
-    await stopScannerRef.current?.();
-    openLabelCamera();
-  }, [openLabelCamera]);
-
   const switchToCameraMode = useCallback(async () => {
     await stopScanner();
     setMode('camera');
@@ -875,6 +870,11 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       window.setTimeout(() => labelFileInputRef.current?.setAttribute('capture', 'environment'), 500);
     }
   }, []);
+
+  const switchToLabelMode = useCallback(async () => {
+    await stopScannerRef.current?.();
+    openLabelCamera();
+  }, [openLabelCamera]);
 
   const handleAnalyzeLabel = useCallback(async () => {
     if (!labelPhoto) return;
