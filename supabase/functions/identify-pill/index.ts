@@ -18,12 +18,28 @@ serve(async (req: Request) => {
       });
     }
 
-    const { imageBase64 } = await req.json();
+    const { imageBase64, expectedMedication } = await req.json();
     if (!imageBase64) {
       return new Response(JSON.stringify({ error: "No image provided" }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
+    const expectedBlock = expectedMedication
+      ? `\n\nThe user has scanned their prescription bottle label. The pill in the photo SHOULD be this medication:
+- Name: ${expectedMedication.name ?? "(unknown)"}
+- Generic: ${expectedMedication.genericName ?? "(unknown)"}
+- Strength: ${expectedMedication.strength ?? "(unknown)"}
+- Form: ${expectedMedication.form ?? "(unknown)"}
+- Manufacturer: ${expectedMedication.manufacturer ?? "(unknown)"}
+- NDC: ${expectedMedication.ndcCode ?? "(unknown)"}
+
+Your job is to compare the pill in the photo to this specific prescription and return a verdict:
+- "match" if the imprint/color/shape/size are consistent with this medication and strength
+- "mismatch" if the pill clearly does NOT look like this medication (different imprint, wrong color, wrong shape)
+- "uncertain" if the photo is unclear or characteristics are ambiguous
+Explain your reasoning. If mismatch, warn strongly about counterfeits and potential fentanyl contamination.`
+      : "";
 
     const systemPrompt = `You are a pharmaceutical pill identification expert. Analyze the pill image and extract:
 1. Imprint text (letters, numbers, logos on the pill)
@@ -35,7 +51,7 @@ serve(async (req: Request) => {
 
 Then suggest up to 3 possible medication matches based on these characteristics. For each match provide the drug name, strength, and your confidence level (high/medium/low).
 
-IMPORTANT: Always include a safety disclaimer that visual identification is not definitive and pills should be verified by a pharmacist. Warn about counterfeit pills potentially containing fentanyl.`;
+IMPORTANT: Always include a safety disclaimer that visual identification is not definitive and pills should be verified by a pharmacist. Warn about counterfeit pills potentially containing fentanyl.${expectedBlock}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -95,6 +111,17 @@ IMPORTANT: Always include a safety disclaimer that visual identification is not 
                     type: "array",
                     items: { type: "string" },
                     description: "Safety warnings about this identification",
+                  },
+                  prescription_match: {
+                    type: "object",
+                    description: "Verdict comparing the pill to the user's scanned prescription. Only include when an expected medication was provided.",
+                    properties: {
+                      verdict: { type: "string", enum: ["match", "mismatch", "uncertain"] },
+                      explanation: { type: "string" },
+                      expected_name: { type: "string" },
+                      expected_strength: { type: "string" },
+                    },
+                    required: ["verdict", "explanation"],
                   },
                 },
                 required: ["characteristics", "matches", "warnings"],
