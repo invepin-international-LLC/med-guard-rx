@@ -872,7 +872,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   }, []);
 
   const switchToLabelMode = useCallback(async () => {
-    await stopScannerRef.current?.();
+    void stopScannerRef.current?.();
     openLabelCamera();
   }, [openLabelCamera]);
 
