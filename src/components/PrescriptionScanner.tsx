@@ -843,12 +843,37 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
 
     const reader = new FileReader();
     reader.onload = (event) => {
+      setMode('label');
       setLabelPhoto(event.target?.result as string);
       setLabelNotes([]);
       setError(null);
       setScannedResult(null);
     };
     reader.readAsDataURL(file);
+  }, []);
+
+  const openLabelCamera = useCallback(() => {
+    flushSync(() => {
+      setMode('label');
+      setError(null);
+      setScannedResult(null);
+      setScannerStarted(false);
+      setLabelNotes([]);
+    });
+    if (labelFileInputRef.current) {
+      labelFileInputRef.current.value = '';
+      labelFileInputRef.current.setAttribute('capture', 'environment');
+      labelFileInputRef.current.click();
+    }
+  }, []);
+
+  const openLabelPhotoPicker = useCallback(() => {
+    if (labelFileInputRef.current) {
+      labelFileInputRef.current.value = '';
+      labelFileInputRef.current.removeAttribute('capture');
+      labelFileInputRef.current.click();
+      window.setTimeout(() => labelFileInputRef.current?.setAttribute('capture', 'environment'), 500);
+    }
   }, []);
 
   const handleAnalyzeLabel = useCallback(async () => {
