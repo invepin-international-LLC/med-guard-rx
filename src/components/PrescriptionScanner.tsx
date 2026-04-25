@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, type ChangeEvent } from 'react';
+import { flushSync } from 'react-dom';
 
 const isPharmacyBarcodeError = (msg: string | null | undefined): boolean => {
   if (!msg) return false;
@@ -28,7 +29,6 @@ import {
   Search,
   ZoomIn,
   ZoomOut,
-  ExternalLink,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -479,17 +479,12 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     setScannedResult(null);
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
-      });
-      stream.getTracks().forEach((track) => track.stop());
       setHasPermission(true);
-
-      scannerRef.current = new Html5Qrcode(scannerContainerId);
       setIsScanning(true);
+      scannerRef.current = new Html5Qrcode(scannerContainerId);
 
       await scannerRef.current.start(
-        { facingMode: 'environment' },
+        { facingMode: { ideal: 'environment' } },
         {
           fps: 10,
           qrbox: { width: 280, height: 120 },
@@ -537,7 +532,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
 
         if (inIframe && errName === 'NotAllowedError') {
           setError(
-            'The preview window cannot access the camera. Open the preview in a new browser tab (top-right "Open in new tab" button), or use Scan Bottle Label / Enter NDC Code instead.'
+            'Camera permission was blocked by the browser preview before the app could show a prompt. Please allow camera access in the browser, then tap Try Again.'
           );
         } else if (errName === 'NotAllowedError') {
           setError(
@@ -843,9 +838,16 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     };
   }, []);
 
-  const handleUserStartScanner = useCallback(async () => {
-    setScannerStarted(true);
-    await startScanner();
+  const handleUserStartScanner = useCallback(() => {
+    flushSync(() => {
+      setScannerStarted(true);
+      setScannedResult(null);
+      setError(null);
+      setLabelPhoto(null);
+      setLabelNotes([]);
+    });
+
+    void startScanner();
   }, [startScanner]);
 
   useEffect(() => {
@@ -1437,27 +1439,10 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
               </div>
             )}
             <div className="flex flex-col gap-3">
-              {typeof window !== 'undefined' && window.self !== window.top && (
-                <Button
-                  variant="default"
-                  size="xl"
-                  onClick={() => {
-                    try {
-                      window.open(window.location.href, '_blank', 'noopener,noreferrer');
-                    } catch {
-                      window.open(window.location.href, '_blank');
-                    }
-                  }}
-                  className="w-full gap-3"
-                >
-                  <ExternalLink className="w-6 h-6" />
-                  Open in New Tab
-                </Button>
-              )}
               <Button
-                variant={typeof window !== 'undefined' && window.self !== window.top ? 'outline' : 'default'}
+                variant="default"
                 size="xl"
-                onClick={() => void handleRetry()}
+                onClick={handleUserStartScanner}
                 className="w-full gap-3"
               >
                 <RotateCcw className="w-6 h-6" />
