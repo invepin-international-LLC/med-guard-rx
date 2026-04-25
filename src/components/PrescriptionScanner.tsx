@@ -1715,6 +1715,9 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
           />
         )}
       </div>
+      {showPillVerifier && (
+        <AIPillIdentifier onClose={() => setShowPillVerifier(false)} />
+      )}
     </div>
   );
 }
