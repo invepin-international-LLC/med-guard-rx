@@ -650,6 +650,10 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     setIsScanning(false);
   }, [clearNativeListeners, isScanning, setScannerBodyActive, usingNativeScanner]);
 
+  useEffect(() => {
+    stopScannerRef.current = stopScanner;
+  }, [stopScanner]);
+
   const toggleTorch = useCallback(async () => {
     if (usingNativeScanner) {
       try {
@@ -767,13 +771,9 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   }, [stopScanner]);
 
   const switchToLabelMode = useCallback(async () => {
-    await stopScanner();
-    setMode('label');
-    setError(null);
-    setScannedResult(null);
-    setScannerStarted(false);
-    setLabelNotes([]);
-  }, [stopScanner]);
+    await stopScannerRef.current?.();
+    openLabelCamera();
+  }, [openLabelCamera]);
 
   const switchToCameraMode = useCallback(async () => {
     await stopScanner();
