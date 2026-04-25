@@ -935,6 +935,19 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   }, []);
 
   const handleUserStartScanner = useCallback(() => {
+    const cameraPermissionRequest = !detectNativeApp() && navigator.mediaDevices?.getUserMedia
+      ? navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: { facingMode: { ideal: 'environment' } },
+        }).catch((rearErr) => {
+          const message = `${(rearErr as any)?.name || ''} ${(rearErr as any)?.message || ''} ${String(rearErr || '')}`;
+          if (/notallowed|permission denied|permission dismissed|permission/i.test(message)) {
+            throw rearErr;
+          }
+          return navigator.mediaDevices.getUserMedia({ audio: false, video: true });
+        })
+      : undefined;
+
     flushSync(() => {
       setScannerStarted(true);
       setScannedResult(null);
@@ -943,7 +956,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       setLabelNotes([]);
     });
 
-    void startScanner();
+    void startScanner(cameraPermissionRequest);
   }, [startScanner]);
 
   useEffect(() => {
