@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback } from 'react';
-import { Camera, Loader2, RotateCcw, AlertTriangle, Sparkles, ShieldAlert, X, ScanSearch } from 'lucide-react';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { Camera, Loader2, RotateCcw, AlertTriangle, Sparkles, ShieldAlert, X, ScanSearch, CheckCircle2, XCircle, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -29,11 +29,27 @@ interface IdentifyResult {
   characteristics: PillCharacteristics;
   matches: PillMatch[];
   warnings: string[];
+  prescription_match?: {
+    verdict: 'match' | 'mismatch' | 'uncertain';
+    explanation: string;
+    expected_name?: string;
+    expected_strength?: string;
+  };
+}
+
+interface ExpectedMedication {
+  name: string;
+  genericName?: string;
+  strength: string;
+  form?: string;
+  manufacturer?: string;
+  ndcCode?: string;
 }
 
 interface AIPillIdentifierProps {
   onClose?: () => void;
   onCompare?: (photo: string, drugName: string) => void;
+  expectedMedication?: ExpectedMedication | null;
 }
 
 const confidenceColors: Record<string, string> = {
@@ -42,7 +58,7 @@ const confidenceColors: Record<string, string> = {
   low: 'bg-muted text-muted-foreground border-border',
 };
 
-export function AIPillIdentifier({ onClose, onCompare }: AIPillIdentifierProps) {
+export function AIPillIdentifier({ onClose, onCompare, expectedMedication }: AIPillIdentifierProps) {
   const [photo, setPhoto] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<IdentifyResult | null>(null);
@@ -64,7 +80,7 @@ export function AIPillIdentifier({ onClose, onCompare }: AIPillIdentifierProps) 
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('identify-pill', {
-        body: { imageBase64: photo },
+        body: { imageBase64: photo, expectedMedication: expectedMedication ?? null },
       });
 
       if (error) throw error;
@@ -77,6 +93,7 @@ export function AIPillIdentifier({ onClose, onCompare }: AIPillIdentifierProps) 
           characteristics: data.characteristics,
           matches: data.matches,
           warnings: data.warnings,
+          prescription_match: data.prescription_match,
         });
       } else {
         toast.error('Could not identify the pill. Try a clearer photo.');
@@ -87,7 +104,7 @@ export function AIPillIdentifier({ onClose, onCompare }: AIPillIdentifierProps) 
     } finally {
       setLoading(false);
     }
-  }, [photo]);
+  }, [photo, expectedMedication]);
 
   const handleReset = useCallback(() => {
     setPhoto(null);
@@ -116,8 +133,18 @@ export function AIPillIdentifier({ onClose, onCompare }: AIPillIdentifierProps) 
             </div>
             <h3 className="text-lg font-bold text-foreground">AI Pill Identifier</h3>
             <p className="text-sm text-muted-foreground">
-              Snap a photo and our AI will detect the imprint, color, shape, and suggest possible medications.
+              {expectedMedication
+                ? `Snap a photo of your pill and AI will check whether it matches your scanned prescription for ${expectedMedication.name} ${expectedMedication.strength}.`
+                : 'Snap a photo and our AI will detect the imprint, color, shape, and suggest possible medications.'}
             </p>
+            {expectedMedication && (
+              <div className="mt-3 inline-flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-full px-3 py-1">
+                <ScanSearch className="w-3.5 h-3.5 text-primary" />
+                <span className="text-xs font-semibold text-primary">
+                  Comparing against: {expectedMedication.name} {expectedMedication.strength}
+                </span>
+              </div>
+            )}
           </div>
 
           <input
@@ -194,6 +221,31 @@ export function AIPillIdentifier({ onClose, onCompare }: AIPillIdentifierProps) 
             <div className="w-20 h-20 mx-auto rounded-xl overflow-hidden border-2 border-border">
               <img src={photo} alt="Analyzed pill" className="w-full h-full object-cover" />
             </div>
+          )}
+
+          {/* Prescription match verdict */}
+          {result.prescription_match && expectedMedication && (
+            <Card
+              className={`p-4 space-y-2 border-2 ${
+                result.prescription_match.verdict === 'match'
+                  ? 'border-emerald-500/40 bg-emerald-500/10'
+                  : result.prescription_match.verdict === 'mismatch'
+                  ? 'border-destructive/50 bg-destructive/10'
+                  : 'border-amber-500/40 bg-amber-500/10'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                {result.prescription_match.verdict === 'match' && <CheckCircle2 className="w-5 h-5 text-emerald-600" />}
+                {result.prescription_match.verdict === 'mismatch' && <XCircle className="w-5 h-5 text-destructive" />}
+                {result.prescription_match.verdict === 'uncertain' && <HelpCircle className="w-5 h-5 text-amber-600" />}
+                <p className="font-bold text-sm text-foreground">
+                  {result.prescription_match.verdict === 'match' && `Looks like ${expectedMedication.name} ${expectedMedication.strength}`}
+                  {result.prescription_match.verdict === 'mismatch' && `Does NOT look like ${expectedMedication.name}`}
+                  {result.prescription_match.verdict === 'uncertain' && `Cannot confirm — verify with pharmacist`}
+                </p>
+              </div>
+              <p className="text-xs text-foreground leading-relaxed">{result.prescription_match.explanation}</p>
+            </Card>
           )}
 
           {/* Characteristics */}

@@ -1107,6 +1107,9 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
                     <Pill className="w-6 h-6" />
                     Verify Pill with AI
                   </Button>
+                  <p className="text-xs text-muted-foreground -mt-1">
+                    Tip: Scan your bottle label first — then pill verification will check against that exact prescription.
+                  </p>
                 </div>
                 <div className="bg-muted/60 border border-border rounded-xl p-4 text-left">
                   <p className="text-sm text-muted-foreground leading-relaxed">
@@ -1661,6 +1664,15 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
                 Add Medication
               </Button>
             </div>
+            <Button
+              variant="outline"
+              size="xl"
+              onClick={() => setShowPillVerifier(true)}
+              className="w-full gap-3 mt-3"
+            >
+              <Pill className="w-6 h-6" />
+              Verify Pill Matches This Prescription
+            </Button>
           </Card>
         )}
       </div>
@@ -1718,7 +1730,21 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       {showPillVerifier && (
         <div className="fixed inset-0 z-[60] bg-background overflow-y-auto">
           <div className="max-w-md mx-auto p-4">
-            <AIPillIdentifier onClose={() => setShowPillVerifier(false)} />
+            <AIPillIdentifier
+              onClose={() => setShowPillVerifier(false)}
+              expectedMedication={
+                scannedResult
+                  ? {
+                      name: scannedResult.name,
+                      genericName: scannedResult.genericName,
+                      strength: scannedResult.strength,
+                      form: scannedResult.form,
+                      manufacturer: scannedResult.manufacturer,
+                      ndcCode: scannedResult.ndcCode,
+                    }
+                  : null
+              }
+            />
           </div>
         </div>
       )}
