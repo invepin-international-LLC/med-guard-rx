@@ -475,7 +475,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     }
   }, [clearNativeListeners, processBarcode, setScannerBodyActive]);
 
-  const startWebScanner = useCallback(async () => {
+  const startWebScanner = useCallback(async (cameraPermissionRequest?: Promise<MediaStream>) => {
     setError(null);
     setScannedResult(null);
 
@@ -533,10 +533,9 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       setIsScanning(true);
       setHasPermission(null);
 
-      // Force the real browser camera permission prompt directly from the tap
-      // handler before html5-qrcode's async internals run. If the user allows
-      // it, reuse that device id so the scanner opens the same camera.
-      const permissionStream = await requestCameraAccess();
+      // The permission promise is created at the very start of the button tap
+      // handler so browsers keep the user-gesture context for the prompt.
+      const permissionStream = await (cameraPermissionRequest ?? requestCameraAccess());
       const preferredDeviceId = permissionStream.getVideoTracks()[0]?.getSettings().deviceId;
       permissionStream.getTracks().forEach((track) => track.stop());
 
@@ -625,7 +624,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     }
   }, [processBarcode]);
 
-  const startScanner = useCallback(async () => {
+  const startScanner = useCallback(async (cameraPermissionRequest?: Promise<MediaStream>) => {
     // CRITICAL: detection must be synchronous so the user-gesture chain stays
     // intact for the browser's getUserMedia() call. Any async wait here causes
     // Safari/Chrome to silently deny camera access.
@@ -636,7 +635,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     if (isNative) {
       await startNativeScanner();
     } else {
-      await startWebScanner();
+      await startWebScanner(cameraPermissionRequest);
     }
   }, [startNativeScanner, startWebScanner]);
 
