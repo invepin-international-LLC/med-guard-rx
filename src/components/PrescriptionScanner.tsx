@@ -601,11 +601,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         const errName: string = err?.name || '';
         const permissionDenied = isPermissionDeniedError(err);
 
-        if (inIframe && permissionDenied) {
-          setError(
-            'Camera permission is blocked in this preview. Open the site in Safari/Chrome, allow Camera when prompted, then tap Try Again.'
-          );
-        } else if (permissionDenied) {
+        if (permissionDenied) {
           setError(
             'Camera access was blocked. In your browser site settings, set Camera to Allow, then tap Try Again.'
           );
