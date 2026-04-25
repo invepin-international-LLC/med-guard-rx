@@ -1062,7 +1062,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
                     <Camera className="w-6 h-6" />
                     Open Barcode Scanner
                   </Button>
-                  <Button variant="outline" size="xl" onClick={() => void switchToLabelMode()} className="w-full gap-3">
+                  <Button variant="outline" size="xl" onClick={openLabelCamera} className="w-full gap-3">
                     <ScanLine className="w-6 h-6" />
                     Scan Bottle Label Instead
                   </Button>
@@ -1420,20 +1420,14 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
 
             {!labelPhoto ? (
               <div className="space-y-3">
-                <Button variant="default" size="xl" onClick={() => labelFileInputRef.current?.click()} className="w-full gap-3">
+                <Button variant="default" size="xl" onClick={openLabelCamera} className="w-full gap-3">
                   <Camera className="w-6 h-6" />
                   Open Camera
                 </Button>
                 <Button
                   variant="outline"
                   size="xl"
-                  onClick={() => {
-                    if (labelFileInputRef.current) {
-                      labelFileInputRef.current.removeAttribute('capture');
-                      labelFileInputRef.current.click();
-                      window.setTimeout(() => labelFileInputRef.current?.setAttribute('capture', 'environment'), 500);
-                    }
-                  }}
+                  onClick={openLabelPhotoPicker}
                   className="w-full gap-3"
                 >
                   <Search className="w-6 h-6" />
