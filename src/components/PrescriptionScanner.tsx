@@ -1521,7 +1521,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
           </Card>
         )}
 
-        {error && mode === 'camera' && (
+        {error && mode === 'camera' && !isNativeApp() && (
           <Card className="w-full max-w-md p-8 text-center space-y-6 bg-card border-2 border-border shadow-elder-lg">
             <div className="w-24 h-24 bg-destructive/20 rounded-3xl flex items-center justify-center mx-auto">
               <Camera className="w-14 h-14 text-destructive" />
