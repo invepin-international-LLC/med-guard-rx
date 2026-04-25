@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { AIPillIdentifier } from '@/components/AIPillIdentifier';
 
 interface ScannedMedication {
   ndcCode: string;
@@ -132,6 +133,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   const [scannerStarted, setScannerStarted] = useState(false);
   const [labelPhoto, setLabelPhoto] = useState<string | null>(null);
   const [labelNotes, setLabelNotes] = useState<string[]>([]);
+  const [showPillVerifier, setShowPillVerifier] = useState(false);
   const [zoomRatio, setZoomRatio] = useState<number>(1);
   const [zoomLimits, setZoomLimits] = useState<{ min: number; max: number }>({ min: 1, max: 5 });
   const [focusPoint, setFocusPoint] = useState<{ x: number; y: number; key: number } | null>(null);
@@ -1088,29 +1090,27 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
             {!scannerStarted && !isScanning && !usingNativeScanner && (
               <div className="text-center space-y-6 w-full max-w-md">
                 <div className="w-24 h-24 bg-primary/20 rounded-3xl flex items-center justify-center mx-auto">
-                  <Camera className="w-14 h-14 text-primary" />
+                  <ScanLine className="w-14 h-14 text-primary" />
                 </div>
                 <div className="space-y-2">
-                  <h2 className="text-elder-xl font-bold text-foreground">Scan Prescription Barcode</h2>
+                  <h2 className="text-elder-xl font-bold text-foreground">Add Your Medication</h2>
                   <p className="text-muted-foreground text-lg">
-                    Use barcode scan for a real NDC code, or scan the printed bottle label directly if the bottle uses a pharmacy barcode.
+                    Take a clear photo of the printed bottle label and we'll read the medication details for you. You can also verify your pills look right with AI.
                   </p>
                 </div>
                 <div className="space-y-3">
-                  <Button variant="default" size="xl" onClick={handleUserStartScanner} className="w-full gap-3">
-                    <Camera className="w-6 h-6" />
-                    Open Barcode Scanner
-                  </Button>
-                  <Button variant="outline" size="xl" onClick={openLabelCamera} className="w-full gap-3">
+                  <Button variant="default" size="xl" onClick={openLabelCamera} className="w-full gap-3">
                     <ScanLine className="w-6 h-6" />
-                    Scan Bottle Label Instead
+                    Scan Bottle Label
+                  </Button>
+                  <Button variant="outline" size="xl" onClick={() => setShowPillVerifier(true)} className="w-full gap-3">
+                    <Pill className="w-6 h-6" />
+                    Verify Pill with AI
                   </Button>
                 </div>
                 <div className="bg-muted/60 border border-border rounded-xl p-4 text-left">
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    <span className="font-semibold text-foreground">Heads up:</span> Some pharmacy bottle barcodes
-                    aren&apos;t FDA NDC barcodes and can&apos;t be looked up. If the scan doesn&apos;t find your
-                    medication, tap <span className="font-semibold text-foreground">Scan Bottle Label</span> instead.
+                    <span className="font-semibold text-foreground">Pill verification:</span> Snap a photo of a pill and AI will check the imprint, color, and shape against what your prescription should look like — helpful for spotting counterfeits or mix-ups.
                   </p>
                 </div>
               </div>
@@ -1715,6 +1715,13 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
           />
         )}
       </div>
+      {showPillVerifier && (
+        <div className="fixed inset-0 z-[60] bg-background overflow-y-auto">
+          <div className="max-w-md mx-auto p-4">
+            <AIPillIdentifier onClose={() => setShowPillVerifier(false)} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
