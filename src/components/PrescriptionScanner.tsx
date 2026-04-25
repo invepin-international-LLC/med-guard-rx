@@ -515,7 +515,30 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
           onDecodeError
         );
       } catch (rearErr: any) {
+        const rearMsg: string = rearErr?.message || String(rearErr) || '';
+        const rearName: string = rearErr?.name || '';
+        const isPermissionDenied =
+          rearName === 'NotAllowedError' ||
+          /permission denied|notallowed/i.test(rearMsg);
+
+        // If the user (or browser preview) denied camera permission, do NOT
+        // retry with the front camera — the same denial will fire and the
+        // library leaves scannerRef in a broken state, causing a confusing
+        // "Cannot read properties of null" crash. Re-throw so the outer
+        // handler shows a proper permission message.
+        if (isPermissionDenied) {
+          throw rearErr;
+        }
+
         console.warn('[Scanner] Rear camera unavailable, falling back to any camera:', rearErr);
+        // Re-create the scanner instance because html5-qrcode can leave the
+        // previous one in an unusable state after a failed start().
+        try {
+          await scannerRef.current?.clear();
+        } catch {
+          // ignore
+        }
+        scannerRef.current = new Html5Qrcode(scannerContainerId);
         // Some desktops/laptops have no rear camera — retry with the user-facing one
         // so the preview still works and the user gets a real permission prompt.
         await scannerRef.current.start(
