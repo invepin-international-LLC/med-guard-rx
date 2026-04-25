@@ -483,28 +483,48 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
       setIsScanning(true);
       scannerRef.current = new Html5Qrcode(scannerContainerId);
 
-      await scannerRef.current.start(
-        { facingMode: { ideal: 'environment' } },
-        {
-          fps: 10,
-          qrbox: { width: 280, height: 120 },
-          aspectRatio: 1.5,
-        },
-        async (decodedText) => {
-          if (scannerRef.current) {
-            try {
-              await scannerRef.current.stop();
-            } catch (e) {
-              console.error('Error stopping scanner after decode:', e);
-            }
-          }
-          await processBarcode(decodedText);
-        },
-        (decodeError) => {
-          if (decodeError) {
+      const scanConfig = {
+        fps: 10,
+        qrbox: { width: 280, height: 120 },
+        aspectRatio: 1.5,
+      };
+
+      const onDecoded = async (decodedText: string) => {
+        if (scannerRef.current) {
+          try {
+            await scannerRef.current.stop();
+          } catch (e) {
+            console.error('Error stopping scanner after decode:', e);
           }
         }
-      );
+        await processBarcode(decodedText);
+      };
+
+      const onDecodeError = (_decodeError: string) => {
+        // ignore per-frame decode misses
+      };
+
+      // html5-qrcode only accepts `{ facingMode: 'environment' }` or
+      // `{ facingMode: { exact: 'environment' } }`. Passing `{ ideal: ... }`
+      // throws synchronously before the camera permission prompt is shown.
+      try {
+        await scannerRef.current.start(
+          { facingMode: 'environment' },
+          scanConfig,
+          onDecoded,
+          onDecodeError
+        );
+      } catch (rearErr: any) {
+        console.warn('[Scanner] Rear camera unavailable, falling back to any camera:', rearErr);
+        // Some desktops/laptops have no rear camera — retry with the user-facing one
+        // so the preview still works and the user gets a real permission prompt.
+        await scannerRef.current.start(
+          { facingMode: 'user' },
+          scanConfig,
+          onDecoded,
+          onDecodeError
+        );
+      }
     } catch (err: any) {
       console.error('Scanner error:', err);
       setIsScanning(false);
