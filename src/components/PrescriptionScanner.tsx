@@ -140,6 +140,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
   const nameSearchAbortRef = useRef<AbortController | null>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const labelFileInputRef = useRef<HTMLInputElement | null>(null);
+  const stopScannerRef = useRef<(() => Promise<void>) | null>(null);
   const nativeBarcodesListenerRef = useRef<{ remove: () => Promise<void> } | null>(null);
   const nativeSingleBarcodeListenerRef = useRef<{ remove: () => Promise<void> } | null>(null);
   const nativeScanErrorListenerRef = useRef<{ remove: () => Promise<void> } | null>(null);
@@ -478,55 +479,58 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     setError(null);
     setScannedResult(null);
 
-    try {
-      setHasPermission(true);
-      setIsScanning(true);
-      scannerRef.current = new Html5Qrcode(scannerContainerId);
+    const isPermissionDeniedError = (err: any) => {
+      const message = `${err?.name || ''} ${err?.message || ''} ${String(err || '')}`;
+      return /notallowed|permission denied|permission dismissed|permission/i.test(message);
+    };
 
-      const scanConfig = {
-        fps: 10,
-        qrbox: { width: 280, height: 120 },
-        aspectRatio: 1.5,
-      };
+    const scanConfig = {
+      fps: 10,
+      qrbox: { width: 280, height: 120 },
+      aspectRatio: 1.5,
+    };
 
-      const onDecoded = async (decodedText: string) => {
-        if (scannerRef.current) {
-          try {
-            await scannerRef.current.stop();
-          } catch (e) {
-            console.error('Error stopping scanner after decode:', e);
-          }
+    const onDecoded = async (decodedText: string) => {
+      if (scannerRef.current) {
+        try {
+          await scannerRef.current.stop();
+        } catch (e) {
+          console.error('Error stopping scanner after decode:', e);
         }
-        await processBarcode(decodedText);
-      };
+      }
+      await processBarcode(decodedText);
+    };
 
-      const onDecodeError = (_decodeError: string) => {
-        // ignore per-frame decode misses
-      };
+    const onDecodeError = (_decodeError: string) => {
+      // ignore per-frame decode misses
+    };
+
+    const startNewScanner = async (constraints: MediaTrackConstraints) => {
+      const scanner = new Html5Qrcode(scannerContainerId);
+      scannerRef.current = scanner;
+      await scanner.start(constraints, scanConfig, onDecoded, onDecodeError);
+    };
+
+    try {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error('Camera access is not supported by this browser.');
+      }
+
+      setIsScanning(true);
+      setHasPermission(null);
 
       // html5-qrcode only accepts `{ facingMode: 'environment' }` or
       // `{ facingMode: { exact: 'environment' } }`. Passing `{ ideal: ... }`
       // throws synchronously before the camera permission prompt is shown.
       try {
-        await scannerRef.current.start(
-          { facingMode: 'environment' },
-          scanConfig,
-          onDecoded,
-          onDecodeError
-        );
+        await startNewScanner({ facingMode: 'environment' });
       } catch (rearErr: any) {
-        const rearMsg: string = rearErr?.message || String(rearErr) || '';
-        const rearName: string = rearErr?.name || '';
-        const isPermissionDenied =
-          rearName === 'NotAllowedError' ||
-          /permission denied|notallowed/i.test(rearMsg);
-
         // If the user (or browser preview) denied camera permission, do NOT
         // retry with the front camera — the same denial will fire and the
         // library leaves scannerRef in a broken state, causing a confusing
         // "Cannot read properties of null" crash. Re-throw so the outer
         // handler shows a proper permission message.
-        if (isPermissionDenied) {
+        if (isPermissionDeniedError(rearErr)) {
           throw rearErr;
         }
 
@@ -538,20 +542,23 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
         } catch {
           // ignore
         }
-        scannerRef.current = new Html5Qrcode(scannerContainerId);
+        scannerRef.current = null;
         // Some desktops/laptops have no rear camera — retry with the user-facing one
         // so the preview still works and the user gets a real permission prompt.
-        await scannerRef.current.start(
-          { facingMode: 'user' },
-          scanConfig,
-          onDecoded,
-          onDecodeError
-        );
+        await startNewScanner({ facingMode: 'user' });
       }
+
+      setHasPermission(true);
     } catch (err: any) {
       console.error('Scanner error:', err);
       setIsScanning(false);
       setHasPermission(false);
+      try {
+        await scannerRef.current?.clear();
+      } catch {
+        // ignore cleanup errors
+      }
+      scannerRef.current = null;
       const errMsg = err?.message || err?.name || String(err);
       const hasCap = !!(window as any).Capacitor;
       const platform = getNativePlatform();
@@ -642,6 +649,10 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     setFocusPoint(null);
     setIsScanning(false);
   }, [clearNativeListeners, isScanning, setScannerBodyActive, usingNativeScanner]);
+
+  useEffect(() => {
+    stopScannerRef.current = stopScanner;
+  }, [stopScanner]);
 
   const toggleTorch = useCallback(async () => {
     if (usingNativeScanner) {
@@ -759,15 +770,6 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     setLabelNotes([]);
   }, [stopScanner]);
 
-  const switchToLabelMode = useCallback(async () => {
-    await stopScanner();
-    setMode('label');
-    setError(null);
-    setScannedResult(null);
-    setScannerStarted(false);
-    setLabelNotes([]);
-  }, [stopScanner]);
-
   const switchToCameraMode = useCallback(async () => {
     await stopScanner();
     setMode('camera');
@@ -836,6 +838,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
 
     const reader = new FileReader();
     reader.onload = (event) => {
+      setMode('label');
       setLabelPhoto(event.target?.result as string);
       setLabelNotes([]);
       setError(null);
@@ -843,6 +846,35 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     };
     reader.readAsDataURL(file);
   }, []);
+
+  const openLabelCamera = useCallback(() => {
+    flushSync(() => {
+      setMode('label');
+      setError(null);
+      setScannedResult(null);
+      setScannerStarted(false);
+      setLabelNotes([]);
+    });
+    if (labelFileInputRef.current) {
+      labelFileInputRef.current.value = '';
+      labelFileInputRef.current.setAttribute('capture', 'environment');
+      labelFileInputRef.current.click();
+    }
+  }, []);
+
+  const openLabelPhotoPicker = useCallback(() => {
+    if (labelFileInputRef.current) {
+      labelFileInputRef.current.value = '';
+      labelFileInputRef.current.removeAttribute('capture');
+      labelFileInputRef.current.click();
+      window.setTimeout(() => labelFileInputRef.current?.setAttribute('capture', 'environment'), 500);
+    }
+  }, []);
+
+  const switchToLabelMode = useCallback(async () => {
+    void stopScannerRef.current?.();
+    openLabelCamera();
+  }, [openLabelCamera]);
 
   const handleAnalyzeLabel = useCallback(async () => {
     if (!labelPhoto) return;
@@ -972,6 +1004,15 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     <div
       className={`barcode-scanner-modal fixed inset-0 z-50 flex flex-col ${usingNativeScanner && isScanning && mode === 'camera' ? 'bg-transparent' : 'bg-background'}`}
     >
+      <input
+        ref={labelFileInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleLabelCapture}
+        className="hidden"
+      />
+
       <header
         className={`flex items-center gap-3 p-4 border-b ${
           usingNativeScanner && isScanning && mode === 'camera'
@@ -1030,7 +1071,7 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
                     <Camera className="w-6 h-6" />
                     Open Barcode Scanner
                   </Button>
-                  <Button variant="outline" size="xl" onClick={() => void switchToLabelMode()} className="w-full gap-3">
+                  <Button variant="outline" size="xl" onClick={openLabelCamera} className="w-full gap-3">
                     <ScanLine className="w-6 h-6" />
                     Scan Bottle Label Instead
                   </Button>
@@ -1377,31 +1418,16 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
               </p>
             </div>
 
-            <input
-              ref={labelFileInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handleLabelCapture}
-              className="hidden"
-            />
-
             {!labelPhoto ? (
               <div className="space-y-3">
-                <Button variant="default" size="xl" onClick={() => labelFileInputRef.current?.click()} className="w-full gap-3">
+                <Button variant="default" size="xl" onClick={openLabelCamera} className="w-full gap-3">
                   <Camera className="w-6 h-6" />
                   Open Camera
                 </Button>
                 <Button
                   variant="outline"
                   size="xl"
-                  onClick={() => {
-                    if (labelFileInputRef.current) {
-                      labelFileInputRef.current.removeAttribute('capture');
-                      labelFileInputRef.current.click();
-                      window.setTimeout(() => labelFileInputRef.current?.setAttribute('capture', 'environment'), 500);
-                    }
-                  }}
+                  onClick={openLabelPhotoPicker}
                   className="w-full gap-3"
                 >
                   <Search className="w-6 h-6" />
