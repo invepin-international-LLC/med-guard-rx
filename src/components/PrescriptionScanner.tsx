@@ -838,9 +838,16 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
     };
   }, []);
 
-  const handleUserStartScanner = useCallback(async () => {
-    setScannerStarted(true);
-    await startScanner();
+  const handleUserStartScanner = useCallback(() => {
+    flushSync(() => {
+      setScannerStarted(true);
+      setScannedResult(null);
+      setError(null);
+      setLabelPhoto(null);
+      setLabelNotes([]);
+    });
+
+    void startScanner();
   }, [startScanner]);
 
   useEffect(() => {
