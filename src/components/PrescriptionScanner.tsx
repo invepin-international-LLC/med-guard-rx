@@ -1453,17 +1453,13 @@ export function PrescriptionScanner({ onMedicationScanned, onClose }: Prescripti
 
             {!labelPhoto ? (
               <div className="space-y-3">
-                <Button variant="default" size="xl" onClick={openLabelCamera} className="w-full gap-3">
-                  <Camera className="w-6 h-6" />
-                  Open Camera
-                </Button>
                 <Button
-                  variant="outline"
+                  variant="default"
                   size="xl"
                   onClick={openLabelPhotoPicker}
                   className="w-full gap-3"
                 >
-                  <Search className="w-6 h-6" />
+                  <Camera className="w-6 h-6" />
                   Upload Photo
                 </Button>
               </div>
