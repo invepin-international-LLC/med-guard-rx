@@ -156,24 +156,18 @@ export function AIPillIdentifier({ onClose, onCompare, expectedMedication }: AIP
             className="hidden"
           />
 
-          <Button className="w-full gap-2" size="lg" onClick={() => fileInputRef.current?.click()}>
-            <Camera className="w-5 h-5" />
-            Take Photo
-          </Button>
-
           <Button
-            variant="outline"
             className="w-full gap-2"
             size="lg"
             onClick={() => {
               if (fileInputRef.current) {
                 fileInputRef.current.removeAttribute('capture');
                 fileInputRef.current.click();
-                setTimeout(() => fileInputRef.current?.setAttribute('capture', 'environment'), 500);
               }
             }}
           >
-            Upload from Gallery
+            <Camera className="w-5 h-5" />
+            Upload Photo
           </Button>
         </Card>
       )}
