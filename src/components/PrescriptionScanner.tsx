@@ -1758,7 +1758,6 @@ type ModeSwitcherProps = {
 
 function ModeSwitcher({ current, onCamera, onLabel, onManual, onSearch }: ModeSwitcherProps) {
   const allItems: { key: ModeSwitcherProps['current']; label: string; Icon: typeof Camera; onClick: () => void }[] = [
-    { key: 'camera', label: 'Barcode', Icon: Camera, onClick: onCamera },
     { key: 'label', label: 'Label', Icon: ScanLine, onClick: onLabel },
     { key: 'manual', label: 'NDC', Icon: Keyboard, onClick: onManual },
     { key: 'name', label: 'Search', Icon: Search, onClick: onSearch },
@@ -1770,7 +1769,7 @@ function ModeSwitcher({ current, onCamera, onLabel, onManual, onSearch }: ModeSw
       <p className="text-xs uppercase tracking-wider text-muted-foreground text-center mb-3">
         Try another way
       </p>
-      <div className="grid grid-cols-3 gap-3">
+      <div className={`grid gap-3 ${items.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
         {items.map(({ key, label, Icon, onClick }) => (
           <button
             key={key}
