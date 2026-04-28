@@ -556,6 +556,10 @@ export function TodayDashboard() {
             <button onClick={() => navigate('/terms')} className="text-xs text-muted-foreground hover:text-foreground underline transition-colors">
               Terms of Service
             </button>
+            <span className="text-xs text-muted-foreground">·</span>
+            <button onClick={() => navigate('/sources')} className="text-xs text-muted-foreground hover:text-foreground underline transition-colors">
+              Sources & Disclaimer
+            </button>
           </div>
 
           {/* Emergency Card */}
