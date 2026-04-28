@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { AlertTriangle, Shield, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { MedicalDisclaimer } from '@/components/MedicalDisclaimer';
 
 interface Interaction {
   severity: string;
@@ -150,6 +151,17 @@ export function DrugInteractionWarnings({ medications }: DrugInteractionWarnings
           )}
         </div>
       )}
+
+      {/* Citations & disclaimer (Apple Guideline 1.4.1) */}
+      <div className="mt-4">
+        <MedicalDisclaimer
+          variant="compact"
+          extraSources={[
+            { label: 'OpenFDA Drug Label API (data source)', url: 'https://open.fda.gov/apis/drug/label/' },
+            { label: 'NIH RxNav Interaction API', url: 'https://lhncbc.nlm.nih.gov/RxNav/APIs/InteractionAPIs.html' },
+          ]}
+        />
+      </div>
     </div>
   );
 }
