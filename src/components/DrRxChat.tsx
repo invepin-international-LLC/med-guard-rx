@@ -8,6 +8,7 @@ import { ArrowLeft, Send, Loader2, Sparkles, Mic, MicOff, Volume2, VolumeX, Chev
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import drRxAvatar from '@/assets/dr-bombay-avatar.png';
+import { MedicalDisclaimer } from '@/components/MedicalDisclaimer';
 
 type Message = { role: 'user' | 'assistant'; content: string };
 
@@ -395,6 +396,11 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Medical disclaimer + citation sources (Apple Guideline 1.4.1) */}
+            <div className="pl-12">
+              <MedicalDisclaimer variant="compact" />
             </div>
           </div>
         )}
