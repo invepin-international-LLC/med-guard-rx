@@ -8,6 +8,7 @@ import { ArrowLeft, Send, Loader2, Sparkles, Mic, MicOff, Volume2, VolumeX, Chev
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import drRxAvatar from '@/assets/dr-bombay-avatar.png';
+import { MedicalDisclaimer } from '@/components/MedicalDisclaimer';
 
 type Message = { role: 'user' | 'assistant'; content: string };
 
@@ -396,6 +397,11 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
                 ))}
               </div>
             </div>
+
+            {/* Medical disclaimer + citation sources (Apple Guideline 1.4.1) */}
+            <div className="pl-12">
+              <MedicalDisclaimer variant="compact" />
+            </div>
           </div>
         )}
 
@@ -414,7 +420,20 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
             >
               {msg.role === 'assistant' ? (
                 <div className="prose prose-sm dark:prose-invert max-w-none text-foreground [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0.5 [&_h1]:text-lg [&_h2]:text-base [&_h3]:text-sm [&_h3]:font-semibold [&_strong]:text-foreground">
-                  <ReactMarkdown>{msg.content}</ReactMarkdown>
+                  <ReactMarkdown
+                    components={{
+                      a: ({ node, ...props }) => (
+                        <a
+                          {...props}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary underline underline-offset-2"
+                        />
+                      ),
+                    }}
+                  >
+                    {msg.content}
+                  </ReactMarkdown>
                 </div>
               ) : (
                 <p className="text-sm">{msg.content}</p>

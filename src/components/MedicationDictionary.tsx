@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Search, Loader2, Pill, AlertTriangle, Info, ChevronRight, BookOpen, ArrowLeft, PlusCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { MedicalDisclaimer } from '@/components/MedicalDisclaimer';
 
 interface DrugInfo {
   name: string;
@@ -309,6 +310,25 @@ export function MedicationDictionary({ onBack, onAddMedication }: MedicationDict
                     </p>
                   </section>
                 )}
+
+                {/* Citations & disclaimer (Apple Guideline 1.4.1) */}
+                <MedicalDisclaimer
+                  variant="compact"
+                  extraSources={[
+                    {
+                      label: `MedlinePlus: search "${detailDrug.genericName || detailDrug.name}"`,
+                      url: `https://medlineplus.gov/search/?query=${encodeURIComponent(detailDrug.genericName || detailDrug.name)}`,
+                    },
+                    {
+                      label: `DailyMed (FDA label): "${detailDrug.genericName || detailDrug.name}"`,
+                      url: `https://dailymed.nlm.nih.gov/dailymed/search.cfm?query=${encodeURIComponent(detailDrug.genericName || detailDrug.name)}`,
+                    },
+                    {
+                      label: `Drugs.com: "${detailDrug.genericName || detailDrug.name}"`,
+                      url: `https://www.drugs.com/search.php?searchterm=${encodeURIComponent(detailDrug.genericName || detailDrug.name)}`,
+                    },
+                  ]}
+                />
               </div>
             </>
           )}

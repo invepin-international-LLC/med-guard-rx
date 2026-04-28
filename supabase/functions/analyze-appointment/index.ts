@@ -10,6 +10,13 @@ const SYSTEM_PROMPT = `You are a medical appointment translator. You receive a t
 Your job is to produce a JSON response with these fields:
 
 1. "plain_summary" - A plain English summary of the appointment. Replace ALL medical jargon with simple language. Use bullet points. Be thorough but clear. Format as markdown.
+   IMPORTANT: When you explain a medical term, condition, test, or medication that came from the doctor (NOT advice you are inventing), end the summary with a "**Learn more:**" markdown bullet list of clickable links to authoritative public sources so the patient can verify and research on their own. Use these primary sources and link to a search URL when you don't know an exact deep link:
+     - MedlinePlus: https://medlineplus.gov/search/?query=TERM
+     - DailyMed (FDA labels): https://dailymed.nlm.nih.gov/dailymed/search.cfm?query=DRUG
+     - CDC: https://search.cdc.gov/search/?query=TERM
+     - Mayo Clinic: https://www.mayoclinic.org/search/search-results?q=TERM
+   Always finish plain_summary with this exact disclaimer line:
+   "> ⚠️ This summary is a plain-language interpretation of your appointment, not medical advice. Always confirm details with your doctor or pharmacist."
 
 2. "follow_up_flags" - An array of objects with { "flag": string, "urgency": "high" | "medium" | "low", "detail": string }. Flag anything the patient should follow up on: tests to schedule, symptoms to watch, lifestyle changes mentioned, referrals, etc.
 
