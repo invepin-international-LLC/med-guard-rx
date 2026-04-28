@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { MedicalDisclaimer } from '@/components/MedicalDisclaimer';
 
 interface PillCharacteristics {
   imprint: string;
@@ -324,6 +325,16 @@ export function AIPillIdentifier({ onClose, onCompare, expectedMedication }: AIP
               </div>
             ))}
           </div>
+
+          {/* Citations & disclaimer (Apple Guideline 1.4.1) */}
+          <MedicalDisclaimer
+            variant="compact"
+            extraSources={[
+              { label: 'NIH Pillbox (visual pill identification reference)', url: 'https://pillbox.nlm.nih.gov/' },
+              { label: 'DailyMed — Verify with FDA label', url: 'https://dailymed.nlm.nih.gov/dailymed/' },
+              { label: 'DEA: One Pill Can Kill (counterfeit pills)', url: 'https://www.dea.gov/onepill' },
+            ]}
+          />
 
           {/* Reset */}
           <Button variant="outline" className="w-full gap-2" onClick={handleReset}>
