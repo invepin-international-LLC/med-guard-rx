@@ -6,6 +6,7 @@ import { AppointmentSummaryPDF } from './AppointmentSummaryPDF';
 import { useAppointments } from '@/hooks/useAppointments';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
+import { MedicalDisclaimer } from '@/components/MedicalDisclaimer';
 
 interface AppointmentSummaryProps {
   appointmentId: string;
@@ -218,6 +219,11 @@ export function AppointmentSummary({ appointmentId, onBack }: AppointmentSummary
               <p className="text-muted-foreground">This may take a moment.</p>
             </CardContent>
           </Card>
+        )}
+
+        {/* Citations & disclaimer (Apple Guideline 1.4.1) */}
+        {appointment.plain_summary && (
+          <MedicalDisclaimer variant="compact" />
         )}
       </div>
     </div>
