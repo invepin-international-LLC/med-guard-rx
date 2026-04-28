@@ -640,6 +640,17 @@ export function TodayDashboard() {
                   <span className="text-sm font-medium">Terms of Service</span>
                   <ChevronRight className="w-4 h-4 ml-auto text-muted-foreground" />
                 </button>
+                <button
+                  onClick={() => navigate('/sources')}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary transition-colors text-left"
+                >
+                  <BookOpen className="w-5 h-5 text-muted-foreground" />
+                  <div className="flex-1">
+                    <span className="text-sm font-medium block">Sources & Medical Disclaimer</span>
+                    <span className="text-xs text-muted-foreground">Citations for the medical info in this app</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 ml-auto text-muted-foreground" />
+                </button>
               </div>
 
               {/* Delete Account */}
