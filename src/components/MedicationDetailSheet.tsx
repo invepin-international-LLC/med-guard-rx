@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Medication } from '@/types/medication';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
+import { MedicalDisclaimer } from './MedicalDisclaimer';
 import { DoseClockWidget } from './DoseClockWidget';
 import { 
   Pill, 
@@ -273,6 +274,11 @@ export function MedicationDetailSheet({ medication, open, onClose }: MedicationD
               </div>
             </section>
           )}
+
+          {/* Citations & disclaimer (Apple Guideline 1.4.1) */}
+          <div className="mt-4">
+            <MedicalDisclaimer variant="compact" />
+          </div>
         </div>
       </SheetContent>
     </Sheet>

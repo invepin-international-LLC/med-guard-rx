@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { supabase } from '@/integrations/supabase/client';
+import { MedicalDisclaimer } from './MedicalDisclaimer';
 import { toast } from 'sonner';
 
 interface PillComparisonToolProps {
@@ -256,6 +257,16 @@ export function PillComparisonTool({ onClose, initialPhoto, initialDrugName }: P
             <RotateCcw className="w-4 h-4" />
             Compare Another Pill
           </Button>
+
+          {/* Citations & disclaimer (Apple Guideline 1.4.1) */}
+          <div className="mt-4">
+            <MedicalDisclaimer
+              variant="compact"
+              extraSources={[
+                { label: 'NIH Pillbox — Pill Identifier', url: 'https://pillbox.nlm.nih.gov/' },
+              ]}
+            />
+          </div>
         </div>
       )}
     </div>

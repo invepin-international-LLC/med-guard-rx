@@ -1,5 +1,6 @@
 import { Phone, AlertCircle, Heart, QrCode, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { MedicalDisclaimer } from './MedicalDisclaimer';
 import { useState } from 'react';
 
 interface EmergencyInfo {
@@ -137,6 +138,11 @@ export function EmergencyCardElder({ info, showQRCode = true }: EmergencyCardEld
           </div>
         </div>
       )}
+
+      {/* Citations & disclaimer (Apple Guideline 1.4.1) */}
+      <div className="mt-4">
+        <MedicalDisclaimer variant="compact" />
+      </div>
     </div>
   );
 }

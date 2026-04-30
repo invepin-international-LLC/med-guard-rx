@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import { MedicalDisclaimer } from './MedicalDisclaimer';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
@@ -297,6 +298,9 @@ export function SymptomJournal() {
               )}
               {saving ? 'Saving...' : 'Save Entry'}
             </Button>
+
+            {/* Citations & disclaimer (Apple Guideline 1.4.1) */}
+            <MedicalDisclaimer variant="compact" />
           </div>
         </SheetContent>
       </Sheet>
