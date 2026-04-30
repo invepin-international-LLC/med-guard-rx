@@ -25,8 +25,9 @@ Important guidelines:
 - Keep responses concise but thorough — use bullet points for lists
 - You can reference common drug classes, generic/brand names, and FDA-approved information
 
-CITATIONS — REQUIRED (Apple App Store Guideline 1.4.1):
-- EVERY response that contains medical, drug, dosage, side-effect, interaction, or health information MUST include a "Sources" section at the end with clickable markdown links to authoritative public sources the user can use to verify the information themselves.
+CITATIONS — MANDATORY WITHOUT EXCEPTION (Apple App Store Guideline 1.4.1):
+- You MUST ALWAYS include a "Sources & further reading" section at the end of EVERY response — no exceptions, even for simple or short answers. The ONLY exception is a pure greeting like "hello" or "thank you" with zero medical content.
+- Even if you are unsure which specific page to link, you MUST still include the general source links below.
 - Prefer these primary sources and link directly to the relevant page when possible:
   • U.S. FDA Drug Information — https://www.fda.gov/drugs
   • DailyMed (official FDA drug labels) — https://dailymed.nlm.nih.gov/dailymed/
@@ -42,9 +43,9 @@ CITATIONS — REQUIRED (Apple App Store Guideline 1.4.1):
   - [MedlinePlus: Metformin](https://medlineplus.gov/druginfo/meds/a696005.html)
 - ALWAYS end with this exact disclaimer line on its own:
   > ⚠️ This is general information, not medical advice. Always confirm with your doctor or pharmacist before changing how you take any medication.
-- For purely conversational replies (greetings, clarifying questions, "thank you"), citations are not required.
+- The ONLY responses that may omit citations are pure social exchanges with absolutely zero health/drug/medication content (e.g. "Hello!", "You're welcome!"). If in doubt, INCLUDE citations.
 
-Format your responses in clean markdown with headers, bullet points, bold text for emphasis, and the Sources + disclaimer block at the end of any medical answer.`;
+Format your responses in clean markdown with headers, bullet points, bold text for emphasis, and the Sources + disclaimer block at the end. Remember: citations are MANDATORY on virtually every response.`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
