@@ -12,6 +12,26 @@ import { MedicalDisclaimer } from '@/components/MedicalDisclaimer';
 
 type Message = { role: 'user' | 'assistant'; content: string };
 
+const FALLBACK_SOURCES = `
+
+**Sources & further reading:**
+- [U.S. FDA — Drug Information](https://www.fda.gov/drugs)
+- [NIH MedlinePlus — Drugs & Supplements](https://medlineplus.gov/druginformation.html)
+- [DailyMed — Official FDA Labels](https://dailymed.nlm.nih.gov/dailymed/)
+- [Poison Control (1-800-222-1222)](https://www.poison.org/)
+
+> ⚠️ This is general information, not medical advice. Always confirm with your doctor or pharmacist before changing how you take any medication.`;
+
+/** Ensure every non-trivial AI response includes citations. */
+function ensureCitations(text: string): string {
+  if (!text || text.length < 60) return text; // pure greeting
+  const lower = text.toLowerCase();
+  if (lower.includes('sources') && (lower.includes('fda.gov') || lower.includes('medlineplus') || lower.includes('dailymed'))) {
+    return text; // already has citations
+  }
+  return text + FALLBACK_SOURCES;
+}
+
 const VOICE_OPTIONS = [
   { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah', description: 'Warm & clear (Female)' },
   { id: 'FGY2WhTYpPnrIDTdsKH5', name: 'Laura', description: 'Calm & gentle (Female)' },
@@ -232,7 +252,7 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
         }
       }
 
-      // Final flush
+      // Final flush + ensure citations
       if (textBuffer.trim()) {
         for (let raw of textBuffer.split('\n')) {
           if (!raw) continue;
@@ -257,6 +277,16 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
           } catch { /* ignore partial leftovers */ }
         }
       }
+
+      // Post-process: guarantee citations exist
+      assistantSoFar = ensureCitations(assistantSoFar);
+      setMessages(prev => {
+        const last = prev[prev.length - 1];
+        if (last?.role === 'assistant') {
+          return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantSoFar } : m));
+        }
+        return [...prev, { role: 'assistant', content: assistantSoFar }];
+      });
     } catch (e) {
       console.error('Dr. Bombay chat error:', e);
       toast.error('Failed to reach Dr. Bombay. Please try again.');
