@@ -655,6 +655,17 @@ export function TodayDashboard() {
                   </div>
                   <ChevronRight className="w-4 h-4 ml-auto text-muted-foreground" />
                 </button>
+                <button
+                  onClick={() => navigate('/compliance-audit')}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary transition-colors text-left"
+                >
+                  <Shield className="w-5 h-5 text-muted-foreground" />
+                  <div className="flex-1">
+                    <span className="text-sm font-medium block">Compliance Audit</span>
+                    <span className="text-xs text-muted-foreground">Citation & disclaimer checklist</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 ml-auto text-muted-foreground" />
+                </button>
               </div>
 
               {/* Delete Account */}
