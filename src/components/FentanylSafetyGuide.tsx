@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { PillComparisonTool } from './PillComparisonTool';
 import { AIPillIdentifier } from './AIPillIdentifier';
+import { MedicalDisclaimer } from './MedicalDisclaimer';
 
 type Section = 'visual' | 'smell' | 'teststrip' | 'emergency' | 'compare' | 'ai-identify';
 
@@ -269,10 +270,17 @@ export function FentanylSafetyGuide() {
         </div>
       </AccordionItem>
 
-      {/* Footer */}
-      <p className="text-xs text-muted-foreground text-center px-4 pb-4">
-        Information sourced from CDC, DEA, and harm reduction organizations. This is not medical advice. Always consult a healthcare professional.
-      </p>
+      {/* Citations & disclaimer (Apple Guideline 1.4.1) */}
+      <div className="px-4 pb-4">
+        <MedicalDisclaimer
+          variant="compact"
+          extraSources={[
+            { label: 'CDC — Fentanyl Facts', url: 'https://www.cdc.gov/stop-overdose/caring/fentanyl.html' },
+            { label: 'DEA — Drug Fact Sheet: Fentanyl', url: 'https://www.dea.gov/factsheets/fentanyl' },
+            { label: 'SAMHSA National Helpline', url: 'https://www.samhsa.gov/find-help/national-helpline' },
+          ]}
+        />
+      </div>
     </div>
   );
 }
