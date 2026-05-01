@@ -90,25 +90,41 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
       audioRef.current = null;
     }
 
+    if (!('speechSynthesis' in window)) {
+      toast.info('Voice playback is not supported on this device. You can read the response above.');
+      setIsSpeaking(false);
+      return;
+    }
+
     setIsSpeaking(true);
     try {
       const utterance = new SpeechSynthesisUtterance(clean);
       utterance.rate = 0.95;
       utterance.pitch = 1.0;
+
+      // Pick a default English voice if available
+      const voices = window.speechSynthesis.getVoices();
+      const preferred = voices.find(v => v.lang.startsWith('en') && v.default)
+        || voices.find(v => v.lang.startsWith('en'))
+        || voices[0];
+      if (preferred) utterance.voice = preferred;
+
       utterance.onend = () => setIsSpeaking(false);
-      utterance.onerror = () => setIsSpeaking(false);
+      utterance.onerror = (e) => {
+        console.error('Speech synthesis error event:', e);
+        toast.error('Voice playback failed. You can read the response above.');
+        setIsSpeaking(false);
+      };
       window.speechSynthesis.speak(utterance);
     } catch (e) {
       console.error('Speech synthesis error:', e);
+      toast.error('Voice playback failed. You can read the response above.');
       setIsSpeaking(false);
     }
   }, [ttsEnabled, selectedVoice]);
 
   const stopSpeaking = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
+    window.speechSynthesis?.cancel();
     setIsSpeaking(false);
   }, []);
 
