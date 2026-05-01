@@ -57,6 +57,13 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
     if (typeof window === 'undefined') return '';
     return window.localStorage?.getItem(VOICE_PREF_KEY) || '';
   });
+  const [voiceLangFilter, setVoiceLangFilter] = useState<string>(() => {
+    if (typeof window === 'undefined') return 'en';
+    const saved = window.localStorage?.getItem(VOICE_PREF_KEY + '_lang');
+    if (saved) return saved;
+    const navLang = (window.navigator?.language || 'en').slice(0, 2).toLowerCase();
+    return navLang || 'en';
+  });
   const [isListening, setIsListening] = useState(false);
   const [ttsEnabled, setTtsEnabled] = useState(true);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -371,9 +378,26 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
           <h2 className="text-lg font-bold text-foreground leading-tight">Dr. Bombay</h2>
           <div className="flex items-center gap-1">
             <Sparkles className="w-3 h-3 text-primary shrink-0" />
-            {availableVoices.length > 0 ? (
+            {availableVoices.length > 0 ? (() => {
+              // Group voices by 2-letter language code
+              const langCodes = Array.from(
+                new Set(availableVoices.map(v => v.lang.slice(0, 2).toLowerCase()))
+              ).sort();
+              const filteredVoices =
+                voiceLangFilter === 'all'
+                  ? availableVoices
+                  : availableVoices.filter(v => v.lang.toLowerCase().startsWith(voiceLangFilter));
+              const langLabel = (code: string) => {
+                try {
+                  const dn = new (Intl as any).DisplayNames([navigator.language || 'en'], { type: 'language' });
+                  return dn.of(code) || code.toUpperCase();
+                } catch {
+                  return code.toUpperCase();
+                }
+              };
+              return (
               <Select
-                value={selectedVoiceURI || availableVoices.find(v => v.lang.startsWith('en') && v.default)?.voiceURI || availableVoices[0]?.voiceURI}
+                value={selectedVoiceURI || filteredVoices.find(v => v.default)?.voiceURI || filteredVoices[0]?.voiceURI || availableVoices[0]?.voiceURI}
                 onValueChange={setSelectedVoiceURI}
               >
                 <SelectTrigger className="h-5 border-0 p-0 shadow-none text-xs text-muted-foreground font-normal hover:text-foreground transition-colors gap-0.5 w-auto max-w-[180px] [&>svg]:w-3 [&>svg]:h-3">
@@ -382,7 +406,50 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
                   </span>
                 </SelectTrigger>
                 <SelectContent className="max-h-72">
-                  {availableVoices.map(voice => (
+                  {/* Language filter chips (sticky) */}
+                  <div className="sticky top-0 z-10 bg-popover border-b border-border p-2 flex flex-wrap gap-1">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setVoiceLangFilter('all');
+                        window.localStorage?.setItem(VOICE_PREF_KEY + '_lang', 'all');
+                      }}
+                      className={`text-xs px-2 py-1 rounded-full border transition-colors ${
+                        voiceLangFilter === 'all'
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-background text-foreground border-border hover:bg-accent/20'
+                      }`}
+                    >
+                      All
+                    </button>
+                    {langCodes.map(code => (
+                      <button
+                        key={code}
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setVoiceLangFilter(code);
+                          window.localStorage?.setItem(VOICE_PREF_KEY + '_lang', code);
+                        }}
+                        className={`text-xs px-2 py-1 rounded-full border transition-colors ${
+                          voiceLangFilter === code
+                            ? 'bg-primary text-primary-foreground border-primary'
+                            : 'bg-background text-foreground border-border hover:bg-accent/20'
+                        }`}
+                      >
+                        {langLabel(code)}
+                      </button>
+                    ))}
+                  </div>
+                  {filteredVoices.length === 0 && (
+                    <div className="px-3 py-2 text-xs text-muted-foreground">
+                      No voices for this language.
+                    </div>
+                  )}
+                  {filteredVoices.map(voice => (
                     <SelectItem key={voice.voiceURI} value={voice.voiceURI}>
                       <div>
                         <span className="font-medium">{voice.name}</span>
@@ -392,7 +459,8 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
                   ))}
                 </SelectContent>
               </Select>
-            ) : (
+              );
+            })() : (
               <span className="text-xs text-muted-foreground">Voice: Default</span>
             )}
           </div>
