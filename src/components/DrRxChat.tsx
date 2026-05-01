@@ -32,14 +32,7 @@ function ensureCitations(text: string): string {
   return text + FALLBACK_SOURCES;
 }
 
-const VOICE_OPTIONS = [
-  { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah', description: 'Warm & clear (Female)' },
-  { id: 'FGY2WhTYpPnrIDTdsKH5', name: 'Laura', description: 'Calm & gentle (Female)' },
-  { id: 'Xb7hH8MSUJpSbSDYk0k2', name: 'Alice', description: 'Friendly & bright (Female)' },
-  { id: 'JBFqnCBsd6RMkjVDRZzb', name: 'George', description: 'Deep & reassuring (Male)' },
-  { id: 'TX3LPaxmHKxFdv7VOQHJ', name: 'Liam', description: 'Youthful & clear (Male)' },
-  { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel', description: 'Warm & professional (Male)' },
-];
+const VOICE_PREF_KEY = 'drbombay_voice_uri';
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/dr-rx-chat`;
 
