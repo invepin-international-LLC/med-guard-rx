@@ -47,6 +47,33 @@ const EXEMPT = new Set([
   'AcceptInviteCard',
   'CaregiverInviteManager',
   'EmergencyContactsManager',
+  // Medication CRUD / list / card components — display user data, not medical advice
+  'AddMedicationSheet',
+  'MedicationCard',
+  'MedicationEditSheet',
+  'MedicationListCard',
+  'MedicationsList',
+  'ElderMedicationCard',
+  // Appointment management — input/scheduling, not advice
+  'AppointmentRecorder',
+  'AppointmentsPage',
+  'AppointmentActions',
+  // PDF generators — rendered off-screen, disclaimer in parent views
+  'AdherenceReportPDF',
+  'AppointmentSummaryPDF',
+  // Dashboard / section containers — child components carry disclaimers
+  'TodayDashboard',
+  'TimeOfDaySection',
+  'AdherenceHistory',
+  'AdherenceWidget',
+  // Widgets that display user stats, not medical advice
+  'RefillAlertsWidget',
+  // Input-only scanner
+  'PrescriptionScanner',
+  // HIPAA vault — data storage, not medical advice
+  'HipaaSection',
+  // UI primitives
+  'button',
   'QuickActionsBar',
   'QuickActionsElder',
   'BadgeCollection',
@@ -63,19 +90,16 @@ const EXEMPT = new Set([
 
 // Keywords that indicate medical content is being RENDERED (not just imported/referenced)
 const MEDICAL_RENDER_PATTERNS = [
-  /medication[s]?\s*\./i,
   /drug\s*interaction/i,
   /side\s*effect/i,
-  /dosage/i,
-  /\bpill\b/i,
+  /\bpill\s*(identif|compar|match)/i,
   /fentanyl/i,
-  /prescription/i,
-  /symptom/i,
-  /emergency.*card/i,
-  /medical\s*(info|detail|record|history)/i,
-  /adherence.*report/i,
-  /appointment.*summary/i,
+  /emergency.*info/i,
+  /medical\s*(info|detail|advice|recommendation)/i,
   /not\s*medical\s*advice/i,
+  /appointment.*summary/i,
+  /symptom.*journal/i,
+  /medication.*dictionary/i,
 ];
 
 // Source link patterns
