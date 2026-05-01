@@ -64,6 +64,7 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
     const navLang = (window.navigator?.language || 'en').slice(0, 2).toLowerCase();
     return navLang || 'en';
   });
+  const [voiceSearch, setVoiceSearch] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [ttsEnabled, setTtsEnabled] = useState(true);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -387,6 +388,12 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
                 voiceLangFilter === 'all'
                   ? availableVoices
                   : availableVoices.filter(v => v.lang.toLowerCase().startsWith(voiceLangFilter));
+              const q = voiceSearch.trim().toLowerCase();
+              const searchedVoices = q
+                ? filteredVoices.filter(v =>
+                    v.name.toLowerCase().includes(q) || v.lang.toLowerCase().includes(q)
+                  )
+                : filteredVoices;
               const langLabel = (code: string) => {
                 try {
                   const dn = new (Intl as any).DisplayNames([navigator.language || 'en'], { type: 'language' });
@@ -444,12 +451,23 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
                       </button>
                     ))}
                   </div>
-                  {filteredVoices.length === 0 && (
+                  {/* Search box (sticky under chips) */}
+                  <div className="sticky top-[44px] z-10 bg-popover border-b border-border p-2">
+                    <Input
+                      autoFocus
+                      value={voiceSearch}
+                      onChange={(e) => setVoiceSearch(e.target.value)}
+                      onKeyDown={(e) => e.stopPropagation()}
+                      placeholder="Search voices by name…"
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                  {searchedVoices.length === 0 && (
                     <div className="px-3 py-2 text-xs text-muted-foreground">
-                      No voices for this language.
+                      {q ? `No voices match "${voiceSearch}".` : 'No voices for this language.'}
                     </div>
                   )}
-                  {filteredVoices.map(voice => (
+                  {searchedVoices.map(voice => (
                     <SelectItem key={voice.voiceURI} value={voice.voiceURI}>
                       <div>
                         <span className="font-medium">{voice.name}</span>
