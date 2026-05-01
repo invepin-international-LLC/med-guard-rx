@@ -450,6 +450,23 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
                         {langLabel(code)}
                       </button>
                     ))}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const browserDefault = (window.navigator?.language || 'en').slice(0, 2).toLowerCase();
+                        setVoiceLangFilter(browserDefault);
+                        setVoiceSearch('');
+                        setSelectedVoiceURI('');
+                        window.localStorage?.removeItem(VOICE_PREF_KEY);
+                        window.localStorage?.removeItem(VOICE_PREF_KEY + '_lang');
+                      }}
+                      className="text-xs px-2 py-1 rounded-full border border-dashed border-border text-muted-foreground hover:text-foreground hover:bg-accent/20 transition-colors ml-auto"
+                      title="Reset language filter, search, and voice to browser default"
+                    >
+                      Reset
+                    </button>
                   </div>
                   {/* Search box (sticky under chips) */}
                   <div className="sticky top-[44px] z-10 bg-popover border-b border-border p-2">
