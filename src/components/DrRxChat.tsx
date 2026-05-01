@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ArrowLeft, Send, Loader2, Sparkles, Mic, MicOff, Volume2, VolumeX, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Send, Loader2, Sparkles, Mic, MicOff, Volume2, VolumeX, ChevronDown, BookOpen } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import drRxAvatar from '@/assets/dr-bombay-avatar.png';
@@ -551,6 +551,21 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
           Test voice
         </Button>
         <span className="text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 px-2 py-1 rounded-full font-medium">Online</span>
+      </div>
+      {/* Persistent citation/sources banner — Apple Guideline 1.4.1 */}
+      <div className="bg-muted/40 border-b border-border px-4 py-2 flex items-center justify-between gap-2">
+        <p className="text-xs text-muted-foreground leading-tight">
+          ℹ️ Responses cite FDA, DailyMed & MedlinePlus.
+        </p>
+        <a
+          href="/sources"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs font-medium text-primary inline-flex items-center gap-1 hover:underline shrink-0"
+        >
+          <BookOpen className="w-3.5 h-3.5" />
+          View all sources
+        </a>
       </div>
 
       {/* Messages */}
