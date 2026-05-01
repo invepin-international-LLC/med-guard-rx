@@ -108,12 +108,65 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
   const [isListening, setIsListening] = useState(false);
   const [ttsEnabled, setTtsEnabled] = useState(true);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [auditOpen, setAuditOpen] = useState(false);
+  // Map of url -> 'ok' | 'broken' | 'unknown' | 'checking'
+  const [linkStatus, setLinkStatus] = useState<Record<string, 'ok' | 'broken' | 'unknown' | 'checking'>>({});
+  const [isAuditing, setIsAuditing] = useState(false);
   const recognitionRef = useRef<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const lastSpokenIndexRef = useRef(-1);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Audit data derived from current messages
+  const auditRows = messages
+    .map((m, i) => ({ idx: i, role: m.role, content: m.content }))
+    .filter((m) => m.role === 'assistant')
+    .map((m) => {
+      const sources = extractSources(m.content);
+      const approved = sources.filter((s) => isApprovedUrl(s.url));
+      const unapproved = sources.filter((s) => !isApprovedUrl(s.url));
+      const hasDisclaimer = /not medical advice/i.test(m.content);
+      const broken = sources.filter((s) => linkStatus[s.url] === 'broken');
+      return { ...m, sources, approved, unapproved, hasDisclaimer, broken };
+    });
+  const totalAssistant = auditRows.length;
+  const missingSources = auditRows.filter((r) => r.sources.length < 2).length;
+  const totalBroken = auditRows.reduce((n, r) => n + r.broken.length, 0);
+  const totalUnapproved = auditRows.reduce((n, r) => n + r.unapproved.length, 0);
+
+  const runLinkAudit = async () => {
+    const urls = Array.from(new Set(auditRows.flatMap((r) => r.sources.map((s) => s.url))));
+    if (urls.length === 0) {
+      toast.info('No citations to verify yet.');
+      return;
+    }
+    setIsAuditing(true);
+    setLinkStatus((prev) => {
+      const next = { ...prev };
+      urls.forEach((u) => { next[u] = 'checking'; });
+      return next;
+    });
+    await Promise.all(urls.map(async (url) => {
+      let status: 'ok' | 'broken' | 'unknown' = 'unknown';
+      try {
+        // no-cors HEAD: opaque response means reachable; network error => broken
+        await fetch(url, { method: 'HEAD', mode: 'no-cors', redirect: 'follow' });
+        status = 'ok';
+      } catch {
+        try {
+          await fetch(url, { method: 'GET', mode: 'no-cors' });
+          status = 'ok';
+        } catch {
+          status = 'broken';
+        }
+      }
+      setLinkStatus((prev) => ({ ...prev, [url]: status }));
+    }));
+    setIsAuditing(false);
+    toast.success('Citation audit complete.');
+  };
 
   const cleanTextForSpeech = (text: string) => {
     return text
@@ -593,19 +646,135 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
         <span className="text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 px-2 py-1 rounded-full font-medium">Online</span>
       </div>
       {/* Persistent citation/sources banner — Apple Guideline 1.4.1 */}
-      <div className="bg-muted/40 border-b border-border px-4 py-2 flex items-center justify-between gap-2">
-        <p className="text-xs text-muted-foreground leading-tight">
-          ℹ️ Responses cite FDA, DailyMed & MedlinePlus.
-        </p>
-        <a
-          href="/sources"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs font-medium text-primary inline-flex items-center gap-1 hover:underline shrink-0"
-        >
-          <BookOpen className="w-3.5 h-3.5" />
-          View all sources
-        </a>
+      <div className="bg-muted/40 border-b border-border">
+        <div className="px-4 py-2 flex items-center justify-between gap-2 flex-wrap">
+          <p className="text-xs text-muted-foreground leading-tight">
+            ℹ️ Responses cite FDA, DailyMed & MedlinePlus.
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setAuditOpen((o) => !o)}
+              className="text-xs font-medium text-foreground inline-flex items-center gap-1 px-2 py-1 rounded-md border border-border bg-background hover:bg-accent hover:text-accent-foreground"
+              aria-expanded={auditOpen}
+              aria-controls="citation-audit-panel"
+            >
+              {missingSources > 0 || totalBroken > 0 || totalUnapproved > 0 ? (
+                <ShieldAlert className="w-3.5 h-3.5 text-destructive" />
+              ) : (
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              )}
+              Audit
+              {(missingSources + totalBroken + totalUnapproved) > 0 && (
+                <span className="ml-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-semibold">
+                  {missingSources + totalBroken + totalUnapproved}
+                </span>
+              )}
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${auditOpen ? 'rotate-180' : ''}`} />
+            </button>
+            <a
+              href="/sources"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-medium text-primary inline-flex items-center gap-1 hover:underline shrink-0"
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              Sources
+            </a>
+          </div>
+        </div>
+        {auditOpen && (
+          <div id="citation-audit-panel" className="px-4 pb-3 pt-1 border-t border-border bg-background">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <h3 className="text-sm font-semibold text-foreground">Citation audit</h3>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-8 px-2 text-xs rounded-lg"
+                onClick={runLinkAudit}
+                disabled={isAuditing || totalAssistant === 0}
+              >
+                {isAuditing ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5 mr-1" />}
+                Verify links
+              </Button>
+            </div>
+            {totalAssistant === 0 ? (
+              <p className="text-xs text-muted-foreground">Ask Dr. Bombay a question to populate the audit.</p>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+                  <div className="rounded-lg border border-border bg-muted/30 px-2 py-1.5">
+                    <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Responses</div>
+                    <div className="text-sm font-semibold text-foreground">{totalAssistant}</div>
+                  </div>
+                  <div className="rounded-lg border border-border bg-muted/30 px-2 py-1.5">
+                    <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Missing sources</div>
+                    <div className={`text-sm font-semibold ${missingSources > 0 ? 'text-destructive' : 'text-emerald-600'}`}>{missingSources}</div>
+                  </div>
+                  <div className="rounded-lg border border-border bg-muted/30 px-2 py-1.5">
+                    <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Broken links</div>
+                    <div className={`text-sm font-semibold ${totalBroken > 0 ? 'text-destructive' : 'text-emerald-600'}`}>{totalBroken}</div>
+                  </div>
+                  <div className="rounded-lg border border-border bg-muted/30 px-2 py-1.5">
+                    <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Unapproved domains</div>
+                    <div className={`text-sm font-semibold ${totalUnapproved > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>{totalUnapproved}</div>
+                  </div>
+                </div>
+                <ul className="space-y-2 max-h-60 overflow-y-auto">
+                  {auditRows.map((r, n) => {
+                    const ok = r.sources.length >= 2 && r.broken.length === 0 && r.unapproved.length === 0;
+                    return (
+                      <li key={r.idx} className={`rounded-lg border px-2.5 py-2 text-xs ${ok ? 'border-border bg-muted/20' : 'border-destructive/40 bg-destructive/5'}`}>
+                        <div className="flex items-center gap-2 mb-1">
+                          {ok ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> : <AlertTriangle className="w-3.5 h-3.5 text-destructive" />}
+                          <span className="font-semibold text-foreground">Response #{n + 1}</span>
+                          <span className="ml-auto text-muted-foreground">{r.sources.length} link{r.sources.length === 1 ? '' : 's'}</span>
+                        </div>
+                        {r.sources.length < 2 && (
+                          <p className="text-destructive">⚠️ Missing required citations (needs ≥2).</p>
+                        )}
+                        {!r.hasDisclaimer && (
+                          <p className="text-amber-600">⚠️ Missing safety disclaimer.</p>
+                        )}
+                        {r.unapproved.length > 0 && (
+                          <p className="text-amber-600">⚠️ {r.unapproved.length} link(s) outside approved sources.</p>
+                        )}
+                        {r.broken.length > 0 && (
+                          <p className="text-destructive">⚠️ {r.broken.length} broken link(s):</p>
+                        )}
+                        {r.sources.length > 0 && (
+                          <ul className="mt-1 space-y-0.5">
+                            {r.sources.map((s) => {
+                              const st = linkStatus[s.url];
+                              const approved = isApprovedUrl(s.url);
+                              return (
+                                <li key={s.url} className="flex items-center gap-1.5 truncate">
+                                  {st === 'broken' ? (
+                                    <XCircle className="w-3 h-3 text-destructive shrink-0" />
+                                  ) : st === 'ok' ? (
+                                    <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                                  ) : st === 'checking' ? (
+                                    <Loader2 className="w-3 h-3 text-muted-foreground shrink-0 animate-spin" />
+                                  ) : (
+                                    <Link2 className="w-3 h-3 text-muted-foreground shrink-0" />
+                                  )}
+                                  <a href={s.url} target="_blank" rel="noopener noreferrer" className={`truncate ${approved ? 'text-primary' : 'text-amber-600'} hover:underline`} title={s.url}>
+                                    {new URL(s.url).hostname.replace(/^www\./, '')}
+                                  </a>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Messages */}
