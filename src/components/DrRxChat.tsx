@@ -835,8 +835,27 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
                 (() => {
                   const sources = extractSources(msg.content);
                   const body = sources.length > 0 ? stripSourcesSection(msg.content) : msg.content;
+                  const brokenCount = sources.filter((s) => linkStatus[s.url] === 'broken').length;
+                  const unapprovedCount = sources.filter((s) => !isApprovedUrl(s.url)).length;
+                  const missing = sources.length < 2;
+                  const flagged = missing || brokenCount > 0 || unapprovedCount > 0;
                   return (
                     <>
+                      {flagged && (
+                        <button
+                          type="button"
+                          onClick={() => setAuditOpen(true)}
+                          className="mb-2 w-full text-left flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/5 px-2.5 py-1.5 text-xs text-destructive hover:bg-destructive/10"
+                        >
+                          <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                          <span>
+                            {missing && 'Citations incomplete. '}
+                            {brokenCount > 0 && `${brokenCount} broken link${brokenCount === 1 ? '' : 's'}. `}
+                            {unapprovedCount > 0 && `${unapprovedCount} unapproved domain${unapprovedCount === 1 ? '' : 's'}. `}
+                            <span className="underline">View audit</span>
+                          </span>
+                        </button>
+                      )}
                       <div className="prose prose-sm dark:prose-invert max-w-none text-foreground [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0.5 [&_h1]:text-lg [&_h2]:text-base [&_h3]:text-sm [&_h3]:font-semibold [&_strong]:text-foreground">
                         <ReactMarkdown
                           components={{
