@@ -32,14 +32,7 @@ function ensureCitations(text: string): string {
   return text + FALLBACK_SOURCES;
 }
 
-const VOICE_OPTIONS = [
-  { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah', description: 'Warm & clear (Female)' },
-  { id: 'FGY2WhTYpPnrIDTdsKH5', name: 'Laura', description: 'Calm & gentle (Female)' },
-  { id: 'Xb7hH8MSUJpSbSDYk0k2', name: 'Alice', description: 'Friendly & bright (Female)' },
-  { id: 'JBFqnCBsd6RMkjVDRZzb', name: 'George', description: 'Deep & reassuring (Male)' },
-  { id: 'TX3LPaxmHKxFdv7VOQHJ', name: 'Liam', description: 'Youthful & clear (Male)' },
-  { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel', description: 'Warm & professional (Male)' },
-];
+const VOICE_PREF_KEY = 'drbombay_voice_uri';
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/dr-rx-chat`;
 
@@ -59,7 +52,11 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [medications, setMedications] = useState<any[]>([]);
-  const [selectedVoice, setSelectedVoice] = useState(VOICE_OPTIONS[0].id);
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [selectedVoiceURI, setSelectedVoiceURI] = useState<string>(() => {
+    if (typeof window === 'undefined') return '';
+    return window.localStorage?.getItem(VOICE_PREF_KEY) || '';
+  });
   const [isListening, setIsListening] = useState(false);
   const [ttsEnabled, setTtsEnabled] = useState(true);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -102,11 +99,13 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
       utterance.rate = 0.95;
       utterance.pitch = 1.0;
 
-      // Pick a default English voice if available
+      // Use the user-selected voice when available, otherwise fall back to a sensible default
       const voices = window.speechSynthesis.getVoices();
-      const preferred = voices.find(v => v.lang.startsWith('en') && v.default)
-        || voices.find(v => v.lang.startsWith('en'))
-        || voices[0];
+      const preferred =
+        (selectedVoiceURI && voices.find(v => v.voiceURI === selectedVoiceURI)) ||
+        voices.find(v => v.lang.startsWith('en') && v.default) ||
+        voices.find(v => v.lang.startsWith('en')) ||
+        voices[0];
       if (preferred) utterance.voice = preferred;
 
       utterance.onend = () => setIsSpeaking(false);
@@ -121,7 +120,27 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
       toast.error('Voice playback failed. You can read the response above.');
       setIsSpeaking(false);
     }
-  }, [ttsEnabled, selectedVoice]);
+  }, [ttsEnabled, selectedVoiceURI]);
+
+  // Load available SpeechSynthesis voices (populates asynchronously on most browsers)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    const loadVoices = () => {
+      const voices = window.speechSynthesis.getVoices();
+      if (voices.length) setAvailableVoices(voices);
+    };
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    return () => {
+      if (window.speechSynthesis) window.speechSynthesis.onvoiceschanged = null;
+    };
+  }, []);
+
+  // Persist voice preference
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (selectedVoiceURI) window.localStorage?.setItem(VOICE_PREF_KEY, selectedVoiceURI);
+  }, [selectedVoiceURI]);
 
   const stopSpeaking = useCallback(() => {
     window.speechSynthesis?.cancel();
@@ -352,21 +371,30 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
           <h2 className="text-lg font-bold text-foreground leading-tight">Dr. Bombay</h2>
           <div className="flex items-center gap-1">
             <Sparkles className="w-3 h-3 text-primary shrink-0" />
-            <Select value={selectedVoice} onValueChange={setSelectedVoice}>
-              <SelectTrigger className="h-5 border-0 p-0 shadow-none text-xs text-muted-foreground font-normal hover:text-foreground transition-colors gap-0.5 w-auto [&>svg]:w-3 [&>svg]:h-3">
-                <span>Voice: {VOICE_OPTIONS.find(v => v.id === selectedVoice)?.name}</span>
-              </SelectTrigger>
-              <SelectContent>
-                {VOICE_OPTIONS.map(voice => (
-                  <SelectItem key={voice.id} value={voice.id}>
-                    <div>
-                      <span className="font-medium">{voice.name}</span>
-                      <span className="text-muted-foreground ml-1.5">— {voice.description}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {availableVoices.length > 0 ? (
+              <Select
+                value={selectedVoiceURI || availableVoices.find(v => v.lang.startsWith('en') && v.default)?.voiceURI || availableVoices[0]?.voiceURI}
+                onValueChange={setSelectedVoiceURI}
+              >
+                <SelectTrigger className="h-5 border-0 p-0 shadow-none text-xs text-muted-foreground font-normal hover:text-foreground transition-colors gap-0.5 w-auto max-w-[180px] [&>svg]:w-3 [&>svg]:h-3">
+                  <span className="truncate">
+                    Voice: {availableVoices.find(v => v.voiceURI === selectedVoiceURI)?.name || 'Default'}
+                  </span>
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  {availableVoices.map(voice => (
+                    <SelectItem key={voice.voiceURI} value={voice.voiceURI}>
+                      <div>
+                        <span className="font-medium">{voice.name}</span>
+                        <span className="text-muted-foreground ml-1.5">— {voice.lang}{voice.default ? ' • default' : ''}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <span className="text-xs text-muted-foreground">Voice: Default</span>
+            )}
           </div>
         </div>
         <Button
