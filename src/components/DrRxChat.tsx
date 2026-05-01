@@ -457,7 +457,18 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
                       autoFocus
                       value={voiceSearch}
                       onChange={(e) => setVoiceSearch(e.target.value)}
-                      onKeyDown={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => {
+                        e.stopPropagation();
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          const top = searchedVoices[0];
+                          if (top) {
+                            setSelectedVoiceURI(top.voiceURI);
+                            window.localStorage?.setItem(VOICE_PREF_KEY, top.voiceURI);
+                            setVoiceSearch('');
+                          }
+                        }
+                      }}
                       placeholder="Search voices by name…"
                       className="h-8 text-xs"
                     />
