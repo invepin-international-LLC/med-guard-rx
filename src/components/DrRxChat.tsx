@@ -648,22 +648,54 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
               }`}
             >
               {msg.role === 'assistant' ? (
-                <div className="prose prose-sm dark:prose-invert max-w-none text-foreground [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0.5 [&_h1]:text-lg [&_h2]:text-base [&_h3]:text-sm [&_h3]:font-semibold [&_strong]:text-foreground">
-                  <ReactMarkdown
-                    components={{
-                      a: ({ node, ...props }) => (
-                        <a
-                          {...props}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary underline underline-offset-2"
-                        />
-                      ),
-                    }}
-                  >
-                    {msg.content}
-                  </ReactMarkdown>
-                </div>
+                (() => {
+                  const sources = extractSources(msg.content);
+                  const body = sources.length > 0 ? stripSourcesSection(msg.content) : msg.content;
+                  return (
+                    <>
+                      <div className="prose prose-sm dark:prose-invert max-w-none text-foreground [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0.5 [&_h1]:text-lg [&_h2]:text-base [&_h3]:text-sm [&_h3]:font-semibold [&_strong]:text-foreground">
+                        <ReactMarkdown
+                          components={{
+                            a: ({ node, ...props }) => (
+                              <a
+                                {...props}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary underline underline-offset-2"
+                              />
+                            ),
+                          }}
+                        >
+                          {body}
+                        </ReactMarkdown>
+                      </div>
+                      {sources.length > 0 && (
+                        <details className="mt-3 group rounded-lg border border-border bg-muted/40">
+                          <summary className="flex items-center gap-2 cursor-pointer select-none px-3 py-2 text-xs font-semibold text-foreground list-none [&::-webkit-details-marker]:hidden">
+                            <Link2 className="w-3.5 h-3.5 text-primary" />
+                            <span>Sources ({sources.length})</span>
+                            <ChevronDown className="w-3.5 h-3.5 ml-auto transition-transform group-open:rotate-180" />
+                          </summary>
+                          <ul className="px-3 pb-3 pt-1 flex flex-col gap-1.5">
+                            {sources.map((s) => (
+                              <li key={s.url}>
+                                <a
+                                  href={s.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-start gap-2 rounded-md bg-background border border-border px-2.5 py-2 text-xs text-primary hover:bg-accent hover:text-accent-foreground active:scale-[0.99] transition min-h-[44px]"
+                                >
+                                  <ExternalLink className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                                  <span className="break-words leading-snug">{s.label}</span>
+                                </a>
+                              </li>
+                            ))}
+                          </ul>
+                        </details>
+                      )}
+                    </>
+                  );
+                })()
               ) : (
                 <p className="text-sm">{msg.content}</p>
               )}
