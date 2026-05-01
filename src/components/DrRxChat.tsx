@@ -4,13 +4,38 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ArrowLeft, Send, Loader2, Sparkles, Mic, MicOff, Volume2, VolumeX, ChevronDown, BookOpen } from 'lucide-react';
+import { ArrowLeft, Send, Loader2, Sparkles, Mic, MicOff, Volume2, VolumeX, ChevronDown, BookOpen, Link2, ExternalLink } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import drRxAvatar from '@/assets/dr-bombay-avatar.png';
 import { MedicalDisclaimer } from '@/components/MedicalDisclaimer';
 
 type Message = { role: 'user' | 'assistant'; content: string };
+
+/** Extract cited links from the "Sources" section (or anywhere) of a message. */
+function extractSources(text: string): { label: string; url: string }[] {
+  if (!text) return [];
+  // Prefer the Sources section if present
+  const idx = text.search(/\*\*\s*Sources[^*]*\*\*/i);
+  const scope = idx >= 0 ? text.slice(idx) : text;
+  const re = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+  const out: { label: string; url: string }[] = [];
+  const seen = new Set<string>();
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(scope)) !== null) {
+    const url = m[2];
+    if (seen.has(url)) continue;
+    seen.add(url);
+    out.push({ label: m[1].trim(), url });
+  }
+  return out;
+}
+
+/** Hide the "Sources & further reading" block from the rendered body — it moves into the expander. */
+function stripSourcesSection(text: string): string {
+  if (!text) return text;
+  return text.replace(/\n*\*\*\s*Sources[\s\S]*?(?=\n>\s*⚠️|\n*$)/i, '\n').trim();
+}
 
 const FALLBACK_SOURCES = `
 
