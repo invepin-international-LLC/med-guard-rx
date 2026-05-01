@@ -52,7 +52,11 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [medications, setMedications] = useState<any[]>([]);
-  const [selectedVoice, setSelectedVoice] = useState(VOICE_OPTIONS[0].id);
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [selectedVoiceURI, setSelectedVoiceURI] = useState<string>(() => {
+    if (typeof window === 'undefined') return '';
+    return window.localStorage?.getItem(VOICE_PREF_KEY) || '';
+  });
   const [isListening, setIsListening] = useState(false);
   const [ttsEnabled, setTtsEnabled] = useState(true);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -95,11 +99,13 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
       utterance.rate = 0.95;
       utterance.pitch = 1.0;
 
-      // Pick a default English voice if available
+      // Use the user-selected voice when available, otherwise fall back to a sensible default
       const voices = window.speechSynthesis.getVoices();
-      const preferred = voices.find(v => v.lang.startsWith('en') && v.default)
-        || voices.find(v => v.lang.startsWith('en'))
-        || voices[0];
+      const preferred =
+        (selectedVoiceURI && voices.find(v => v.voiceURI === selectedVoiceURI)) ||
+        voices.find(v => v.lang.startsWith('en') && v.default) ||
+        voices.find(v => v.lang.startsWith('en')) ||
+        voices[0];
       if (preferred) utterance.voice = preferred;
 
       utterance.onend = () => setIsSpeaking(false);
@@ -114,7 +120,27 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
       toast.error('Voice playback failed. You can read the response above.');
       setIsSpeaking(false);
     }
-  }, [ttsEnabled, selectedVoice]);
+  }, [ttsEnabled, selectedVoiceURI]);
+
+  // Load available SpeechSynthesis voices (populates asynchronously on most browsers)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    const loadVoices = () => {
+      const voices = window.speechSynthesis.getVoices();
+      if (voices.length) setAvailableVoices(voices);
+    };
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    return () => {
+      if (window.speechSynthesis) window.speechSynthesis.onvoiceschanged = null;
+    };
+  }, []);
+
+  // Persist voice preference
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (selectedVoiceURI) window.localStorage?.setItem(VOICE_PREF_KEY, selectedVoiceURI);
+  }, [selectedVoiceURI]);
 
   const stopSpeaking = useCallback(() => {
     window.speechSynthesis?.cancel();
