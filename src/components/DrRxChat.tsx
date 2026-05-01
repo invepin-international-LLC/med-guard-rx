@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ArrowLeft, Send, Loader2, Sparkles, Mic, MicOff, Volume2, VolumeX, ChevronDown, BookOpen, Link2, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Send, Loader2, Sparkles, Mic, MicOff, Volume2, VolumeX, ChevronDown, BookOpen, Link2, ExternalLink, ShieldCheck, ShieldAlert, AlertTriangle, CheckCircle2, XCircle, RefreshCw } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import drRxAvatar from '@/assets/dr-bombay-avatar.png';
@@ -35,6 +35,21 @@ function extractSources(text: string): { label: string; url: string }[] {
 function stripSourcesSection(text: string): string {
   if (!text) return text;
   return text.replace(/\n*\*\*\s*Sources[\s\S]*?(?=\n>\s*⚠️|\n*$)/i, '\n').trim();
+}
+
+/** Approved authoritative domains (per system prompt). */
+const APPROVED_DOMAINS = [
+  'fda.gov', 'dailymed.nlm.nih.gov', 'medlineplus.gov', 'nlm.nih.gov',
+  'cdc.gov', 'rxlist.com', 'drugs.com', 'poison.org', 'nih.gov',
+];
+
+function isApprovedUrl(url: string): boolean {
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    return APPROVED_DOMAINS.some((d) => host === d || host.endsWith('.' + d));
+  } catch {
+    return false;
+  }
 }
 
 const FALLBACK_SOURCES = `
