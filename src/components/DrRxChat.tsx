@@ -381,6 +381,33 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
         >
           {ttsEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
         </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="rounded-xl shrink-0 h-9 px-2 text-xs"
+          onClick={() => {
+            if (!('speechSynthesis' in window)) {
+              toast.error('Voice playback is not supported on this device.');
+              return;
+            }
+            if (isSpeaking) {
+              stopSpeaking();
+              return;
+            }
+            // Temporarily allow speaking even if TTS is disabled
+            const wasEnabled = ttsEnabled;
+            setTtsEnabled(true);
+            speakText("Hello! This is Dr. Bombay. If you can hear me clearly, your voice playback is working.");
+            if (!wasEnabled) {
+              // restore preference after a short delay so the test plays once
+              setTimeout(() => setTtsEnabled(false), 100);
+            }
+            toast.success('Playing voice test…');
+          }}
+          title="Test voice playback"
+        >
+          Test voice
+        </Button>
         <span className="text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 px-2 py-1 rounded-full font-medium">Online</span>
       </div>
 
