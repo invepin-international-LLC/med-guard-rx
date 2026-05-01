@@ -371,21 +371,30 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
           <h2 className="text-lg font-bold text-foreground leading-tight">Dr. Bombay</h2>
           <div className="flex items-center gap-1">
             <Sparkles className="w-3 h-3 text-primary shrink-0" />
-            <Select value={selectedVoice} onValueChange={setSelectedVoice}>
-              <SelectTrigger className="h-5 border-0 p-0 shadow-none text-xs text-muted-foreground font-normal hover:text-foreground transition-colors gap-0.5 w-auto [&>svg]:w-3 [&>svg]:h-3">
-                <span>Voice: {VOICE_OPTIONS.find(v => v.id === selectedVoice)?.name}</span>
-              </SelectTrigger>
-              <SelectContent>
-                {VOICE_OPTIONS.map(voice => (
-                  <SelectItem key={voice.id} value={voice.id}>
-                    <div>
-                      <span className="font-medium">{voice.name}</span>
-                      <span className="text-muted-foreground ml-1.5">— {voice.description}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {availableVoices.length > 0 ? (
+              <Select
+                value={selectedVoiceURI || availableVoices.find(v => v.lang.startsWith('en') && v.default)?.voiceURI || availableVoices[0]?.voiceURI}
+                onValueChange={setSelectedVoiceURI}
+              >
+                <SelectTrigger className="h-5 border-0 p-0 shadow-none text-xs text-muted-foreground font-normal hover:text-foreground transition-colors gap-0.5 w-auto max-w-[180px] [&>svg]:w-3 [&>svg]:h-3">
+                  <span className="truncate">
+                    Voice: {availableVoices.find(v => v.voiceURI === selectedVoiceURI)?.name || 'Default'}
+                  </span>
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  {availableVoices.map(voice => (
+                    <SelectItem key={voice.voiceURI} value={voice.voiceURI}>
+                      <div>
+                        <span className="font-medium">{voice.name}</span>
+                        <span className="text-muted-foreground ml-1.5">— {voice.lang}{voice.default ? ' • default' : ''}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <span className="text-xs text-muted-foreground">Voice: Default</span>
+            )}
           </div>
         </div>
         <Button
