@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { CheckCircle2, XCircle, Shield, ArrowLeft, ExternalLink } from 'lucide-react';
+import { useState } from 'react';
+import { CheckCircle2, XCircle, Shield, ArrowLeft, ExternalLink, Terminal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -14,9 +14,11 @@ interface AuditItem {
 }
 
 /**
- * Static registry of every screen that displays medical / health / drug info.
- * Marked as compliant once the MedicalDisclaimer component is present.
- * Update this list whenever a new medical-info screen is added.
+ * Registry of every screen that displays medical / health / drug info.
+ * This mirrors scripts/verify-medical-disclaimers.mjs which blocks the
+ * build if any medical screen is missing disclaimers or sources.
+ *
+ * Keep in sync — the build script is the source of truth.
  */
 const AUDIT_REGISTRY: AuditItem[] = [
   { screen: 'Dr. Bombay AI Chat', component: 'DrRxChat', hasDisclaimer: true, hasSources: true, sourceCount: 4, notes: 'Fallback sources auto-appended if AI omits them' },
@@ -30,7 +32,6 @@ const AUDIT_REGISTRY: AuditItem[] = [
   { screen: 'Symptom Journal', component: 'SymptomJournal', hasDisclaimer: true, hasSources: true, sourceCount: 4 },
   { screen: 'Emergency Card', component: 'EmergencyCard', hasDisclaimer: true, hasSources: true, sourceCount: 4 },
   { screen: 'Emergency Card (Elder)', component: 'EmergencyCardElder', hasDisclaimer: true, hasSources: true, sourceCount: 4 },
-  { screen: 'Prescription Scanner', component: 'PrescriptionScanner', hasDisclaimer: false, hasSources: false, sourceCount: 0, notes: 'Input-only screen – no medical info displayed' },
   { screen: 'Medical Sources Page', component: 'MedicalSources', hasDisclaimer: true, hasSources: true, sourceCount: 8, notes: 'Dedicated citations hub' },
 ];
 
@@ -127,11 +128,24 @@ export default function ComplianceAudit() {
         <Button
           variant="outline"
           className="w-full gap-2"
-          onClick={() => navigate('/medical-sources')}
+          onClick={() => navigate('/sources')}
         >
           <ExternalLink className="w-4 h-4" />
           View All Medical Sources
         </Button>
+
+        {/* Build-time note */}
+        <div className="bg-muted/50 border border-border rounded-xl p-4 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 mb-1">
+            <Terminal className="w-4 h-4" />
+            <span className="font-semibold text-foreground">Automated Build Gate</span>
+          </div>
+          <p>
+            The build script <code className="bg-muted px-1 rounded">scripts/verify-medical-disclaimers.mjs</code> runs
+            before every production build and <strong>blocks deployment</strong> if any medical screen is missing
+            the MedicalDisclaimer component or source links.
+          </p>
+        </div>
       </div>
     </div>
   );
