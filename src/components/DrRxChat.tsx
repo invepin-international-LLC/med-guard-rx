@@ -119,6 +119,38 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Flexible safety-disclaimer matcher (Apple Guideline 1.4.1).
+  // Accepts a wide range of phrasings so the audit doesn't false-flag
+  // assistant messages whose wording drifts slightly from the canonical
+  // "not medical advice" string.
+  const DISCLAIMER_PATTERNS: RegExp[] = [
+    /\bnot\s+(a\s+substitute\s+for\s+|intended\s+as\s+|to\s+be\s+(?:taken|used)\s+as\s+)?(?:professional\s+)?medical\s+(?:advice|guidance|recommendation)/i,
+    /\bnot\s+(?:a\s+)?(?:doctor|physician|pharmacist|clinician)\b/i,
+    /\b(?:for\s+)?(?:general\s+)?(?:information(?:al)?|reference|educational)\s+(?:purposes?\s+)?only\b/i,
+    /\bdoes\s+not\s+(?:constitute|replace|substitute\s+for)\s+(?:professional\s+)?medical\b/i,
+    /\b(?:always|please)\s+(?:consult|talk\s+to|speak\s+(?:with|to)|check\s+with|confirm\s+with)\s+(?:your\s+)?(?:doctor|physician|pharmacist|healthcare\s+provider|clinician)/i,
+    /\bseek\s+(?:the\s+)?(?:advice|guidance)\s+of\s+(?:your\s+|a\s+)?(?:doctor|physician|pharmacist|qualified\s+health)/i,
+    /\bin\s+an?\s+emergency[, ]+(?:call|dial)\s*9-?1-?1\b/i,
+    /\bcall\s+poison\s+control\b/i,
+  ];
+  const DISCLAIMER_PHRASES: string[] = [
+    'not medical advice',
+    'not a substitute for',
+    'informational purposes only',
+    'for educational purposes',
+    'consult your doctor',
+    'consult your pharmacist',
+    'talk to your doctor',
+    'speak with your healthcare',
+    'this is general information',
+  ];
+  const hasSafetyDisclaimer = (text: string): boolean => {
+    if (!text) return false;
+    const lc = text.toLowerCase();
+    if (DISCLAIMER_PHRASES.some((p) => lc.includes(p))) return true;
+    return DISCLAIMER_PATTERNS.some((re) => re.test(text));
+  };
+
   // Audit data derived from current messages
   const auditRows = messages
     .map((m, i) => ({ idx: i, role: m.role, content: m.content }))
@@ -127,7 +159,7 @@ export function DrRxChat({ onBack }: DrRxChatProps) {
       const sources = extractSources(m.content);
       const approved = sources.filter((s) => isApprovedUrl(s.url));
       const unapproved = sources.filter((s) => !isApprovedUrl(s.url));
-      const hasDisclaimer = /not medical advice/i.test(m.content);
+      const hasDisclaimer = hasSafetyDisclaimer(m.content);
       const broken = sources.filter((s) => linkStatus[s.url] === 'broken');
       return { ...m, sources, approved, unapproved, hasDisclaimer, broken };
     });
